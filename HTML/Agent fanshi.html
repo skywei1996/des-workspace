@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Development Paradigm - Presentation</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent-color: #d32f2f;
+            --slide-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: #e0e0e0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            width: 100%;
+            max-width: 1600px;
+            aspect-ratio: 16/9;
+            background: #ffffff;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+            padding: 60px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 5rem;
+            margin: 0;
+            line-height: 1.1;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1d1d1f 0%, #424245 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin: 0;
+            max-width: 80%;
+        }
+        
+        .accent {
+            color: var(--accent-color);
+            -webkit-text-fill-color: initial; 
+            background: none;
+        }
+
+        .big-number {
+             font-size: 15rem;
+             font-weight: 900;
+             color: #f4f4f4;
+             position: absolute;
+             z-index: -1;
+             opacity: 0.8;
+             line-height: 0.8;
+             top: 5%;
+             left: 5%;
+             transition: all 1s ease;
+        }
+        
+        .slide.active .big-number {
+            opacity: 1;
+            transform: translateX(20px);
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: rgba(211, 47, 47, 0.08); /* Light red tint */
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid rgba(211, 47, 47, 0.2);
+            font-weight: 600;
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            color: #333;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.5s;
+            z-index: 1000;
+        }
+
+        /* Slide Specifics */
+        .slide-content-left {
+            text-align: left;
+            align-items: flex-start;
+            padding-left: 10%;
+        }
+        
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            text-align: left;
+            margin-top: 50px;
+        }
+        
+        .list-item {
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease 0.3s;
+            font-weight: 300;
+            color: var(--text-primary);
+        }
+        
+        .slide.active .list-item:nth-child(1) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+        .slide.active .list-item:nth-child(2) { transition-delay: 0.6s; opacity: 1; transform: translateY(0); }
+        .slide.active .list-item:nth-child(3) { transition-delay: 0.8s; opacity: 1; transform: translateY(0); }
+        .slide.active .list-item:nth-child(4) { transition-delay: 1.0s; opacity: 1; transform: translateY(0); }
+        .slide.active .list-item:nth-child(5) { transition-delay: 1.2s; opacity: 1; transform: translateY(0); }
+        .slide.active .list-item:nth-child(6) { transition-delay: 1.4s; opacity: 1; transform: translateY(0); }
+        
+        .list-item::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-color);
+            margin-right: 30px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(211, 47, 47, 0.4);
+        }
+
+        /* Animations for active slide children */
+        .slide h1, .slide h2, .slide .tag {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .slide.active h1 { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+        .slide.active .tag { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+        .slide.active h2 { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+
+    </style>
+</head>
+<body>
+
+<div class="presentation-container">
+    
+    <!-- Slide 1: Cover -->
+    <div class="slide active">
+        <div class="tag">Vision</div>
+        <h1>Silicon Workmate</h1>
+        <h2>打造<span class="accent">企业决策操作系统</span></h2>
+        <h2 style="font-size: 1.5rem; margin-top: 30px; opacity: 0.7;">从 Copilot 到 Agentic AI 的战略跃迁</h2>
+    </div>
+
+    <!-- Slide 1.5: What kind of Digital Employee -->
+    <div class="slide slide-content-left">
+        <div class="tag">定义未来员工</div>
+        <h1>我们构建的<br><span class="accent">“数字员工”</span>是怎样的？</h1>
+        <div class="list-items" style="margin-top: 40px;">
+            <div class="list-item">不仅是工具，更是<strong>业务伙伴</strong></div>
+            <div class="list-item">具备<strong>理解力、推理力、协同力</strong></div>
+            <div class="list-item">具备<strong>执行力</strong>，<strong>自主完成任务</strong>，像人类一样具有<strong>记忆</strong></div>
+            <div class="list-item">像人类一样<strong>因果推理</strong>与<strong>自我反思</strong></div>
+            <div class="list-item">可信、可控、可持续进化</div>
+        </div>
+    </div>
+
+    <!-- Slide 1.6: The Paradigm -->
+    <div class="slide">
+        <div class="tag">建设范式</div>
+        <h1>“双循环”进化架构</h1>
+        <div style="display: flex; gap: 80px; margin-top: 50px; justify-content: center;">
+            <div style="text-align: left;">
+                <h3 style="color: var(--accent-color); font-size: 2rem; margin-bottom: 20px;">内循环 (执行)</h3>
+                <p style="font-size: 1.5rem; color: #ccc;">理解 → 思考 → 规划<br>执行 → 观察 → 反思</p>
+            </div>
+            <div style="width: 2px; background: #333;"></div>
+            <div style="text-align: left;">
+                <h3 style="color: var(--accent-color); font-size: 2rem; margin-bottom: 20px;">外循环 (感知)</h3>
+                <p style="font-size: 1.5rem; color: #ccc;">感知业务状态<br>提供业务语义上下文</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 1.7: Driver Patterns -->
+    <div class="slide">
+        <div class="tag">驱动模式</div>
+        <h1>全场景覆盖</h1>
+        <div class="list-items" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px;">
+             <!-- Override list-item style for grid -->
+            <div class="list-item" style="font-size: 1.8rem;">任务驱动 <span style="font-size: 1rem; opacity: 0.6; display: block; margin-top: 10px;">响应用户指令</span></div>
+            <div class="list-item" style="font-size: 1.8rem;">数据驱动 <span style="font-size: 1rem; opacity: 0.6; display: block; margin-top: 10px;">响应数据变更</span></div>
+            <div class="list-item" style="font-size: 1.8rem;">目标驱动 <span style="font-size: 1rem; opacity: 0.6; display: block; margin-top: 10px;">基于目标偏差预警</span></div>
+            <div class="list-item" style="font-size: 1.8rem;">语义驱动 <span style="font-size: 1rem; opacity: 0.6; display: block; margin-top: 10px;">基于业务规则触发</span></div>
+        </div>
+    </div>
+
+    <!-- Slide 1.8: Case Study Example -->
+    <div class="slide">
+        <div class="tag">场景案例</div>
+        <h1>数据驱动型 · 供应链智能体</h1>
+        <div style="display: flex; gap: 30px; margin-top: 50px; align-items: stretch; justify-content: center; width: 85%;">
+            
+            <!-- Step 1 -->
+            <div style="flex: 1; text-align: left; padding: 25px; background: #f9f9f9; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column;">
+                <h3 style="color: var(--accent-color); font-size: 1.3rem; margin: 0 0 15px 0;">01 感知 (Trigger)</h3>
+                <p style="font-size: 1.1rem; color: #555; line-height: 1.6; flex: 1;">
+                    24小时监控 ERP 数据库<br><br>
+                    <strong>事件触发：</strong><br>
+                    监测到 SKU-X82 芯片库存<br>
+                    <span style="color: #d32f2f; font-weight: bold;">跌破 15% 安全水位</span>
+                </p>
+            </div>
+
+            <div style="align-self: center; font-size: 2rem; color: #ddd;">→</div>
+
+            <!-- Step 2 -->
+            <div style="flex: 1; text-align: left; padding: 25px; background: #f9f9f9; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column;">
+                <h3 style="color: var(--accent-color); font-size: 1.3rem; margin: 0 0 15px 0;">02 思考 (Reasoning)</h3>
+                <p style="font-size: 1.1rem; color: #555; line-height: 1.6; flex: 1;">
+                    根据排产计划计算需求量<br><br>
+                    <strong>生成决策选项：</strong><br>
+                    A. 极速补货 (溢价10%, 2天到)<br>
+                    B. 经济补货 (原价, 5天到)
+                </p>
+            </div>
+
+            <div style="align-self: center; font-size: 2rem; color: #ddd;">→</div>
+
+            <!-- Step 3 -->
+            <div style="flex: 1.2; text-align: left; padding: 25px; background: rgba(211, 47, 47, 0.04); border-radius: 12px; border: 1px dashed var(--accent-color); display: flex; flex-direction: column;">
+                <h3 style="color: var(--accent-color); font-size: 1.3rem; margin: 0 0 15px 0;">03 协同 (Collaboration)</h3>
+                <p style="font-size: 1.1rem; color: #555; line-height: 1.6; flex: 1;">
+                    推送消息至采购经理 IM<br><br>
+                    <strong>人类决策：</strong><br>
+                    经理点击“确认方案A”<br>
+                    ↓<br>
+                    <strong>智能体执行：</strong>自动生成PO单
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Slide 1.9: Core Function Matrix -->
+    <div class="slide">
+        <div class="tag">功能矩阵</div>
+        <h1>五大核心模块</h1>
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 25px; width: 90%; margin-top: 40px;">
+            
+            <!-- Feature 1: Talent Center -->
+            <div style="grid-column: span 2; text-align: left; padding: 25px; background: #fdfdfd; border-radius: 10px; border-top: 4px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333;">硅基人才中心</h3>
+                <p style="color: var(--accent-color); font-size: 0.95rem; margin: 10px 0; font-weight: 600;">HR 招聘与入职大厅</p>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">就像企业招聘。在这里给 AI 起名字、定性格、分岗位，让她正式“入职”业务部门，变成你可以随时对话的同事。</p>
+            </div>
+
+            <!-- Feature 2: Specialized Agent -->
+            <div style="grid-column: span 2; text-align: left; padding: 25px; background: #fdfdfd; border-radius: 10px; border-top: 4px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333;">专项智能体</h3>
+                <p style="color: var(--accent-color); font-size: 0.95rem; margin: 10px 0; font-weight: 600;">不聊天的“干活机器”</p>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">专门解决单一任务的“特种兵”（如发票识别）。不需要复杂的沟通，给任务就干，干完就交付。</p>
+            </div>
+
+            <!-- Feature 3: Task Center -->
+            <div style="grid-column: span 2; text-align: left; padding: 25px; background: #fdfdfd; border-radius: 10px; border-top: 4px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333;">任务中心</h3>
+                <p style="color: var(--accent-color); font-size: 0.95rem; margin: 10px 0; font-weight: 600;">全景任务监控室</p>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">就像看着外卖骑手的路线图。AI 怎么拆解任务、干到哪一步、有没有出错，在这里看得一清二楚，随时接管。</p>
+            </div>
+
+            <!-- Feature 4: Resource Hub -->
+            <div style="grid-column: span 3; text-align: left; padding: 25px; background: #fdfdfd; border-radius: 10px; border-top: 4px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333;">资源中枢</h3>
+                <p style="color: var(--accent-color); font-size: 0.95rem; margin: 10px 0; font-weight: 600;">超能力补给站 (脑+手+眼)</p>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">给员工配装备的地方，缺什么补什么：<br>
+                <strong>知识 (RAG)：</strong>喂公司文档（脑），懂业务规范。<br>
+                <strong>技能 (Skill)：</strong>装软件工具（手），能发邮件查天气。<br>
+                <strong>数据 (DB)：</strong>连业务数据库（眼），能看实时库存订单。</p>
+            </div>
+
+            <!-- Feature 5: System Settings -->
+            <div style="grid-column: span 3; text-align: left; padding: 25px; background: #fdfdfd; border-radius: 10px; border-top: 4px solid var(--accent-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h3 style="margin: 0; font-size: 1.3rem; color: #333;">系统设置</h3>
+                <p style="color: var(--accent-color); font-size: 0.95rem; margin: 10px 0; font-weight: 600;">组织部与安保部 (RBAC)</p>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">严格管理“人和权”。谁是管理者，谁是员工，谁能调用昂贵的模型，谁能查看敏感数据，在这里规定得死死的。</p>
+            </div>
+
+        </div>
+    </div>
+    <!-- Slide 1.95: Tech Stack Selection -->
+    <div class="slide slide-content-left">
+        <div class="tag">技术选型</div>
+        <h1 style="margin-bottom: 60px;">Agent 编排框架</h1>
+        
+        <div style="display: flex; width: 90%; justify-content: space-between; align-items: center;">
+             <!-- List -->
+            <div class="list-items" style="margin-top: 0;">
+                <div class="list-item">1. AutoAgent (图形化编排)</div>
+                <div class="list-item">2. LangChain (LangGraph)</div>
+                <div class="list-item" style="color: var(--accent-color); font-weight: 700; font-size: 3rem;">3. Google Agent开发范式 (高代码编排)</div>
+            </div>
+
+            <!-- Diagram -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-right: 100px;">
+                <div style="width: 300px; padding: 15px; background: #fff; border: 2px solid #eee; border-radius: 12px; text-align: center; font-size: 1.5rem; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">应用</div>
+                <div style="color: #ccc; font-size: 1.5rem;">↓</div>
+                <div style="width: 300px; padding: 15px; background: #fff; border: 2px solid #eee; border-radius: 12px; text-align: center; font-size: 1.5rem; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">Agent</div>
+                <div style="color: #ccc; font-size: 1.5rem;">↓</div>
+                <div style="width: 300px; padding: 15px; background: rgba(211, 47, 47, 0.08); border: 2px solid var(--accent-color); border-radius: 12px; text-align: center; font-size: 1.8rem; font-weight: 700; color: var(--accent-color); box-shadow: 0 4px 15px rgba(211, 47, 47, 0.15);">MeADK</div>
+                <div style="color: #ccc; font-size: 1.5rem;">↓</div>
+                <div style="width: 300px; padding: 15px; background: #f5f5f7; border: 2px dashed #ccc; border-radius: 12px; text-align: center; font-size: 1.4rem; color: #666;">Agent开发基础框架</div>
+            </div>
+        </div>
+    </div>
+    <!-- Slide 2: Market Point -->
+    <div class="slide">
+        <div class="tag">市场判断</div>
+        <h1>2026年</h1>
+        <h2>是Agent从“能力验证”走向“规模化落地”的<br><span class="accent">决定性拐点</span></h2>
+    </div>
+
+    <!-- Slide 3: Role Change -->
+    <div class="slide">
+        <div class="tag">角色演变</div>
+        <h1>从“辅助工具”<br>到<span class="accent">“可信执行单元”</span></h1>
+        <h2 style="margin-top: 20px; font-size: 2rem; opacity: 0.8;">Copilot <span style="margin:0 15px">→</span> Agentic AI</h2>
+    </div>
+
+    <!-- Slide 4: Deep Water -->
+    <div class="slide slide-content-left">
+        <div class="big-number">01</div>
+        <div class="tag">应用场景深水区</div>
+        <h1>突破核心业务环节</h1>
+        <div class="list-items">
+            <div class="list-item">自动化财务审计</div>
+            <div class="list-item">复杂供应链协同</div>
+            <div class="list-item">高合规金融风控</div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Platform Opportunity -->
+    <div class="slide">
+        <div class="tag">竞争与机会</div>
+        <h1>全栈式平台机遇</h1>
+        <h2 style="font-size: 3rem; margin-top: 30px;"><span class="accent">Silicon Workmate</span></h2>
+        <h2 style="font-size: 1.8rem; margin-top: 20px;">算力 + 模型 + Agent + 安全治理</h2>
+    </div>
+
+    <!-- Slide 6: Goal 1 - Factory -->
+    <div class="slide slide-content-left">
+        <div class="big-number">02</div>
+        <div class="tag">研发目标</div>
+        <h1>“资产化”的硅基人才工厂</h1>
+        <h2 style="margin-bottom: 20px;">像招聘员工一样“创建”Agent</h2>
+        <div class="list-items">
+            <div class="list-item">定义人设 Persona</div>
+            <div class="list-item">绑定技能 Skills</div>
+            <div class="list-item">配置权限 RBAC</div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Goal 2 - Complex Task -->
+    <div class="slide">
+        <div class="tag">核心痛点</div>
+        <h1>解决“幻觉”与“不可控”</h1>
+        <h2 style="margin-top:40px; line-height: 1.5;">通过 <span class="accent">Plan (执行计划)</span> 机制<br>将模糊指令拆解为可执行步骤</h2>
+    </div>
+
+    <!-- Slide 8: Goal 3 - Business Logic -->
+    <div class="slide">
+        <div class="tag">认知中枢</div>
+        <h1>不仅懂语言，<br>更要<span class="accent">“懂业务”</span></h1>
+        <h2 style="margin-top: 30px;">双层业务语义架构：静态规则 + 动态状态</h2>
+    </div>
+
+    <!-- Slide 9: Goal 4 - Collaboration -->
+    <div class="slide">
+        <div class="tag">工作范式</div>
+        <h1>1 + 1 > 2</h1>
+        <h2 style="margin-top: 30px;">构建<span class="accent">“人机协同”</span>的<br>混合智能团队</h2>
+    </div>
+    
+    <!-- Slide 10: End -->
+    <div class="slide">
+        <h1>Thank You</h1>
+        <h2>Silicon Workmate</h2>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="controls">
+        <button class="nav-btn" onclick="changeSlide(-1)">←</button>
+        <button class="nav-btn" onclick="changeSlide(1)">→</button>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progressBar');
+
+    function updateProgress() {
+        const progress = ((currentSlide + 1) / slides.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    function changeSlide(direction) {
+        // Remove active class
+        slides[currentSlide].classList.remove('active');
+        
+        currentSlide += direction;
+
+        // Loop functionality
+        if (currentSlide < 0) currentSlide = 0;
+        if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+
+        // Add active class
+        slides[currentSlide].classList.add('active');
+        updateProgress();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') changeSlide(1);
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    updateProgress();
+</script>
+
+</body>
+</html>

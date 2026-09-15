@@ -1,0 +1,10 @@
+| 任务编号 | 信息点 | 需要收集的内容 | 收集途径（URL/搜索关键词） | 预期输出 |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 市场规模 | 豆包手机所在市场的整体规模（2023-2024）；增长率；用户需求趋势 | https://statista.com；关键词：mobile phone market size China 2024；关键词：smartphone growth rate 2023 | 市场规模柱状图；增长率折线图；用户需求趋势图 |
+| 2 | 竞品列表 | 豆包手机主要竞品（国内外）；竞品市场份额；竞品定位与目标用户 | https://data.ai；https://counterpointresearch.com；关键词：smartphone competitors China 2024；关键词：market share Xiaomi Huawei Oppo | 竞品列表表格；市场份额饼图；定位与目标用户分析 |
+| 3 | 功能对比 | 豆包手机与竞品的核心功能对比；用户体验评分；技术实现差异 | https://gsmarena.com；https://dxomark.com；关键词：smartphone feature comparison 2024；关键词：user experience Xiaomi Huawei Oppo | 功能矩阵；用户体验评分表；技术差异点分析 |
+| 4 | 定价策略 | 豆包手机与竞品的定价；性价比分析；用户反馈 | https://jd.com；https://taobao.com；关键词：smartphone price comparison 2024；关键词：user feedback smartphone pricing | 定价表；性价比分析图；用户反馈总结 |
+| 5 | 营销策略 | 豆包手机与竞品的广告投放渠道；促销活动；营销案例 | https://weibo.com；https://wechat.com；关键词：smartphone marketing strategy China；关键词：promotion campaigns Xiaomi Huawei Oppo | 营销案例分析；渠道覆盖率表；促销活动效果图 |
+| 6 | 用户反馈 | 豆包手机与竞品的用户评价；用户痛点；改进建议 | https://zhihu.com；https://weibo.com；关键词：smartphone user reviews 2024；关键词：user pain points Xiaomi Huawei Oppo | 用户评论分析表；痛点总结；改进建议清单 |
+| 7 | 近期动态 | 豆包手机竞品的最新功能更新；市场活动 | https://techcrunch.com；https://36kr.com；关键词：smartphone new features 2024；关键词：market events Xiaomi Huawei Oppo | 最新功能列表；市场活动总结 |
+| 8 | 差异化机会 | 豆包手机的差异化切入点；潜在市场机会 | https://counterpointresearch.com；https://statista.com；关键词：smartphone differentiation strategy；关键词：market opportunity China 2024 | 差异化策略建议；机会点地图 |

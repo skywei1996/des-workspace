@@ -1,0 +1,1 @@
+This directory contains files related to recommendations for 豆包手机, including product optimization and market strategies based on analysis.

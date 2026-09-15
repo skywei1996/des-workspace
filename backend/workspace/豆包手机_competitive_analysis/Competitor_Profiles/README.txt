@@ -1,0 +1,1 @@
+This directory contains files related to competitor profiles for 豆包手机, including market performance, product strategies, and comparisons.

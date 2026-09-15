@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WORKMATE 用户手册</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --page: #ffffff;
+            --line: #e8e3e4;
+            --text: #1a1515;
+            --muted: #6b6262;
+            --primary: #dc2626;
+            --primary-soft: #fef2f2;
+            --warning-soft: #fff7ed;
+            --shadow: 0 18px 44px rgba(220, 38, 38, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: #ffffff;
+            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 56px;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        .toc {
+            position: sticky;
+            top: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            backdrop-filter: blur(12px);
+            padding: 24px 20px;
+        }
+
+        .toc h1 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .toc p {
+            margin: 0 0 14px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #fff;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover,
+        .toc-list a:active {
+            color: #111827;
+            background: #fafafa;
+            border-color: var(--line);
+        }
+
+        .page {
+            background: var(--page);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 40px 48px 30px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .hero h2 {
+            margin: 16px 0 10px;
+            font-size: 34px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 860px;
+            color: #524b4b;
+            font-size: 16px;
+        }
+
+        .meta {
+            margin-top: 16px;
+        }
+
+        .meta span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 36px 48px 48px;
+        }
+
+        section + section {
+            margin-top: 52px;
+            padding-top: 20px;
+            border-top: 2px dashed #f6f1f1;
+        }
+
+        section {
+            scroll-margin-top: 20px;
+        }
+
+        h3 {
+            margin: 0 0 16px;
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        h4 {
+            margin: 28px 0 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        p {
+            margin: 0 0 14px;
+            font-size: 15px;
+            color: #374151;
+        }
+
+        ul,
+        ol {
+            margin: 0 0 14px 20px;
+            padding: 0;
+        }
+
+        li + li {
+            margin-top: 10px;
+            color: #374151;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin: 20px 0 24px;
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 24px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #fca5a5;
+            box-shadow: 0 12px 20px rgba(220, 38, 38, 0.04);
+        }
+
+        .card strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .tip,
+        .warning,
+        .note {
+            margin: 24px 0;
+            padding: 18px 24px;
+            border-radius: 8px;
+            color: #374151;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .tip {
+            background: #fffafa;
+            border-left: 4px solid #fca5a5;
+        }
+
+        .warning {
+            background: var(--warning-soft);
+            border-left: 4px solid #fdba74;
+        }
+
+        .note {
+            background: #fafafa;
+            border-left: 4px solid #e5e7eb;
+        }
+
+        .callout-title {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0 24px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead {
+            background: #faf8f8;
+            border-bottom: 2px solid var(--line);
+        }
+
+        th,
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            white-space: normal;
+        }
+
+        /* 解决第一列(比如“字段”列)中的文字换行过窄 */
+        td:first-child,
+        th:first-child {
+            white-space: nowrap;
+            width: 80px;
+        }
+
+        th {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .steps {
+            counter-reset: step;
+            margin: 0 0 24px 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .steps li {
+            counter-increment: step;
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+            padding: 16px 20px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+            transition: border-color 0.2s ease;
+        }
+
+        .steps li:hover {
+            border-color: #fca5a5;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .footer {
+            margin-top: 26px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .shell {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .hero,
+            .content {
+                padding: 22px 18px;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm 20mm;
+            }
+            .toc {
+                display: none !important;
+            }
+            .shell {
+                display: block !important;
+                padding: 0 !important;
+            }
+            .page {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .hero {
+                background: none !important;
+                border-bottom: 2px solid #000 !important;
+            }
+            body {
+                background: #fff !important;
+            }
+            .table-wrap, .card, .tip, .warning, .note, .steps li, img, h3, h4, tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            h3, h4 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <aside class="toc">
+            <h1>AI WORKMATE 用户手册</h1>
+            <ul class="toc-list">
+                <li><a href="#quickstart">1. 快速使用</a></li>
+                <li><a href="#create-worker">2. 创建数字员工</a></li>
+                <li><a href="#chat-worker">3. 对话数字员工</a></li>
+                <li><a href="#knowledge-base">4. 知识库手册</a></li>
+                <li><a href="#skill-manual">5. Skill 手册</a></li>
+                <li><a href="#mcp-manual">6. MCP 手册</a></li>
+                <li><a href="#model-config">7. 模型配置手册</a></li>
+            </ul>
+        </aside>
+
+        <main class="page">
+            <div class="hero">
+                <span class="eyebrow">User Manual</span>
+                <h2>AI WORKMATE 用户手册</h2>
+                <div class="meta">
+                    <span>更新日期：2026-04-30</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <section id="quickstart">
+                    <h3>1. 快速使用</h3>
+                    <p>如果你只是第一次使用 AI WORKMATE，先看这一节就够了。</p>
+                    <p>企业通常会先提供一批公开数字员工。第一次使用时，你可以先直接选择这些公开数字员工开始对话，不一定要自己先创建。</p>
+
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>选择员工</strong>
+                                先从企业已经提供的公开数字员工里选一个，进入聊天工作区。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>直接提问</strong>
+                                把任务直接写给员工，例如“帮我整理本周 AI 行业要点并输出摘要”。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>需要长期复用再创建员工</strong>
+                                如果你经常做同类任务，再创建一个专属员工。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>需要资料或工具时再配资源</strong>
+                                读文档用知识库，需要工具能力就看 Skill 和 MCP。
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="tip">
+                        <span class="callout-title">一句话建议</span>
+                        先对话，后沉淀；先确认任务稳定，再补员工和资源配置。
+                    </div>
+
+                    <div class="note">
+                        <span class="callout-title">先看哪两节</span>
+                        如果你要新建一个专用员工，就看“创建数字员工”。如果你已经选好了员工，想知道怎么提需求、上传文件、拿结果，就看“对话数字员工”。
+                    </div>
+                </section>
+
+                <section id="create-worker">
+                    <p>
+                        <img
+                            src="screenshot/对话-你好.png"
+                            alt="对话示意图"
+                            style="display:block; width:100%; max-width:920px; border:1px solid #e5e7eb; border-radius:20px; margin-bottom:16px;"
+                        >
+                    </p>
+                    <h3>2. 创建数字员工</h3>
+                    <p>创建数字员工的目标，是把一种高频任务固定下来，让这个员工长期按同一套方式工作。</p>
+
+                    <h4>怎么创建员工</h4>
+                    <ol>
+                        <li>先进入左侧的 AI 伙伴页面，再点击右上角的“新建 AI 伙伴”。</li>
+                        <li>先填写左侧“基本信息”。</li>
+                        <li>再配置右侧“核心技能”和资源。</li>
+                        <li>确认无误后，点击底部“入职”。</li>
+                    </ol>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>新建数字员工</strong>
+                            <img
+                                src="screenshot/新建数字员工入口.png"
+                                alt="新建数字员工入口"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>数字员工创建</strong>
+                            <img
+                                src="screenshot/新建数字员工创建.png"
+                                alt="数字员工创建页面"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>先填哪些内容</h4>
+                        <div class="table-wrap">
+                            <table style="table-layout: auto;">
+                                <thead>
+                                    <tr>
+                                        <th style="white-space: nowrap; width: 80px;">字段</th>
+                                        <th>建议怎么填</th>
+                                        <th>作用</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">全名</td>
+                                        <td>给数字员工设置一个名字，例如“行业研究助手”“小说策划助手”</td>
+                                        <td>方便你识别和选择这个数字员工</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">分类</td>
+                                        <td>按员工职责选择分类，方便后续筛选和查找</td>
+                                        <td>让员工归到正确业务类型下</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">标签</td>
+                                        <td>补充关键词，例如“周报”“行业研究”“售前”</td>
+                                        <td>方便搜索和快速识别</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">描述</td>
+                                        <td>一句话写清任务范围，例如“负责整理行业动态并输出周报摘要”</td>
+                                        <td>帮助你快速区分不同员工</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">模型</td>
+                                        <td>需要先在“模型配置”里设置模型，也可以直接选用企业公开模型</td>
+                                        <td>决定这个员工主要使用哪个模型工作</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">指令</td>
+                                        <td>写清角色、目标、流程、输出格式 and 限制条件</td>
+                                        <td>决定员工怎么理解任务、怎么输出结果</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>核心技能怎么选</h4>
+                        <div class="card-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                            <div class="card">
+                                <strong style="color: #111827; display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 18px;">⚙️</span> planner
+                                </strong>
+                                适合需要先拆解任务、列步骤、做方案的员工。比如“先列研究提纲，再分步骤完成周报”这类任务。
+                            </div>
+                            <div class="card">
+                                <strong style="color: #111827; display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 18px;">🔍</span> search
+                                </strong>
+                                适合需要查最新信息的员工。比如“查行业动态、竞品信息、公开新闻”这类任务.
+                            </div>
+                        </div>
+                        <div class="tip" style="margin-top: 16px;">
+                            <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px;">
+                                💡 操作方法：怎么选？
+                            </span>
+                            如果你要员工先想步骤、出方案以保证思路清晰，就开启 <strong>planner</strong>；<br>
+                            如果你要员工能够调用外部网络获取公开最新资料，就开启 <strong>search</strong>。<br>
+                            <strong>注意：不是所有技能都要开。优先根据具体任务特性进行按需选用。</strong>
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>右侧资源区怎么配</h4>
+                        <div class="card-grid">
+                            <div class="card">
+                                <strong>Extended Skills</strong>
+                                用来补充额外能力。比如你希望员工固定走“周报生成流程”或“头脑风暴流程”时，再加对应 Skill。
+                            </div>
+                            <div class="card">
+                                <strong>Knowledge Bases</strong>
+                                用来绑定知识库。比如员工要长期参考产品资料、制度文档、售前材料时再添加。
+                            </div>
+                            <div class="card">
+                                <strong>MCP Toolsets</strong>
+                                用来绑定外部工具能力。比如员工要访问外部系统、网页工具或企业服务时再添加。
+                            </div>
+                        </div>
+                        <div class="tip" style="margin-top: 16px;">
+                            <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px;">
+                                📋 推荐配置顺序
+                            </span>
+                            先把<strong>基本信息</strong>和<strong>指令</strong>写清楚，再按任务实际需要补齐下列高级资源：<br>
+                            ● <strong>查实时公开资料</strong>：优先启用 <code>search</code> 开关；<br>
+                            ● <strong>运行特定步骤流程</strong>：优先选用 <code>Extended Skill</code>；<br>
+                            ● <strong>查询专有核心知识文档</strong>：优先选用 <code>Knowledge Base</code>（绑定已处理好的知识库）。
+                        </div>
+                    </div>
+
+                    <div class="tip" style="margin-top: 24px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight: 800;">
+                            💡 指令建议写法与调优建议
+                        </span>
+                        <ul style="margin: 10px 0 14px 20px; padding: 0;">
+                            <li><strong>先写角色</strong>：例如“你是一名负责行业研究的数字员工”。</li>
+                            <li><strong>再写目标</strong>：例如“输出一份 5 条重点动态摘要”。</li>
+                            <li><strong>再写流程</strong>：例如“先整理信息，再分类，再给结论”。</li>
+                            <li><strong>最后写输出格式和限制</strong>：例如“用表格输出，不要编造数据”。</li>
+                        </ul>
+                        <hr style="border: none; border-top: 1px dashed rgba(220, 38, 38, 0.15); margin: 12px 0;">
+                        <div style="font-size: 14px; color: #4b5563;">
+                            ⚠️ <strong>调优小贴士：</strong>最核心、决定表现的仍然是<strong>“指令”本身</strong>。如果员工表现不稳定，先不要急着追加复杂的高级技能，<strong>先回来看基本指令是否写得具体清晰、没有歧义。</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="chat-worker">
+                    <h3>3. 对话数字员工</h3>
+                    <p>进入聊天工作区后，直接告诉员工你要做什么。需要时也可以添加图片和文件。</p>
+
+                    <h4>适合怎么用</h4>
+                    <div class="card-grid">
+                        <div class="card">
+                            <strong>信息整理</strong>
+                            例如“帮我整理这份会议记录，提炼 5 条结论和 3 个待办”。
+                        </div>
+                        <div class="card">
+                            <strong>内容生成</strong>
+                            例如“根据这份产品资料，写一版对外介绍文案”。
+                        </div>
+                        <div class="card">
+                            <strong>研究分析</strong>
+                            例如“帮我整理本周 AI 行业动态，并按公司、产品、趋势分类”。
+                        </div>
+                        <div class="card">
+                            <strong>基于文件处理任务</strong>
+                            例如上传一份文档后说“读完这份文档，帮我输出摘要和风险点”。
+                        </div>
+                    </div>
+
+                    <h4>怎么提需求</h4>
+                    <ol>
+                        <li>先写任务目标，例如“帮我输出周报摘要”。</li>
+                        <li>再写范围，例如“只看这周新增的内容”。</li>
+                        <li>再写输出方式，例如“用表格输出，控制在一页内”。</li>
+                    </ol>
+
+                    <h4>常见场景</h4>
+                    <ul>
+                        <li>你已经有一个固定员工，直接把当天任务发给它。</li>
+                        <li>你需要员工读取上传的图片、文档或资料，再给出结果。</li>
+                        <li>你希望员工持续跟进一个任务，并在对话里迭代修改结果。</li>
+                    </ul>
+
+                    <div class="tip">
+                        <span class="callout-title">提问方式</span>
+                        不要只写“帮我分析一下”。最好写成“帮我读这份文档，提炼 5 条重点，并列出 3 个风险点”。
+                    </div>
+                </section>
+
+                <section id="knowledge-base">
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>制定计划</strong>
+                            <img
+                                src="screenshot/制定计划-01.png"
+                                alt="编辑计划示意图一"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>编辑计划</strong>
+                            <img
+                                src="screenshot/制定计划-02.png"
+                                alt="编辑计划示意图二"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+                    <h3>4. 知识库手册</h3>
+                    <p>知识库是专门用来给数字员工补充专业领域和深度文档资料的底座。当员工面临“需要基于专有材料、专业术语进行精准问答”时，知识库是您的首选配置。</p>
+
+                    <div class="note" style="border-left-color: #374151;">
+                        <span class="callout-title" style="color: #111827;">📍 临境决策：我该选择直接上传，还是建知识库？</span>
+                        <strong>对话临时上传文件</strong> 适合“一次性且高度偶发”的任务（如：帮我润色这篇刚写好的合同、整理最新的本日会议纪要）；<br>
+                        <strong>知识库（KB）</strong> 适合“高复用、多成员、大批次”的沉淀材料（如：公司薪酬福利规章、高频售前产品手册）。
+                    </div>
+
+                    <h4 style="margin-top:24px;">� 知识库配置三步走</h4>
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>新建知识库</strong>
+                                在左侧侧边栏进入“知识库”页面，点击“新建”，录入简洁的项目名称与清晰描述（如：“2026产品手册库”）。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>导入文档并处理</strong>
+                                批量拖拽需要学习的业务文档，系统会自动进行智能切片、向量化存储及背景深度加工。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>数字员工绑定</strong>
+                                返回所需数字员工的配置页，在右侧“绑定知识库”资源栏中按需勾选对应的已就绪知识库。
+                            </div>
+                        </li>
+                    </ol>
+
+                    <h4 style="margin-top:24px;">📂 导入规格与系统限制</h4>
+                    <div class="card-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">📄 支持格式</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">PDF, TXT, DOCX, MD, EXCEL, JPG, PNG 等企业主流排版与图包。</p>
+                        </div>
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">🔢 数量范围</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">单次上传极限支持最多 <strong>10 个</strong> 文档，多材料请分批导入即可。</p>
+                        </div>
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">📦 单包限制</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">单个电子包文件所占存储体积必须严格控制在 <strong>20 MB</strong> 以内。</p>
+                        </div>
+                    </div>
+
+                    <div class="tip" style="background: #fffafa; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            💡 知识治理供应链黄金原则
+                        </span>
+                        <ul style="margin: 8px 0 0 20px; padding:0; line-height:1.6; font-size:14px; color:#4b5563;">
+                            <li><strong>高内聚拆分</strong>：千万别随手建一个巨型“通用材料大杂烩”，应当按具体职责（如：规章制度、营销案、售前白皮书）进行小体量专库细分。</li>
+                            <li><strong>多版本清洗</strong>：定期下架或强时效淘汰过期的旧法规、废弃活动白皮书，保持检索源头的水质“清澈干净”。</li>
+                            <li><strong>已就绪绑定原则</strong>：新建数字员工时，如果发现下拉列表中找不到该库，请回到知识库页面确认所有文档的“向量分析切片”均已处理就绪。</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="skill-manual">
+                    <p>
+                        <img
+                            src="screenshot/知识库.png"
+                            alt="知识库示意图"
+                            style="display:block; width:100%; max-width:920px; border:1px solid #e5e7eb; border-radius:20px; margin-bottom:16px;"
+                        >
+                    </p>
+                    <h3>5. Skill 手册</h3>
+                    <p>Skill（技能）是赋予数字员工的可重复性调用的垂直业务本领。如果说模型提供了通用常识大脑，那么 Skill 就是数字员工在特定业务流程下的<strong>“肌肉记忆与专业操作手册”</strong>。</p>
+
+                    <div class="note" style="border-left-color: #374151;">
+                        <span class="callout-title" style="color: #111827;">💡 如何理解 Skill ？</span>
+                        Skill 不一定只是一个小动作。只要是一类可重复使用的动作行为、一套稳定的业务处理流程（集成了特定格式的输入、处理及输出模板），都可以打包封装成为一个 Skill，实现一人配置，全局复用。
+                    </div>
+
+                    <div class="tip" style="background: #fffafa; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            🛠️ Skill 最佳实践建设指南
+                        </span>
+                        <ul style="margin: 8px 0 0 20px; padding:0; line-height:1.6; font-size:14px; color:#4b5563;">
+                            <li><strong>职责单一原则</strong>：一个 Skill 应该且只负责一件清晰的独立能力（如“格式润色”或“图表整理”），逻辑过于复杂的分段任务建议解耦。</li>
+                            <li><strong>流程顺次沉淀</strong>：如果有一套每次都要反复沟通的固定分析框架，可以直接把它固化定义成流程型 Skill，保证质量的高度标准化。</li>
+                            <li><strong>先思后配原则</strong>：在进入配置页前，建议先拆解清楚 Skill 的“触发场景（Trigger）”、“输入参数（Inputs）”和“期望输出（Outputs）”。</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="mcp-manual">
+                    <p>
+                        <img
+                            src="screenshot/skill.png"
+                            alt="Skill 示意图"
+                            style="display:block; width:100%; max-width:920px; border:1px solid #e5e7eb; border-radius:20px; margin-bottom:16px;"
+                        >
+                    </p>
+                    <h3>6. MCP 手册</h3>
+                    <p>MCP（Model Context Protocol）是数字员工打破语言模型封闭环境、连接外部软件生态和业务数据库的**统一数字接口桥梁**。当数字员工需要“做事、调接口、查系统”时，配置 MCP 是唯一通途。</p>
+
+                    <div class="tip" style="background: #fffcfc; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            💡 数字员工配置能力选择指南
+                        </span>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
+                                        <th style="padding: 8px; white-space: nowrap; color: #374151;">场景需求</th>
+                                        <th style="padding: 8px; white-space: nowrap; color: #374151;">推荐组件</th>
+                                        <th style="padding: 8px; color: #374151;">配置效用及目的</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">需要员工参考和检索特定文档材料进行问答</td>
+                                        <td style="padding: 8px; white-space: nowrap;">📚 <strong>知识库 (KB)</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">补充专业文档：专为参考各种内部规章、业务话术、行业研报等文档资产设计。</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">需要员工掌握某种特定、标准的业务流程或任务格式</td>
+                                        <td style="padding: 8px; white-space: nowrap;">⚡ <strong>Skill (技能)</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">沉淀流式本领：在提示词中固定特定输入和标准业务流程，实现按模板高精度作业。</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">需要员工调用外部系统接口、执行代码或联网搜索</td>
+                                        <td style="padding: 8px; white-space: nowrap;">🔌 <strong>MCP 接口协议</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">执行外部动作：无缝对接企业内部审批流、本地软件、代码沙箱，以及 SaaS 应用。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                    </div>
+                </section>
+
+                <section id="model-config">
+                    <p>
+                        <img
+                            src="screenshot/mcp.png"
+                            alt="MCP 示意图"
+                            style="display:block; width:100%; max-width:920px; border:1px solid #e5e7eb; border-radius:20px; margin-bottom:16px;"
+                        >
+                    </p>
+                    <h3>7. 模型配置手册</h3>
+                    <p>模型配置用于管理数字员工可选的底层语言模型。配置完成后，在创建数字员工时即可在“模型”字段中进行选择和绑定。</p>
+
+                    <h4 style="margin-top:24px;">📝 模型配置核心步骤</h4>
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>进入模型配置页面</strong>
+                                进入左侧 Settings &gt; Model Configuration 菜单。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>填写模型连接参数</strong>
+                                在模型列表中点击“新增”，在打开 the 页面中填写：名称、提供商、提供商类型、模型名称、API 地址和 API 密钥。
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>创建模型并使用</strong>
+                                确认参数填写无误后，点击底部“创建模型”。随后即可在创建数字员工页面直接选择该模型。
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="note" style="border-left-color: #374151; margin-top:28px;">
+                        <span class="callout-title" style="color: #111827;">📍 变更生效规则说明</span>
+                        模型配置编辑和保存后，仅对后续发起的新会话和新流程生效。正在执行和运行中的后台任务会稳定按照原连接通道流转，不受中途变更的抖动影响。
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

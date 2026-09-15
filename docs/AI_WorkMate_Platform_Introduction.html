@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WorkMate 平台介绍</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --paper: #ffffff;
+            --text: #171717;
+            --muted: #646970;
+            --soft: #f7f7f8;
+            --line: #e8e3e4;
+            --brand: #e8000c;
+            --brand-dark: #b80008;
+            --brand-soft: #fff1f2;
+            --ink: #111827;
+            --blue: #1f4f8f;
+            --green: #0f766e;
+            --amber: #a16207;
+            --shadow: 0 18px 48px rgba(17, 24, 39, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(232, 0, 12, 0.035) 0%, rgba(255, 255, 255, 0) 260px),
+                var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .shell {
+            width: min(1220px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 28px 0 64px;
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        .toc {
+            position: sticky;
+            top: 28px;
+            padding: 22px 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 10px 28px rgba(17, 24, 39, 0.04);
+            backdrop-filter: blur(12px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: 6px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .brand span:first-child {
+            color: var(--brand);
+            font-size: 24px;
+        }
+
+        .brand span:last-child {
+            color: #0a0a0a;
+            font-size: 24px;
+        }
+
+        .toc p {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .toc nav {
+            display: grid;
+            gap: 8px;
+        }
+
+        .toc a {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 650;
+            border: 1px solid transparent;
+        }
+
+        .toc a:hover {
+            color: var(--brand-dark);
+            background: var(--brand-soft);
+            border-color: #ffd9dd;
+        }
+
+        .page {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--paper);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 48px 52px 36px;
+            background:
+                linear-gradient(135deg, rgba(255, 241, 242, 0.95) 0%, rgba(255, 255, 255, 0.9) 56%),
+                radial-gradient(circle at 88% 8%, rgba(232, 0, 12, 0.12), transparent 30%);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 7px;
+            background: #ffffff;
+            color: var(--brand-dark);
+            border: 1px solid #ffd9dd;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 18px 0 14px;
+            max-width: 850px;
+            color: #0f172a;
+            font-size: 42px;
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .lead {
+            margin: 0;
+            max-width: 820px;
+            color: #374151;
+            font-size: 17px;
+            line-height: 1.9;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hero-meta span {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid #f1d7d9;
+            color: #4b5563;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 40px 52px 56px;
+        }
+
+        section {
+            scroll-margin-top: 24px;
+        }
+
+        section + section {
+            margin-top: 52px;
+            padding-top: 34px;
+            border-top: 1px solid var(--line);
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            color: var(--ink);
+            font-size: 26px;
+            line-height: 1.35;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 0 0 8px;
+            color: var(--ink);
+            font-size: 18px;
+            line-height: 1.45;
+        }
+
+        p {
+            margin: 0 0 14px;
+            color: #374151;
+        }
+
+        .section-intro {
+            max-width: 860px;
+            color: #4b5563;
+            font-size: 15px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 22px;
+        }
+
+        .metric {
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .metric strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--brand);
+            font-size: 22px;
+            line-height: 1.2;
+        }
+
+        .metric span {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .value-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 22px;
+        }
+
+        .value-item {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr);
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid #f0eeee;
+        }
+
+        .value-item:last-child {
+            border-bottom: 0;
+        }
+
+        .value-label {
+            color: var(--brand-dark);
+            font-weight: 850;
+        }
+
+        .value-text {
+            color: #374151;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .module {
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+        }
+
+        .module .tag {
+            display: inline-flex;
+            margin-bottom: 12px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            color: #374151;
+            background: #f3f4f6;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .module p {
+            margin-bottom: 0;
+            color: #4b5563;
+        }
+
+        .architecture {
+            display: grid;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .layer {
+            display: grid;
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 16px;
+            padding: 18px 20px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .layer-name {
+            color: var(--ink);
+            font-weight: 850;
+        }
+
+        .layer-desc {
+            color: #4b5563;
+        }
+
+        .scenario-table {
+            width: 100%;
+            margin-top: 24px;
+            border-collapse: collapse;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+        }
+
+        .scenario-table th,
+        .scenario-table td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .scenario-table th {
+            background: #fafafa;
+            color: #111827;
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .scenario-table td {
+            color: #374151;
+        }
+
+        .scenario-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .roadmap {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .step {
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .step b {
+            display: inline-flex;
+            width: 28px;
+            height: 28px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            color: #ffffff;
+            background: var(--brand);
+            font-size: 13px;
+        }
+
+        .step strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        .step span {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .callout {
+            margin-top: 24px;
+            padding: 22px 24px;
+            border-left: 4px solid var(--brand);
+            border-radius: 12px;
+            background: var(--brand-soft);
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--brand-dark);
+            font-size: 16px;
+        }
+
+        .callout p {
+            margin: 0;
+        }
+
+        .footer {
+            padding: 24px 52px;
+            border-top: 1px solid var(--line);
+            background: #fafafa;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .shell {
+                width: min(100% - 28px, 760px);
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+
+            .summary-grid,
+            .module-grid,
+            .roadmap {
+                grid-template-columns: 1fr;
+            }
+
+            .value-item,
+            .layer {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .hero,
+            .content,
+            .footer {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <aside class="toc" aria-label="目录">
+            <div class="brand"><span>AI</span><span>WorkMate</span></div>
+            <p>企业级数字员工平台介绍</p>
+            <nav>
+                <a href="#overview">平台定位</a>
+                <a href="#value">核心价值</a>
+                <a href="#modules">能力模块</a>
+                <a href="#architecture">运行架构</a>
+                <a href="#scenarios">典型场景</a>
+                <a href="#adoption">落地路径</a>
+            </nav>
+        </aside>
+
+        <article class="page">
+            <header class="hero">
+                <span class="eyebrow">Platform Introduction</span>
+                <h1>AI WorkMate：面向企业协作的数字员工平台</h1>
+                <p class="lead">
+                    AI WorkMate 将大模型能力、企业知识、业务技能和外部系统工具统一编排为可创建、可授权、可调用、可追踪的数字员工。它不是一个单点聊天工具，而是一套让组织沉淀 AI 工作能力、复用业务经验、管理执行过程的平台。
+                </p>
+                <div class="hero-meta">
+                    <span>数字员工配置</span>
+                    <span>知识库增强</span>
+                    <span>Skill 业务技能</span>
+                    <span>MCP 工具连接</span>
+                    <span>模型与权限管理</span>
+                </div>
+            </header>
+
+            <div class="content">
+                <section id="overview">
+                    <h2>平台定位</h2>
+                    <p class="section-intro">
+                        AI WorkMate 面向企业内部的高频知识工作与流程协作场景，帮助团队把分散的 AI 使用方式沉淀为标准化、可复用的数字员工资产。每个数字员工都可以拥有明确角色、专属指令、绑定知识、可调用技能、外部工具权限和底层模型配置。
+                    </p>
+                    <div class="summary-grid">
+                        <div class="metric">
+                            <strong>人设明确</strong>
+                            <span>用角色、职责、指令和工作边界定义数字员工。</span>
+                        </div>
+                        <div class="metric">
+                            <strong>能力可配</strong>
+                            <span>通过 Knowledge Base、Skill、MCP 和模型配置组合能力。</span>
+                        </div>
+                        <div class="metric">
+                            <strong>过程可管</strong>
+                            <span>让任务执行、工具调用、知识引用和结果产出具备治理基础。</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="value">
+                    <h2>核心价值</h2>
+                    <p class="section-intro">
+                        AI WorkMate 的价值不只在于让员工“问 AI”，而是让企业能够持续积累可管理的数字生产力资产。
+                    </p>
+                    <div class="value-list">
+                        <div class="value-item">
+                            <div class="value-label">从个人试用到组织复用</div>
+                            <div class="value-text">把个人提示词、工具调用经验和业务知识沉淀为数字员工，减少重复配置和重复沟通。</div>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-label">从通用问答到业务执行</div>
+                            <div class="value-text">通过 Skill 和 MCP 连接真实业务动作，让数字员工能够检索资料、分析信息、生成报告、调用系统和辅助流程推进。</div>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-label">从不可控输出到可治理协作</div>
+                            <div class="value-text">通过知识范围、工具权限、模型配置和执行快照，降低越权调用、结果漂移和流程不可追溯的风险。</div>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-label">从单人助手到团队工作台</div>
+                            <div class="value-text">支持公开数字员工、专用数字员工和多员工协作，让团队围绕任务选择合适的 AI 同事。</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="modules">
+                    <h2>能力模块</h2>
+                    <p class="section-intro">
+                        平台以数字员工为核心对象，围绕“角色、知识、技能、工具、模型、协作”构建完整能力闭环。
+                    </p>
+                    <div class="module-grid">
+                        <div class="module">
+                            <span class="tag">Digital Worker</span>
+                            <h3>数字员工管理</h3>
+                            <p>创建、编辑和发布数字员工，配置名称、角色、模型、人设指令、能力范围和资源绑定，使其成为可被选择和复用的业务工作主体。</p>
+                        </div>
+                        <div class="module">
+                            <span class="tag">Knowledge Base</span>
+                            <h3>知识库</h3>
+                            <p>导入产品资料、制度文档、售前材料、行业报告等企业知识，经过处理后绑定给数字员工，用于专有知识问答与深度分析。</p>
+                        </div>
+                        <div class="module">
+                            <span class="tag">Skill</span>
+                            <h3>业务技能</h3>
+                            <p>把固定业务方法、输出格式、判断标准和执行流程封装成可重复调用的技能，让数字员工稳定完成垂直任务。</p>
+                        </div>
+                        <div class="module">
+                            <span class="tag">MCP Toolset</span>
+                            <h3>外部工具连接</h3>
+                            <p>通过 MCP 连接搜索、协同办公、日程、文件系统、开发者工具、业务系统等外部能力，让数字员工不止回答，还能查系统、调接口、做动作。</p>
+                        </div>
+                        <div class="module">
+                            <span class="tag">Model Config</span>
+                            <h3>模型配置</h3>
+                            <p>统一管理模型提供商、模型名称、API Endpoint、密钥和开放范围，让不同数字员工按任务类型选择合适模型。</p>
+                        </div>
+                        <div class="module">
+                            <span class="tag">Collaboration</span>
+                            <h3>对话与协作</h3>
+                            <p>用户可以直接与单个数字员工对话，也可以围绕复杂任务组织多个数字员工协作，形成计划、执行、反馈和结果沉淀。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="architecture">
+                    <h2>运行架构</h2>
+                    <p class="section-intro">
+                        AI WorkMate 将大模型能力放在企业可控的工作框架中运行，通过分层设计把“能生成”升级为“能按业务方式工作”。
+                    </p>
+                    <div class="architecture">
+                        <div class="layer">
+                            <div class="layer-name">交互层</div>
+                            <div class="layer-desc">员工选择、任务输入、文件上传、对话工作区、多人协作和结果查看。</div>
+                        </div>
+                        <div class="layer">
+                            <div class="layer-name">数字员工层</div>
+                            <div class="layer-desc">承载角色定义、系统指令、模型引用、知识绑定、技能绑定和工具权限。</div>
+                        </div>
+                        <div class="layer">
+                            <div class="layer-name">能力编排层</div>
+                            <div class="layer-desc">根据任务判断是否需要规划、检索、调用 Skill、调用 MCP、生成文件或进入工作流节点。</div>
+                        </div>
+                        <div class="layer">
+                            <div class="layer-name">资源连接层</div>
+                            <div class="layer-desc">连接知识库、模型服务、MCP Toolset、业务系统和生成文件存储。</div>
+                        </div>
+                        <div class="layer">
+                            <div class="layer-name">治理与审计层</div>
+                            <div class="layer-desc">保留任务上下文、工具调用痕迹、资源快照和历史结果，为权限控制和复盘提供基础。</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="scenarios">
+                    <h2>典型场景</h2>
+                    <p class="section-intro">
+                        平台适合沉淀那些重复出现、需要专业背景、经常依赖资料和工具、且结果需要稳定格式的企业工作。
+                    </p>
+                    <table class="scenario-table">
+                        <thead>
+                            <tr>
+                                <th>场景</th>
+                                <th>数字员工示例</th>
+                                <th>平台能力组合</th>
+                                <th>典型产出</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>市场与行业研究</td>
+                                <td>行业研究员、热点观察员</td>
+                                <td>联网搜索 Skill、行业知识库、报告生成模板</td>
+                                <td>行业分析报告、竞品简报、热点趋势解读</td>
+                            </tr>
+                            <tr>
+                                <td>企业信息与风控查询</td>
+                                <td>企业洞察官</td>
+                                <td>企业数据 MCP、搜索工具、风险判断 Skill</td>
+                                <td>企业画像、风险提示、合作背景调查</td>
+                            </tr>
+                            <tr>
+                                <td>办公协同与日志分析</td>
+                                <td>办公协同助手、日志分析员</td>
+                                <td>钉钉/日程 MCP、日报分析 Skill、组织知识库</td>
+                                <td>日报汇总、任务跟进、会议纪要、日程创建</td>
+                            </tr>
+                            <tr>
+                                <td>合同与文档审查</td>
+                                <td>合同审查专家</td>
+                                <td>合同规则库、审查 Skill、文档解析能力</td>
+                                <td>风险条款识别、修改建议、审查报告</td>
+                            </tr>
+                            <tr>
+                                <td>研发与 AI 编程</td>
+                                <td>代码助手、工程效率顾问</td>
+                                <td>代码知识库、开发者 MCP、任务规划能力</td>
+                                <td>技术方案、代码解释、问题定位、变更建议</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="adoption">
+                    <h2>落地路径</h2>
+                    <p class="section-intro">
+                        企业可以从公开数字员工试用开始，再逐步沉淀专用员工、专属知识库和核心业务技能，最终形成组织级数字员工资产库。
+                    </p>
+                    <div class="roadmap">
+                        <div class="step">
+                            <b>1</b>
+                            <strong>选择试点场景</strong>
+                            <span>优先选择高频、边界清晰、结果格式稳定的知识工作。</span>
+                        </div>
+                        <div class="step">
+                            <b>2</b>
+                            <strong>创建数字员工</strong>
+                            <span>定义角色、指令、模型和基础工作方式，形成可复用员工。</span>
+                        </div>
+                        <div class="step">
+                            <b>3</b>
+                            <strong>绑定知识与工具</strong>
+                            <span>按需接入知识库、Skill 和 MCP，让员工能查资料、按流程做事。</span>
+                        </div>
+                        <div class="step">
+                            <b>4</b>
+                            <strong>复盘并规模化</strong>
+                            <span>根据真实任务表现优化指令、技能和权限，扩展到更多团队。</span>
+                        </div>
+                    </div>
+
+                    <div class="callout">
+                        <strong>一句话总结</strong>
+                        <p>AI WorkMate 的核心，是把企业内部“会用 AI 的经验”产品化为“可管理、可授权、可复用的数字员工”。</p>
+                    </div>
+                </section>
+            </div>
+
+            <footer class="footer">
+                AI WorkMate 平台介绍 · 面向企业知识工作、流程协作与数字员工资产沉淀
+            </footer>
+        </article>
+    </main>
+</body>
+</html>

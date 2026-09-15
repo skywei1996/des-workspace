@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI WorkMate | 企业级数字员工团队</title>
+<style>
+  :root {
+    --ink: #242424;
+    --muted: #666;
+    --line: #d8d8d8;
+    --red: #d92929;
+    --red-soft: #fff1f1;
+    --green: #267c37;
+    --green-soft: #eff9ef;
+    --blue: #1672c4;
+    --blue-soft: #edf6ff;
+    --gold: #e99a16;
+    --purple: #6652b9;
+    --paper: #fff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; background: #e9edf1; overflow: hidden; }
+  body {
+    display: grid;
+    place-items: center;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: var(--ink);
+  }
+  .slide {
+    width: 1600px;
+    height: 900px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    background: var(--paper);
+    position: relative;
+    padding: 42px 48px 30px;
+    transform: scale(var(--slide-scale, 1));
+    transform-origin: center center;
+    box-shadow: 0 18px 50px rgba(31, 41, 55, .16);
+  }
+  .topline { position: absolute; inset: 0 0 auto; height: 3px; background: #d5d8dc; }
+  .heading { display: flex; align-items: flex-start; gap: 15px; height: 73px; }
+  .heading-mark { width: 6px; height: 54px; background: var(--red); margin-top: 5px; }
+  h1 { font-size: 36px; line-height: 1.15; margin: 0; letter-spacing: 0; font-weight: 800; }
+  .subtitle { margin-top: 9px; color: #555; font-size: 15px; }
+  .takeaway { height: 61px; display: flex; align-items: center; gap: 15px; margin: 0 0 14px 21px; padding: 0 19px; color: #771919; background: #ffe6e6; border-left: 6px solid var(--red); font-size: 21px; font-weight: 800; }
+  .takeaway b { color: white; background: var(--red); padding: 8px 12px; border-radius: 4px; font-size: 13px; white-space: nowrap; }
+  .brand { position: absolute; top: 45px; right: 48px; display: flex; align-items: center; gap: 10px; color: #5b5b5b; }
+  .brand-name { font-size: 21px; font-weight: 800; letter-spacing: 1px; }
+  .brand-cn { border-left: 1px solid #aaa; padding-left: 10px; color: var(--red); font-size: 13px; font-weight: 700; }
+  .matrix { display: grid; grid-template-columns: 20% 38% 38%; gap: 5px; height: 700px; }
+  .matrix-head { height: 43px; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; letter-spacing: .3px; }
+  .head-problem { color: var(--red); border: 2px solid var(--red); background: #fff7f7; }
+  .head-solution { color: var(--green); border: 2px solid var(--green); background: #f5fbf5; }
+  .dimension { display: grid; grid-template-rows: 43px repeat(4, 1fr); gap: 5px; }
+  .dimension-card { border: 1px solid var(--line); padding: 15px 16px 12px; position: relative; background: #fcfcfc; }
+  .dimension-card h2 { margin: 0 0 11px; font-size: 17px; line-height: 1.2; font-weight: 800; }
+  .dimension-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .num { display: inline-grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; color: #fff; font-size: 16px; margin-right: 8px; vertical-align: middle; }
+  .n1 { background: #c9242a; } .n2 { background: #1d7b58; } .n3 { background: #e77712; } .n4 { background: #5b49b8; }
+  .t1 { color: #1d64bd; } .t2 { color: #087d66; } .t3 { color: #df710f; } .t4 { color: #5b49b8; }
+  .problem, .solution { display: grid; grid-template-rows: 43px repeat(4, 1fr); gap: 5px; }
+  .cell { position: relative; border: 1px solid; padding: 14px 18px 12px; overflow: hidden; }
+  .problem .cell { border-color: #efa0a0; background: linear-gradient(110deg, #fff4f4, #fffafa); }
+  .solution .cell { border-color: #9bc99e; background: linear-gradient(110deg, #f0faef, #fbfefb); }
+  .cell-kicker { font-size: 12px; font-style: italic; margin-bottom: 9px; }
+  .problem .cell-kicker { color: var(--red); } .solution .cell-kicker { color: var(--green); }
+  .cell-title { font-size: 16px; font-weight: 800; margin-bottom: 10px; }
+  .cell-copy { font-size: 12px; line-height: 1.6; color: #555; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { border: 1px solid #ef9a9a; background: #fffafa; color: #c52f2f; border-radius: 4px; min-width: 112px; padding: 8px 9px; text-align: center; font-size: 12px; }
+  .solution .chip { border-color: #a4d0a7; background: #fafffa; color: var(--green); }
+  .flow { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .flow-box { border: 1px solid #6eafe7; color: var(--blue); background: #f4faff; border-radius: 5px; padding: 7px 10px; font-weight: 700; font-size: 12px; text-align: center; }
+  .flow-arrow { color: var(--gold); font-size: 20px; font-weight: 800; }
+  .rule { display: inline-block; background: var(--green); color: white; padding: 7px 14px; border-radius: 4px; font-weight: 800; font-size: 13px; }
+  .rule small { display: block; font-size: 10px; font-weight: 400; margin-top: 4px; }
+  .footer { position: absolute; left: 48px; bottom: 12px; color: #686868; font-size: 12px; border-left: 4px solid var(--red); padding-left: 10px; }
+  .footer strong { color: var(--ink); }
+  .reference-page { display: grid; grid-template-columns: 31% 43% 24%; gap: 12px; height: 650px; }
+  .section { min-width: 0; }
+  .section-bar { height: 52px; display: flex; align-items: center; gap: 13px; padding: 0 17px; color: white; background: var(--red); border-radius: 0 12px 12px 0; font-size: 18px; font-weight: 800; }
+  .section-number { width: 34px; height: 34px; display: grid; place-items: center; border: 2px solid white; border-radius: 50%; font-size: 18px; flex: 0 0 auto; }
+  .section-intro { min-height: 112px; padding: 17px 10px 13px; color: #303030; font-size: 15px; line-height: 1.7; font-weight: 700; }
+  .section-intro::before { content: "◆"; color: var(--red); margin-right: 9px; }
+  .section-takeaway { min-height: 50px; display: flex; align-items: center; padding: 4px 10px 10px; color: var(--red); font-size: 22px; line-height: 1.25; font-weight: 800; }
+  .panel { border: 1px solid #d8dce2; background: #fff; border-radius: 9px; overflow: hidden; }
+  .panel-title { padding: 11px 16px; color: var(--red); background: #fff1f1; font-size: 14px; font-weight: 800; border-bottom: 1px solid #f0c6c6; }
+  .business-map { height: 438px; position: relative; background: #fffafa; }
+  .business-map .core { position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%); width: 128px; height: 128px; display: grid; place-items: center; text-align: center; border-radius: 50%; background: var(--red); color: white; font-size: 18px; font-weight: 800; box-shadow: 0 0 0 12px #ffe3e3; }
+  .business-map .core small { display: block; font-size: 11px; font-weight: 400; margin-top: 5px; }
+  .map-node { position: absolute; width: 145px; padding: 12px 8px; border: 1px solid #e5b3b3; background: white; color: #555; text-align: center; border-radius: 7px; font-size: 13px; line-height: 1.35; }
+  .map-node strong { display: block; color: var(--red); font-size: 14px; margin-bottom: 4px; }
+  .node-a { left: 22px; top: 42px; } .node-b { right: 22px; top: 42px; } .node-c { left: 22px; bottom: 43px; } .node-d { right: 22px; bottom: 43px; }
+  .map-line { position: absolute; height: 2px; width: 118px; background: #df7777; transform-origin: left center; }
+  .line-a { left: 167px; top: 105px; transform: rotate(25deg); } .line-b { right: 167px; top: 105px; transform: rotate(155deg); } .line-c { left: 167px; bottom: 105px; transform: rotate(-25deg); } .line-d { right: 167px; bottom: 105px; transform: rotate(-155deg); }
+  .map-caption { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: #777; font-size: 12px; }
+  .scenario { height: 438px; padding: 14px 18px; background: #fffafa; }
+  .scenario-label { display: inline-block; padding: 6px 12px; background: var(--red); color: white; border-radius: 4px; font-size: 13px; font-weight: 800; }
+  .scenario h3 { margin: 14px 0 13px; font-size: 17px; line-height: 1.4; }
+  .task-flow { display: flex; align-items: stretch; gap: 0; margin-top: 17px; }
+  .task { position: relative; flex: 1; min-height: 112px; padding: 12px 9px 10px; background: white; border: 1px solid #e6b6b6; border-right: 0; border-radius: 0; }
+  .task:first-child { border-radius: 7px 0 0 7px; }
+  .task:last-child { border-right: 1px solid #e6b6b6; border-radius: 0 7px 7px 0; }
+  .task:not(:last-child)::after { content: "›"; position: absolute; z-index: 2; right: -12px; top: 40px; width: 23px; height: 30px; color: white; background: var(--red); border-radius: 50%; text-align: center; font: 28px/25px Georgia, serif; }
+  .task b { display: block; color: var(--red); font-size: 13px; margin-bottom: 5px; }
+  .task span { color: #666; font-size: 11px; line-height: 1.45; }
+  .scenario-result { margin-top: 25px; padding: 12px 14px; background: #fae1e1; border-left: 5px solid var(--red); color: #7c1b1b; font-size: 13px; font-weight: 800; line-height: 1.5; }
+  .trust-list { height: 438px; padding: 11px 13px; background: #fffafa; }
+  .trust-item { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: center; min-height: 105px; border-bottom: 1px solid #f1d4d4; }
+  .trust-item:last-child { border-bottom: 0; }
+  .trust-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--red); font-size: 22px; font-weight: 800; box-shadow: 0 0 0 8px #ffe3e3; }
+  .trust-item h3 { margin: 0 0 5px; color: var(--red); font-size: 15px; }
+  .trust-item p { margin: 0; color: #666; font-size: 11px; line-height: 1.55; }
+  .trust-item em { display: inline-block; margin-left: 6px; padding: 2px 6px; border: 1px solid #e59b9b; border-radius: 3px; color: var(--red); background: #fff; font-size: 9px; font-style: normal; font-weight: 400; vertical-align: 2px; }
+  .capability-strip { display: flex; gap: 6px; margin-top: 8px; }
+  .capability-strip span { padding: 4px 7px; color: #8b2929; background: #ffe5e5; border: 1px solid #efb0b0; border-radius: 3px; font-size: 10px; font-weight: 700; }
+  .bottom-banner { position: absolute; left: 48px; right: 48px; bottom: 31px; min-height: 54px; display: flex; align-items: center; gap: 15px; padding: 10px 18px; color: #761919; background: #ffe7e7; border-top: 1px solid #f0b7b7; border-bottom: 1px solid #f0b7b7; font-size: 15px; font-weight: 800; }
+  .bottom-banner b { color: white; background: var(--red); padding: 8px 12px; border-radius: 4px; font-size: 13px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="slide" aria-label="AI WorkMate 企业级数字员工团队产品介绍第一页">
+  <div class="topline"></div>
+  <header class="heading">
+    <div class="heading-mark"></div>
+    <div>
+      <h1>AI WorkMate：面向企业的数字员工团队</h1>
+      <div class="subtitle">连接企业知识、业务数据、工作流程与专业角色，让 AI 从辅助问答走向协同工作与任务执行</div>
+    </div>
+  </header>
+  <div class="brand"><span class="brand-name">SOFTSTONE</span><span class="brand-cn">数字转型新动力</span></div>
+  <div class="takeaway"><b>核心判断</b><span>AI WorkMate 不是一个单点 AI 工具，而是一支能够理解业务、协同工作并交付结果的企业级数字员工团队</span></div>
+
+  <section class="reference-page">
+    <section class="section">
+      <div class="section-bar"><span class="section-number">1</span>回到主线：企业为什么需要数字员工</div>
+      <div class="section-takeaway">把零散事务整合成可衡量的产出</div>
+      <div class="section-intro">企业的制度、经验和业务数据，长期分散在文档、系统和个人手中。AI WorkMate 的目标，是把这些隐性的、因人而异的工作能力组织起来，变成可理解、可协同、可交付的数字员工团队。</div>
+      <div class="panel business-map">
+        <div class="panel-title">从分散的企业信息，到统一的数字员工工作语境</div>
+        <div class="map-line line-a"></div><div class="map-line line-b"></div><div class="map-line line-c"></div><div class="map-line line-d"></div>
+        <div class="map-node node-a"><strong>企业知识</strong>制度 / 流程<br>项目经验</div>
+        <div class="map-node node-b"><strong>业务数据</strong>客户 / 项目<br>合同 / 指标</div>
+        <div class="map-node node-c"><strong>岗位能力</strong>分析 / 执行<br>审核 / 管理</div>
+        <div class="map-node node-d"><strong>工作成果</strong>报告 / 方案<br>任务 / 决策</div>
+        <div class="core">数字员工<small>理解 · 协作 · 执行</small></div>
+        <div class="map-caption">把企业的知识、数据、角色与成果连接起来</div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-bar"><span class="section-number">2</span>更进一步：从问答走向完成工作</div>
+      <div class="section-takeaway">从“它能干啥”变成“它干完了”</div>
+      <div class="section-intro">让 Agent 能够沿着一条清晰的工作链路，把业务目标转化为计划，把计划转化为协作，把协作转化为可以复核和交付的结果。</div>
+      <div class="panel scenario">
+        <span class="scenario-label">示例：重点客户经营分析</span>
+        <h3>“分析本季度重点客户经营情况，并形成管理层汇报”</h3>
+        <div class="task-flow">
+          <div class="task"><b>① 理解</b><span>识别范围、周期、维度和交付标准</span></div>
+          <div class="task"><b>② 规划</b><span>拆解数据、知识、分析和报告任务</span></div>
+          <div class="task"><b>③ 协同</b><span>多个数字员工按角色分工推进</span></div>
+          <div class="task"><b>④ 执行</b><span>调用数据、知识库和业务工具</span></div>
+          <div class="task"><b>⑤ 校验</b><span>检查来源、口径、结论和完整性</span></div>
+          <div class="task"><b>⑥ 交付</b><span>输出报告、风险清单和跟进任务</span></div>
+        </div>
+        <div class="scenario-result">AI WorkMate 交付的不是一个答案，而是一项有计划、有依据、有过程、有检查的完整工作。</div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-bar"><span class="section-number">3</span>企业级数字员工必须可信</div>
+      <div class="section-takeaway">进核心业务的前提条件</div>
+      <div class="section-intro">数据安全、流程合规、结果准确，是数字员工进入企业核心业务的三条底线。</div>
+      <div class="panel trust-list">
+        <div class="trust-item"><div class="trust-icon">⌁</div><div><h3>数据安全</h3><p>按用户、岗位、部门和任务控制知识访问、数据使用与工具调用，关键过程全程留痕。</p><div class="capability-strip"><span>权限治理</span><span>访问审计</span></div></div></div>
+        <div class="trust-item"><div class="trust-icon">✓</div><div><h3>流程合规 <em>建设中</em></h3><p>把企业制度、审批条件和风险红线变成可执行约束，关键节点支持授权、确认、暂停和审计。</p><div class="capability-strip"><span>规则引擎</span><span>流程编排</span></div></div></div>
+        <div class="trust-item"><div class="trust-icon">◎</div><div><h3>结果准确 <em>建设中</em></h3><p>统一客户、项目、合同、指标等业务对象及其关系，让 AI 基于企业语义、真实数据和规则生成结果。</p><div class="capability-strip"><span>企业本体</span><span>结果校验</span></div></div></div>
+      </div>
+    </section>
+  </section>
+  <footer class="footer"><strong>AI WorkMate</strong>　面向企业的数字员工团队平台</footer>
+</main>
+<script>
+  function fitSlide() {
+    const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    document.documentElement.style.setProperty('--slide-scale', Math.max(scale, 0.1));
+  }
+  fitSlide();
+  window.addEventListener('resize', fitSlide);
+</script>
+</body>
+</html>

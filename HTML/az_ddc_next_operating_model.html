@@ -1,0 +1,4349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AZ DDC NEXT Operating Model</title>
+  <style>
+    :root {
+      --red: #d80000;
+      --red-soft: #fff5f5;
+      --blue: #6f83ff;
+      --blue-soft: #f6f8ff;
+      --ink: #20242a;
+      --muted: #5f6673;
+      --line: #edf0f6;
+      --bg: #ffffff;
+      --paper: #fffaf8;
+      --paper-deep: #fff2ee;
+      --warm-shadow: 0 24px 54px rgba(72, 31, 27, 0.08);
+      --panel-shadow: 0 18px 48px rgba(31, 42, 68, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #ffffff;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+
+    .deck {
+      display: grid;
+      gap: 28px;
+      padding: 28px 0;
+    }
+
+    .slide {
+      width: 1440px;
+      height: 810px;
+      margin: 0 auto;
+      padding: 46px 56px 44px;
+      background: #ffffff;
+      border: 1px solid rgba(216, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: none;
+      pointer-events: none;
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      inset: 34px 34px auto 34px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(216, 0, 0, 0.16) 8%, rgba(216, 0, 0, 0.08) 100%);
+      pointer-events: none;
+    }
+
+    .brand {
+      position: absolute;
+      top: 48px;
+      right: 58px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: #be2a1d;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 1px;
+      z-index: 2;
+    }
+
+    .brand-mark {
+      color: #6c605d;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .brand-mark span {
+      color: var(--red);
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+    }
+
+    .hero::after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 1px;
+      margin-top: 18px;
+      background: linear-gradient(90deg, rgba(216, 0, 0, 0.18), rgba(216, 0, 0, 0.04));
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .title-bar {
+      width: 8px;
+      height: 66px;
+      border-radius: 999px;
+      background: var(--red);
+      box-shadow: 0 10px 22px rgba(216, 0, 0, 0.2);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.14;
+      font-weight: 900;
+      letter-spacing: -0.4px;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 1180px;
+      color: #222832;
+      font-size: 18px;
+      line-height: 1.72;
+    }
+
+    .subtitle strong,
+    .emphasis {
+      color: var(--red);
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: rgba(255, 243, 240, 0.96);
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      margin-top: 22px;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4,
+    .grid-5 {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-5 {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .grid-1 {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      border-radius: 24px;
+      box-shadow: var(--warm-shadow);
+      padding: 22px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(216, 0, 0, 0.82), rgba(216, 0, 0, 0.08));
+    }
+
+    .panel.red {
+      border-color: rgba(216, 0, 0, 0.16);
+      background: linear-gradient(180deg, rgba(255, 244, 241, 0.98), rgba(255, 252, 251, 1));
+    }
+
+    .panel.blue {
+      border-color: rgba(216, 0, 0, 0.1);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 245, 0.92));
+    }
+
+    .panel h2,
+    .panel h3,
+    .panel h4 {
+      margin: 0;
+    }
+
+    .panel h2 {
+      font-size: 26px;
+      line-height: 1.3;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .panel h3 {
+      font-size: 20px;
+      line-height: 1.3;
+      font-weight: 850;
+      margin-bottom: 10px;
+    }
+
+    .panel h4 {
+      font-size: 16px;
+      line-height: 1.3;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .panel p,
+    .panel li,
+    .table,
+    .metric-value,
+    .metric-label {
+      color: #2d3440;
+    }
+
+    .panel p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.66;
+    }
+
+    .panel ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 15px;
+      line-height: 1.62;
+      color: #2d3440;
+    }
+
+    .panel li + li {
+      margin-top: 6px;
+    }
+
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .kpi {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(111, 131, 255, 0.18);
+      text-align: center;
+    }
+
+    .kpi b {
+      display: block;
+      color: var(--red);
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .tag-row,
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .tag,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tag {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid rgba(216, 0, 0, 0.16);
+    }
+
+    .chip {
+      background: var(--blue-soft);
+      color: #4153c8;
+      border: 1px solid rgba(111, 131, 255, 0.16);
+    }
+
+    .big-quote {
+      padding: 28px 32px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(216, 0, 0, 0.08), rgba(111, 131, 255, 0.08));
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .big-quote strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1.34;
+      color: #1d2430;
+      margin-bottom: 14px;
+    }
+
+    .model-arch-slide {
+      padding-top: 38px;
+    }
+
+    .model-arch-slide .hero {
+      max-width: 1240px;
+    }
+
+    .model-arch-slide .subtitle {
+      max-width: 1220px;
+      font-size: 14px;
+      line-height: 1.42;
+    }
+
+    .model-arch-wrap {
+      margin-top: 10px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .model-arch-row {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .model-arch-label {
+      border-radius: 14px;
+      border: 2px solid rgba(216, 0, 0, 0.5);
+      background: rgba(255, 245, 245, 0.78);
+      display: grid;
+      place-items: center;
+      padding: 6px;
+      text-align: center;
+      color: #151a22;
+      font-size: 16px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .model-arch-content {
+      border-radius: 14px;
+      border: 2px solid rgba(216, 0, 0, 0.68);
+      background: rgba(255, 255, 255, 0.92);
+      padding: 5px;
+    }
+
+    .model-arch-cards {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .model-arch-cards.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .model-arch-cards.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .model-arch-card {
+      min-height: 72px;
+      border-radius: 12px;
+      border: 1.8px solid rgba(216, 0, 0, 0.56);
+      background: #fff;
+      padding: 7px 7px 6px;
+    }
+
+    .model-arch-card.primary {
+      background: #fffafa;
+      border-color: rgba(216, 0, 0, 0.74);
+    }
+
+    .model-arch-card.secondary {
+      background: #fafbff;
+      border-color: rgba(111, 131, 255, 0.42);
+    }
+
+    .model-arch-card.support {
+      background: #fff8ee;
+      border-color: rgba(208, 131, 26, 0.62);
+    }
+
+    .model-arch-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .model-arch-title {
+      color: #151a22;
+      font-size: 12px;
+      line-height: 1.18;
+      font-weight: 900;
+    }
+
+    .model-arch-status {
+      flex: 0 0 auto;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-size: 9px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--red);
+      background: var(--red-soft);
+      border: 1px solid rgba(216, 0, 0, 0.16);
+    }
+
+    .model-arch-status.blue {
+      color: #4d61d5;
+      background: var(--blue-soft);
+      border-color: rgba(111, 131, 255, 0.14);
+    }
+
+    .model-arch-card ul {
+      margin: 0;
+      padding-left: 15px;
+      color: #4a5260;
+      font-size: 10px;
+      line-height: 1.26;
+    }
+
+    .model-arch-card li::marker {
+      color: var(--red);
+    }
+
+    .model-arch-note {
+      margin-top: 4px;
+      padding: 4px 8px;
+      border-radius: 9px;
+      background: #fff7e8;
+      color: #b46306;
+      font-size: 10px;
+      line-height: 1.3;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .model-foundation-bar {
+      margin-top: 1px;
+      border-radius: 12px;
+      border: 2px solid rgba(216, 0, 0, 0.68);
+      background: #fffafa;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #151a22;
+      font-size: 14px;
+      line-height: 1.14;
+      font-weight: 900;
+    }
+
+    .model-foundation-bar.secondary {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      border-color: rgba(111, 131, 255, 0.46);
+      background: #fafbff;
+      color: #1f2630;
+      font-size: 12px;
+    }
+
+    .big-quote p {
+      margin: 0;
+      color: #4f5867;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .cover-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.92fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-top: 26px;
+    }
+
+    .cover-stamp {
+      position: absolute;
+      top: 134px;
+      right: 84px;
+      z-index: 2;
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #d80000, #b70000);
+      color: #fff8f5;
+      box-shadow: 0 18px 32px rgba(146, 18, 18, 0.18);
+      text-align: center;
+    }
+
+    .cover-stamp strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-stamp span {
+      display: block;
+      margin-top: 5px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    .cover-slide .hero {
+      max-width: 1088px;
+      margin-bottom: 8px;
+    }
+
+    .cover-slide .title-row {
+      margin-bottom: 8px;
+    }
+
+    .cover-slide h1 {
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .cover-slide .subtitle {
+      font-size: 15px;
+      line-height: 1.52;
+      max-width: 940px;
+      color: #333c48;
+    }
+
+    .cover-slide .content {
+      margin-top: 8px;
+    }
+
+    .cover-slide .cover-layout {
+      gap: 24px;
+      margin-top: 10px;
+      grid-template-columns: 0.82fr 1.38fr;
+      align-items: center;
+    }
+
+    .cover-slide .cover-main {
+      min-height: 0;
+      padding: 20px 22px;
+    }
+
+    .cover-slide .cover-main h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .cover-slide .cover-main p {
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .cover-slide .kpi-strip {
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .cover-slide .kpi {
+      padding: 12px 10px;
+    }
+
+    .cover-slide .kpi b {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .cover-slide .kpi span {
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .cover-slide .cover-side {
+      gap: 12px;
+    }
+
+    .cover-slide .stat-card {
+      padding: 16px 18px;
+    }
+
+    .cover-slide .stat-card h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .cover-slide .stat-card ul {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .cover-slide .number-badge {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .cover-main {
+      min-height: 470px;
+    }
+
+    .cover-main h2 {
+      font-size: 34px;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+
+    .cover-main p {
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    .cover-side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .stat-card {
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.92), rgba(216, 0, 0, 0.15));
+    }
+
+    .stat-card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card ul {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #374154;
+    }
+
+    .number-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.16), rgba(216, 0, 0, 0.08));
+      color: var(--red);
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .insight-card {
+      padding: 20px 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(111, 131, 255, 0.16);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .insight-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 850;
+    }
+
+    .insight-card p {
+      margin: 0;
+      color: #465062;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .principle-card {
+      min-height: 220px;
+    }
+
+    .principle-card p {
+      font-size: 14px;
+    }
+
+    .layer-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      align-items: stretch;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(111, 131, 255, 0.18);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .layer-name {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.08), rgba(255, 255, 255, 0.96));
+      color: #1d2430;
+      text-align: center;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 900;
+    }
+
+    .layer-body {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .layer-item {
+      padding: 14px 14px 12px;
+      border-radius: 14px;
+      background: var(--blue-soft);
+      border: 1px solid rgba(111, 131, 255, 0.14);
+    }
+
+    .layer-item h4 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .layer-item p {
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border: 1px solid rgba(95, 102, 115, 0.14);
+      vertical-align: top;
+      text-align: left;
+      line-height: 1.52;
+    }
+
+    th {
+      background: rgba(216, 0, 0, 0.06);
+      color: #1f2632;
+      font-weight: 800;
+    }
+
+
+    .cover-showcase {
+      position: relative;
+      min-height: 460px;
+      overflow: hidden;
+    }
+
+    .showcase-orbit {
+      position: relative;
+      height: 100%;
+      min-height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 42px;
+      transform: translateX(84px);
+    }
+
+    .showcase-orbit::before {
+      content: "";
+      position: absolute;
+      width: 396px;
+      height: 396px;
+      border-radius: 50%;
+      border: 2px dashed rgba(205, 85, 85, 0.22);
+      left: 0;
+      top: 34px;
+    }
+
+    .showcase-circle {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      margin-left: -14px;
+      background: linear-gradient(180deg, #d51414 0%, #b50000 100%);
+      color: #fffaf7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 22px 42px rgba(153, 15, 15, 0.18);
+    }
+
+    .showcase-circle h2 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1.08;
+      letter-spacing: 1px;
+      font-weight: 900;
+    }
+
+    .showcase-node {
+      position: absolute;
+      left: 344px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      box-shadow: 0 14px 24px rgba(181, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    .showcase-node::after {
+      content: "";
+      position: absolute;
+      left: 40px;
+      top: 50%;
+      width: 180px;
+      border-top: 2px dashed rgba(205, 85, 85, 0.22);
+      transform: translateY(-50%);
+    }
+
+    .showcase-node.node-1 {
+      top: 102px;
+      background: #ef7185;
+    }
+
+    .showcase-node.node-2 {
+      left: 378px;
+      top: 210px;
+      background: #cb4d61;
+    }
+
+    .showcase-node.node-2::after {
+      width: 146px;
+    }
+
+    .showcase-node.node-3 {
+      top: 318px;
+      background: #ba1008;
+    }
+
+    .showcase-stack {
+      display: grid;
+      gap: 14px;
+      padding-right: 8px;
+    }
+
+    .showcase-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .showcase-iconbox {
+      border-radius: 14px;
+      min-height: 94px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #ea7385 0%, #d9566b 100%);
+      box-shadow: 0 14px 26px rgba(195, 59, 80, 0.12);
+      position: relative;
+    }
+
+    .showcase-row:nth-child(2) .showcase-iconbox {
+      background: linear-gradient(180deg, #df5d71 0%, #cb4358 100%);
+    }
+
+    .showcase-row:nth-child(3) .showcase-iconbox {
+      background: linear-gradient(180deg, #d01d11 0%, #b30000 100%);
+    }
+
+    .showcase-glyph {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c6262f;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      box-shadow: inset 0 -8px 16px rgba(239, 113, 133, 0.18);
+    }
+
+    .showcase-copy {
+      min-height: 94px;
+      padding: 14px 16px;
+      background: #f7f7f7;
+      border: 1px solid rgba(221, 221, 221, 0.95);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .showcase-copy-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .showcase-copy h3 {
+      margin: 0;
+      color: #d24f60;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .showcase-copy p {
+      margin: 0;
+      color: #2f3743;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .showcase-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .showcase-tag {
+      padding: 6px 10px;
+      background: #cf4a59;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.2px;
+      border-radius: 999px;
+    }
+
+    .execution-plan-board {
+      margin-top: 14px;
+      padding: 10px 0 0;
+    }
+
+    .execution-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .execution-phase {
+      min-height: 420px;
+      padding: 14px 14px 18px;
+      border: 1px dashed rgba(213, 141, 132, 0.5);
+      background: linear-gradient(180deg, rgba(255, 251, 250, 0.96), rgba(255, 246, 243, 0.9));
+    }
+
+    .execution-phase-head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .execution-pill {
+      padding: 9px 20px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 900;
+      background: linear-gradient(180deg, #d92b1f, #bf1207);
+      box-shadow: 0 12px 22px rgba(191, 18, 7, 0.14);
+    }
+
+    .execution-phase:nth-child(2) .execution-pill {
+      background: linear-gradient(180deg, #d95869, #c83b50);
+    }
+
+    .execution-phase:nth-child(3) .execution-pill {
+      background: linear-gradient(180deg, #eb7c90, #d85a70);
+    }
+
+    .execution-phase:nth-child(4) .execution-pill {
+      background: linear-gradient(180deg, #ecaa82, #dd8c60);
+    }
+
+    .execution-title {
+      margin: 0;
+      color: #b32518;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .execution-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #2d3743;
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+
+    .execution-list li + li {
+      margin-top: 10px;
+    }
+
+    .execution-quarter-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+
+    .execution-quarter {
+      padding: 12px 10px;
+      background: #ca2414;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 900;
+      text-align: center;
+      position: relative;
+    }
+
+    .execution-quarter:nth-child(2) {
+      background: #d74a5b;
+    }
+
+    .execution-quarter:nth-child(3) {
+      background: #e06d83;
+    }
+
+    .execution-quarter:nth-child(4) {
+      background: #ea9f78;
+    }
+
+    .execution-quarter:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: -18px;
+      width: 0;
+      height: 0;
+      border-top: 24px solid transparent;
+      border-bottom: 24px solid transparent;
+      border-left: 18px solid currentColor;
+      color: inherit;
+      z-index: 1;
+      opacity: 0.98;
+    }
+
+    .resource-stage-board {
+      margin-top: 12px;
+    }
+
+    .resource-stage-grid {
+      display: grid;
+      grid-template-columns: 62px repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+
+    .resource-label-col {
+      display: grid;
+      grid-template-rows: 84px 1fr 84px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .resource-label {
+      color: #bf2b1d;
+      font-size: 26px;
+      line-height: 1.1;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .resource-col {
+      padding: 10px 10px 12px;
+      border-left: 2px dashed rgba(212, 155, 145, 0.45);
+    }
+
+    .resource-stage {
+      padding: 9px 0;
+      text-align: center;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 900;
+      background: linear-gradient(180deg, #d62a1e, #c21409);
+      width: 92px;
+      margin: 0 auto 10px;
+    }
+
+    .resource-col:nth-child(3) .resource-stage {
+      background: linear-gradient(180deg, #d34f62, #c5384b);
+    }
+
+    .resource-col:nth-child(4) .resource-stage {
+      background: linear-gradient(180deg, #e4768c, #d65972);
+    }
+
+    .resource-col:nth-child(5) .resource-stage {
+      background: linear-gradient(180deg, #e6a27f, #d98b63);
+    }
+
+    .resource-card-title {
+      margin: 0 0 10px;
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 30px;
+      line-height: 1.1;
+      color: #b52519;
+      font-weight: 900;
+      background: rgba(242, 242, 242, 0.9);
+    }
+
+    .resource-tag {
+      width: fit-content;
+      margin: 0 auto 12px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 800;
+      background: #c91d10;
+    }
+
+    .resource-col:nth-child(3) .resource-tag {
+      background: #cf4e5d;
+    }
+
+    .resource-col:nth-child(4) .resource-tag {
+      background: #e2758a;
+    }
+
+    .resource-col:nth-child(5) .resource-tag {
+      background: #e3a07b;
+    }
+
+    .resource-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #2d3642;
+      font-size: 12px;
+      line-height: 1.72;
+      min-height: 250px;
+    }
+
+    .resource-list li + li {
+      margin-top: 10px;
+    }
+
+    .resource-metric {
+      margin-top: 12px;
+      padding: 10px 10px;
+      text-align: center;
+      border: 1px solid rgba(190, 190, 190, 0.75);
+      background: rgba(250, 250, 250, 0.94);
+    }
+
+    .resource-metric strong {
+      display: block;
+      color: #c42418;
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .resource-metric span {
+      display: block;
+      margin-top: 4px;
+      color: #535c69;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .proof-dashboard {
+      margin-top: 12px;
+    }
+
+    .proof-summary {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr 1.15fr;
+      gap: 0;
+      border: 1px solid rgba(220, 220, 220, 0.92);
+      background: rgba(247, 247, 247, 0.95);
+    }
+
+    .proof-summary-card,
+    .proof-summary-metric {
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 18px;
+      position: relative;
+    }
+
+    .proof-summary-metric + .proof-summary-metric,
+    .proof-summary-card + .proof-summary-metric,
+    .proof-summary-metric + .proof-summary-card {
+      border-left: 2px solid rgba(202, 118, 104, 0.45);
+    }
+
+    .proof-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #d02518, #c11409);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .proof-summary-card strong {
+      display: block;
+      color: #bc2719;
+      font-size: 19px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .proof-summary-card span {
+      display: block;
+      margin-top: 5px;
+      color: #2c3541;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .proof-metric-number {
+      color: #ba1f14;
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .proof-metric-copy {
+      color: #2d3642;
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .proof-track {
+      position: relative;
+      margin-top: 18px;
+      padding-top: 18px;
+    }
+
+    .proof-track::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 55px;
+      height: 10px;
+      background: linear-gradient(90deg, #e6a184 0%, #e57689 28%, #df5d72 56%, #d73f4f 78%, #c51c10 100%);
+    }
+
+    .proof-evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .proof-evidence-col {
+      position: relative;
+      padding-top: 0;
+    }
+
+    .proof-badge {
+      position: relative;
+      margin: 0 auto 14px;
+      padding: 12px 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.1;
+      font-weight: 900;
+      background: #c71e10;
+    }
+
+    .proof-evidence-col:nth-child(2) .proof-badge {
+      background: #d64f63;
+    }
+
+    .proof-evidence-col:nth-child(3) .proof-badge {
+      background: #e57a8f;
+    }
+
+    .proof-evidence-col:nth-child(4) .proof-badge {
+      background: #eca17e;
+    }
+
+    .proof-evidence-col:nth-child(5) .proof-badge {
+      background: #c71e10;
+    }
+
+    .proof-badge::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -11px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 11px solid currentColor;
+      color: inherit;
+      transform: translateX(-50%);
+    }
+
+    .proof-node {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      margin: 8px auto 12px;
+      border-radius: 50%;
+      border: 5px solid #c71e10;
+      background: #fff;
+      z-index: 1;
+    }
+
+    .proof-evidence-col:nth-child(2) .proof-node {
+      border-color: #d64f63;
+    }
+
+    .proof-evidence-col:nth-child(3) .proof-node {
+      border-color: #e57a8f;
+    }
+
+    .proof-evidence-col:nth-child(4) .proof-node {
+      border-color: #eca17e;
+    }
+
+    .proof-card {
+      min-height: 260px;
+      padding: 16px 16px 14px;
+      background: rgba(244, 244, 244, 0.95);
+      border: 1px solid rgba(225, 225, 225, 0.92);
+    }
+
+    .proof-card h3 {
+      margin: 0 0 10px;
+      color: #bf2618;
+      font-size: 19px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .proof-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #2f3844;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .proof-card ul li + li {
+      margin-top: 10px;
+    }
+
+    .proof-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .proof-tags span {
+      padding: 5px 10px;
+      background: #c71e10;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .governance-board {
+      margin-top: 12px;
+    }
+
+    .governance-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.92fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .governance-side {
+      display: grid;
+      gap: 14px;
+    }
+
+    .governance-card {
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(205, 112, 98, 0.2);
+      border-radius: 18px;
+      background: rgba(249, 249, 249, 0.96);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .governance-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .governance-card-head strong {
+      color: #bc2618;
+      font-size: 16px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .governance-chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d12a1c, #bd160a);
+      color: #fff;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .governance-card p {
+      margin: 0;
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.62;
+    }
+
+    .governance-core {
+      position: relative;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .governance-ring {
+      position: relative;
+      width: 324px;
+      height: 324px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, #cc1d10 0deg 90deg, #d84f61 90deg 180deg, #e37a8f 180deg 270deg, #eca17f 270deg 360deg);
+      box-shadow: 0 22px 36px rgba(200, 55, 42, 0.16);
+    }
+
+    .governance-ring::before {
+      content: "";
+      position: absolute;
+      inset: 34px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(220, 220, 220, 0.75);
+    }
+
+    .governance-center {
+      position: absolute;
+      inset: 72px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 248, 246, 0.98), rgba(247, 247, 247, 0.98));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 1;
+      border: 1px dashed rgba(209, 122, 109, 0.35);
+    }
+
+    .governance-center strong {
+      color: #c12719;
+      font-size: 32px;
+      line-height: 1.06;
+      font-weight: 900;
+    }
+
+    .governance-center span {
+      margin-top: 8px;
+      color: #4b5463;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .governance-quadrant {
+      position: absolute;
+      width: 100px;
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 800;
+      z-index: 2;
+    }
+
+    .governance-q1 { top: 18px; left: 112px; }
+    .governance-q2 { top: 140px; right: 10px; }
+    .governance-q3 { bottom: 18px; left: 112px; }
+    .governance-q4 { top: 140px; left: 10px; }
+
+    .governance-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .governance-kpi {
+      padding: 12px 10px;
+      text-align: center;
+      background: rgba(249, 249, 249, 0.96);
+      border: 1px solid rgba(218, 218, 218, 0.95);
+      border-radius: 14px;
+    }
+
+    .governance-kpi strong {
+      display: block;
+      color: #c22316;
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .governance-kpi span {
+      display: block;
+      margin-top: 6px;
+      color: #4e5867;
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .ai-control-board {
+      margin-top: 12px;
+    }
+
+    .ai-control-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.92fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .ai-control-side {
+      display: grid;
+      gap: 14px;
+    }
+
+    .ai-control-card {
+      padding: 16px 16px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(214, 120, 105, 0.2);
+      background: rgba(249, 249, 249, 0.96);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .ai-control-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #bd2618;
+      font-size: 16px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .ai-control-card p {
+      margin: 0;
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.62;
+    }
+
+    .ai-control-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ai-pyramid {
+      width: 100%;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .ai-tier {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      font-weight: 900;
+      line-height: 1.15;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      padding-bottom: 12px;
+    }
+
+    .ai-tier-top {
+      width: 180px;
+      height: 106px;
+      background: linear-gradient(180deg, #ee8fa0, #da6479);
+      font-size: 11px;
+    }
+
+    .ai-tier-mid {
+      width: 240px;
+      height: 122px;
+      background: linear-gradient(180deg, #dc5b6f, #c93d52);
+      font-size: 15px;
+    }
+
+    .ai-tier-base {
+      width: 308px;
+      height: 146px;
+      background: linear-gradient(180deg, #cf2518, #bc1308);
+      font-size: 16px;
+    }
+
+    .ai-tier span {
+      max-width: 64%;
+      display: block;
+      line-height: 1.08;
+      transform: translateY(12px);
+    }
+
+    .ai-tier-top span {
+      max-width: 48%;
+      line-height: 1.02;
+      transform: translateY(18px);
+    }
+
+    .ai-tier-mid span {
+      max-width: 62%;
+    }
+
+    .ai-tier-base span {
+      max-width: 66%;
+    }
+
+    .ai-control-footer {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .ai-footer-box {
+      padding: 12px 10px;
+      text-align: center;
+      border: 1px solid rgba(220, 220, 220, 0.95);
+      background: rgba(249, 249, 249, 0.95);
+      border-radius: 14px;
+    }
+
+    .ai-footer-box strong {
+      display: block;
+      color: #c12417;
+      font-size: 15px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .ai-footer-box span {
+      display: block;
+      margin-top: 5px;
+      color: #4c5665;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .ckp-progress-board {
+      margin-top: 12px;
+    }
+
+    .ckp-summary-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) 1.2fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .ckp-summary-card {
+      padding: 12px 10px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 251, 250, 0.98), rgba(249, 249, 249, 0.98));
+      border: 1px solid rgba(216, 216, 216, 0.95);
+      text-align: center;
+    }
+
+    .ckp-summary-card strong {
+      display: block;
+      color: #bf2316;
+      font-size: 24px;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .ckp-summary-card span {
+      display: block;
+      margin-top: 6px;
+      color: #4f5968;
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .ckp-summary-note {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 245, 243, 0.98), rgba(249, 249, 249, 0.98));
+      border: 1px solid rgba(216, 140, 128, 0.2);
+    }
+
+    .ckp-summary-note strong {
+      display: block;
+      color: #be2618;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .ckp-summary-note p {
+      margin: 0;
+      color: #313b47;
+      font-size: 11px;
+      line-height: 1.52;
+    }
+
+    .ckp-timeline {
+      margin-top: 12px;
+      border-top: 10px solid #d12314;
+      padding-top: 10px;
+    }
+
+    .ckp-phase-heads {
+      display: grid;
+      grid-template-columns: 160px repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .ckp-phase-title {
+      padding: 8px 8px;
+      text-align: center;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.1;
+      font-weight: 900;
+      background: linear-gradient(180deg, #d12b1d, #be170a);
+      border-radius: 10px;
+    }
+
+    .ckp-phase-heads .ckp-phase-title:nth-child(3) { background: linear-gradient(180deg, #d84f61, #c93b50); }
+    .ckp-phase-heads .ckp-phase-title:nth-child(4) { background: linear-gradient(180deg, #e57a8f, #d85e74); }
+    .ckp-phase-heads .ckp-phase-title:nth-child(5) { background: linear-gradient(180deg, #eca27f, #de8f66); }
+
+    .ckp-lane-grid {
+      display: grid;
+      grid-template-columns: 160px repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .ckp-lane-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+      background: #cb2011;
+      border-radius: 10px;
+    }
+
+    .ckp-lane-cell {
+      min-height: 70px;
+      padding: 8px 8px 7px;
+      background: rgba(251, 247, 246, 0.92);
+      border: 1px solid rgba(224, 224, 224, 0.95);
+      border-radius: 12px;
+    }
+
+    .ckp-chip {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d6281b, #c0170b);
+      color: #fff;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .ckp-lane-grid .ckp-lane-cell:nth-child(5n + 3) .ckp-chip { background: linear-gradient(180deg, #d84f61, #c93b50); }
+    .ckp-lane-grid .ckp-lane-cell:nth-child(5n + 4) .ckp-chip { background: linear-gradient(180deg, #e57a8f, #d85e74); }
+    .ckp-lane-grid .ckp-lane-cell:nth-child(5n + 5) .ckp-chip { background: linear-gradient(180deg, #eca27f, #de8f66); }
+
+    .ckp-lane-cell p {
+      margin: 0;
+      color: #303946;
+      font-size: 10px;
+      line-height: 1.42;
+      font-weight: 700;
+    }
+    .table-card {
+      padding: 16px 18px 18px;
+    }
+
+    .table-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .process-step {
+      padding: 18px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(111, 131, 255, 0.18);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .process-step h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .process-step p,
+    .process-step li {
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .response-cycle-board {
+      margin-top: 10px;
+    }
+
+    .response-cycle-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.96fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .response-side {
+      display: grid;
+      gap: 14px;
+    }
+
+    .response-card {
+      padding: 16px 16px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(216, 216, 216, 0.92);
+      background: rgba(249, 249, 249, 0.97);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .response-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .response-card-head strong {
+      color: #be2618;
+      font-size: 16px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .response-chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d22a1c, #c1180c);
+      color: #fff;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .response-card p {
+      margin: 0;
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.58;
+      font-weight: 700;
+    }
+
+    .response-core {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 388px;
+      position: relative;
+    }
+
+    .response-core-ring {
+      position: relative;
+      width: 316px;
+      height: 316px;
+      border-radius: 50%;
+      background: conic-gradient(from -10deg, #cc1e11 0deg 92deg, #d84f61 92deg 182deg, #e57b8f 182deg 272deg, #ec9f7d 272deg 360deg);
+      box-shadow: 0 20px 34px rgba(203, 46, 34, 0.16);
+    }
+
+    .response-core-ring::before {
+      content: "";
+      position: absolute;
+      inset: 34px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(224, 224, 224, 0.88);
+    }
+
+    .response-core-center {
+      position: absolute;
+      inset: 74px;
+      border-radius: 50%;
+      border: 1px dashed rgba(210, 116, 102, 0.35);
+      background: radial-gradient(circle, rgba(255, 249, 248, 0.98), rgba(248, 248, 248, 0.98));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .response-core-center strong {
+      color: #c12618;
+      font-size: 30px;
+      line-height: 1.06;
+      font-weight: 900;
+    }
+
+    .response-core-center span {
+      margin-top: 8px;
+      color: #4d5766;
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .response-orbit {
+      position: absolute;
+      width: 102px;
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 800;
+      z-index: 2;
+    }
+
+    .response-orbit-1 { top: 18px; left: 108px; }
+    .response-orbit-2 { top: 138px; right: 8px; }
+    .response-orbit-3 { bottom: 18px; left: 108px; }
+    .response-orbit-4 { top: 138px; left: 8px; }
+
+    .response-link-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .response-link-box {
+      padding: 12px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(220, 220, 220, 0.95);
+      background: rgba(249, 249, 249, 0.96);
+      text-align: center;
+    }
+
+    .response-link-box strong {
+      display: block;
+      color: #c22417;
+      font-size: 15px;
+      line-height: 1.15;
+      font-weight: 900;
+    }
+
+    .response-link-box span {
+      display: block;
+      margin-top: 5px;
+      color: #4f5968;
+      font-size: 11px;
+      line-height: 1.38;
+      font-weight: 700;
+    }
+
+    .pod-board {
+      margin-top: 10px;
+    }
+
+    .pod-summary-row {
+      display: grid;
+      grid-template-columns: 1.2fr repeat(3, minmax(0, 0.72fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .pod-summary-card,
+    .pod-summary-metric {
+      border-radius: 16px;
+      border: 1px solid rgba(220, 220, 220, 0.95);
+      background: rgba(249, 249, 249, 0.97);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .pod-summary-card {
+      padding: 14px 16px;
+    }
+
+    .pod-summary-card strong {
+      display: block;
+      color: #c12517;
+      font-size: 18px;
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .pod-summary-card p {
+      margin: 0;
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .pod-summary-metric {
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    .pod-summary-metric strong {
+      display: block;
+      color: #c22518;
+      font-size: 28px;
+      line-height: 1.02;
+      font-weight: 900;
+    }
+
+    .pod-summary-metric span {
+      display: block;
+      margin-top: 6px;
+      color: #4e5867;
+      font-size: 11px;
+      line-height: 1.36;
+      font-weight: 700;
+    }
+
+    .pod-matrix {
+      margin-top: 12px;
+      border-top: 10px solid #d02213;
+      padding-top: 10px;
+    }
+
+    .pod-head-row,
+    .pod-row {
+      display: grid;
+      grid-template-columns: 170px repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .pod-head-row {
+      margin-bottom: 8px;
+    }
+
+    .pod-col-head {
+      padding: 10px 8px;
+      border-radius: 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.15;
+      font-weight: 900;
+      background: linear-gradient(180deg, #d12b1d, #be170a);
+    }
+
+    .pod-head-row .pod-col-head:nth-child(3) { background: linear-gradient(180deg, #d84f61, #c93b50); }
+    .pod-head-row .pod-col-head:nth-child(4) { background: linear-gradient(180deg, #e57a8f, #d85e74); }
+    .pod-head-row .pod-col-head:nth-child(5) { background: linear-gradient(180deg, #eca27f, #de8f66); }
+
+    .pod-row {
+      margin-bottom: 8px;
+    }
+
+    .pod-row-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      border-radius: 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 900;
+      background: #cb2011;
+    }
+
+    .pod-cell {
+      padding: 10px 10px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(224, 224, 224, 0.95);
+      background: rgba(251, 247, 246, 0.94);
+      min-height: 86px;
+    }
+
+    .pod-chip {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d6281b, #c0170b);
+      color: #fff;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .pod-row .pod-cell:nth-child(3) .pod-chip { background: linear-gradient(180deg, #d84f61, #c93b50); }
+    .pod-row .pod-cell:nth-child(4) .pod-chip { background: linear-gradient(180deg, #e57a8f, #d85e74); }
+    .pod-row .pod-cell:nth-child(5) .pod-chip { background: linear-gradient(180deg, #eca27f, #de8f66); }
+
+    .pod-cell p {
+      margin: 0;
+      color: #303946;
+      font-size: 10px;
+      line-height: 1.42;
+      font-weight: 700;
+    }
+
+    .bid-summary-board,
+    .service-overview-board {
+      margin-top: 12px;
+      min-height: 528px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 16px;
+    }
+
+    .bid-summary-grid,
+    .service-pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+      align-items: stretch;
+    }
+
+    .bid-summary-box,
+    .service-pillar {
+      padding: 18px 16px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(220, 220, 220, 0.94);
+      background: rgba(249, 249, 249, 0.96);
+      box-shadow: var(--panel-shadow);
+      min-height: 156px;
+    }
+
+    .bid-summary-box strong,
+    .service-pillar strong {
+      display: block;
+      color: #c22417;
+      font-size: 17px;
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .bid-summary-box p,
+    .service-pillar p {
+      margin: 0;
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.56;
+      font-weight: 700;
+    }
+
+    .bid-summary-note,
+    .service-overview-note {
+      margin-top: 6px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(221, 214, 212, 0.92);
+      background: linear-gradient(180deg, rgba(255, 248, 247, 0.98), rgba(249, 249, 249, 0.98));
+      color: #313b47;
+      font-size: 12px;
+      line-height: 1.58;
+      font-weight: 700;
+    }
+
+    .bid-summary-board .proof-summary {
+      min-height: 108px;
+    }
+
+    .bid-summary-board .proof-summary-card,
+    .bid-summary-board .proof-summary-metric {
+      min-height: 108px;
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+
+    .bid-summary-board .proof-metric-number {
+      font-size: 36px;
+    }
+
+    .bid-summary-board .proof-summary-card strong {
+      font-size: 19px;
+    }
+
+    .bid-summary-board .proof-summary-card span,
+    .bid-summary-board .proof-metric-copy {
+      font-size: 12px;
+      line-height: 1.46;
+    }
+
+    .bid-summary-note strong,
+    .service-overview-note strong {
+      color: #be2618;
+    }
+
+    .service-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+      position: relative;
+      padding-top: 10px;
+    }
+
+    .service-flow::before {
+      content: "";
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      top: 24px;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(208, 33, 20, 0.9), rgba(230, 120, 100, 0.9));
+      z-index: 0;
+    }
+
+    .service-flow-step {
+      position: relative;
+      z-index: 1;
+      padding-top: 18px;
+      text-align: center;
+      min-height: 114px;
+    }
+
+    .service-flow-dot {
+      width: 18px;
+      height: 18px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      background: #ce2113;
+      box-shadow: 0 0 0 5px rgba(206, 33, 19, 0.12);
+    }
+
+    .service-flow-step strong {
+      display: block;
+      color: #c32417;
+      font-size: 15px;
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .service-flow-step span {
+      display: block;
+      color: #4d5766;
+      font-size: 11px;
+      line-height: 1.38;
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    .ckp-evolution-board {
+      position: relative;
+      margin-top: 8px;
+      min-height: 452px;
+      overflow: hidden;
+    }
+
+    .ckp-evolution-wave {
+      position: absolute;
+      inset: 34px 40px 66px 40px;
+      pointer-events: none;
+    }
+
+    .ckp-evolution-wave svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .ckp-evolution-wave path {
+      fill: none;
+      stroke: rgba(205, 111, 98, 0.5);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .ckp-stage-label {
+      position: absolute;
+      color: #262f3c;
+      font-size: 18px;
+      line-height: 1.08;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .ckp-stage-label span {
+      display: block;
+      margin-top: 5px;
+      color: #8b95a3;
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .ckp-stage-line {
+      position: absolute;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(209, 44, 30, 0.9), rgba(235, 159, 124, 0.35));
+      border-radius: 999px;
+    }
+
+    .ckp-stage-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ca2012;
+      box-shadow: 0 0 0 5px rgba(202, 32, 18, 0.12);
+    }
+
+    .ckp-stage-card {
+      position: absolute;
+      width: 224px;
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(220, 220, 220, 0.95);
+      background: rgba(249, 249, 249, 0.96);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .ckp-stage-chip {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d6281b, #c0170b);
+      color: #fff;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .ckp-stage-card strong {
+      display: block;
+      color: #be2618;
+      font-size: 16px;
+      line-height: 1.18;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .ckp-stage-card p {
+      margin: 0;
+      color: #313b47;
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .ckp-stage-a .ckp-stage-chip { background: linear-gradient(180deg, #d6281b, #c0170b); }
+    .ckp-stage-b .ckp-stage-chip { background: linear-gradient(180deg, #d84f61, #c93b50); }
+    .ckp-stage-c .ckp-stage-chip { background: linear-gradient(180deg, #e57a8f, #d85e74); }
+    .ckp-stage-d .ckp-stage-chip { background: linear-gradient(180deg, #e89a86, #d97b68); }
+    .ckp-stage-e .ckp-stage-chip { background: linear-gradient(180deg, #eca27f, #de8f66); }
+
+    .ckp-stage-a-label { left: 62px; top: 86px; }
+    .ckp-stage-a-line { left: 96px; top: 128px; height: 74px; }
+    .ckp-stage-a-dot { left: 91px; top: 120px; }
+    .ckp-stage-a-card { left: 34px; top: 214px; }
+
+    .ckp-stage-b-label { left: 306px; top: 278px; }
+    .ckp-stage-b-line { left: 344px; top: 228px; height: 64px; }
+    .ckp-stage-b-dot { left: 339px; top: 220px; }
+    .ckp-stage-b-card { left: 252px; top: 112px; }
+
+    .ckp-stage-c-label { left: 602px; top: 112px; }
+    .ckp-stage-c-line { left: 638px; top: 156px; height: 68px; }
+    .ckp-stage-c-dot { left: 633px; top: 148px; }
+    .ckp-stage-c-card { left: 548px; top: 236px; }
+
+    .ckp-stage-d-label { left: 888px; top: 258px; }
+    .ckp-stage-d-line { left: 924px; top: 208px; height: 66px; }
+    .ckp-stage-d-dot { left: 919px; top: 200px; }
+    .ckp-stage-d-card { left: 814px; top: 98px; }
+
+    .ckp-stage-e-label { right: 42px; top: 96px; }
+    .ckp-stage-e-line { right: 92px; top: 140px; height: 78px; }
+    .ckp-stage-e-dot { right: 87px; top: 132px; }
+    .ckp-stage-e-card { right: 32px; top: 224px; }
+
+    .ckp-evolution-footer {
+      position: absolute;
+      right: 28px;
+      bottom: 10px;
+      padding: 12px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(223, 212, 210, 0.9);
+      background: rgba(255, 247, 246, 0.96);
+      color: #4a5463;
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .ckp-evolution-footer strong {
+      color: #c12417;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .phase {
+      position: relative;
+      padding: 24px 24px 20px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+    }
+
+    .phase::before {
+      content: "";
+      position: absolute;
+      left: 24px;
+      top: 0;
+      width: 84px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--red);
+    }
+
+    .phase h3 {
+      margin: 12px 0 8px;
+      font-size: 22px;
+    }
+
+    .phase .period {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: #4d61d5;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .phase ul {
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .roadmap-board {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .roadmap-phases {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .roadmap-phase {
+      padding: 15px 16px 13px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .roadmap-phase::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(216, 0, 0, 0.88), rgba(216, 0, 0, 0.12));
+    }
+
+    .roadmap-phase .period {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 243, 240, 0.98);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .roadmap-phase h3 {
+      margin: 8px 0 6px;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .roadmap-phase p {
+      margin: 0;
+      color: #495364;
+      font-size: 12px;
+      line-height: 1.48;
+    }
+
+    .roadmap-lanes {
+      display: grid;
+      gap: 8px;
+    }
+
+    .roadmap-lane {
+      display: grid;
+      grid-template-columns: 176px repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .roadmap-track {
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 245, 242, 0.98), rgba(255, 255, 255, 0.98));
+      border: 1px solid rgba(216, 0, 0, 0.14);
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 900;
+      color: #1f2632;
+      display: flex;
+      align-items: center;
+    }
+
+    .roadmap-cell {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      box-shadow: var(--warm-shadow);
+    }
+
+    .roadmap-cell strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #1c2430;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .roadmap-cell p {
+      margin: 0;
+      color: #4c5667;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .roadmap-exit {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .roadmap-exit .summary-box {
+      margin-top: 0;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.48;
+    }
+
+    .planning-layout {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .planning-topline {
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: rgba(255, 244, 241, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      color: #4c5667;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .planning-topline strong {
+      color: var(--red);
+    }
+
+    .planning-main {
+      display: grid;
+      grid-template-columns: 270px 1fr 240px;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .planning-panel {
+      padding: 14px 14px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .planning-panel::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(216, 0, 0, 0.9), rgba(216, 0, 0, 0.14));
+    }
+
+    .planning-panel h3 {
+      margin: 3px 0 8px;
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 900;
+    }
+
+    .planning-block + .planning-block {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(216, 0, 0, 0.08);
+    }
+
+    .planning-block h4 {
+      margin: 0 0 6px;
+      color: #bb2d20;
+      font-size: 13px;
+      line-height: 1.3;
+      font-weight: 900;
+    }
+
+    .planning-block p,
+    .planning-block li,
+    .priority-item p {
+      margin: 0;
+      color: #4c5667;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .planning-block ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    .planning-matrix-wrap {
+      position: relative;
+      padding: 16px 14px 14px 28px;
+      border-radius: 20px;
+      background: rgba(255, 252, 251, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+    }
+
+    .planning-axis-y,
+    .planning-axis-x {
+      position: absolute;
+      color: #8b5149;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .planning-axis-y {
+      left: -2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      transform-origin: left top;
+    }
+
+    .planning-axis-x {
+      left: 50%;
+      bottom: 2px;
+      transform: translateX(-50%);
+    }
+
+    .planning-matrix {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .planning-cell {
+      padding: 10px 10px 8px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      min-height: 112px;
+    }
+
+    .planning-cell h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      line-height: 1.25;
+      font-weight: 900;
+      color: #1d2430;
+    }
+
+    .planning-cell ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    .planning-cell li {
+      color: #485263;
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    .planning-note {
+      margin-top: 6px;
+      padding: 5px 7px;
+      border-radius: 10px;
+      background: rgba(255, 243, 240, 0.9);
+      color: #b2372a;
+      font-size: 10px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .priority-item {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 9px 9px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.98);
+    }
+
+    .priority-badge {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.92), rgba(188, 33, 20, 0.88));
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .priority-item h4 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 900;
+      color: #1d2430;
+    }
+
+    .planning-roadmap {
+      display: grid;
+      grid-template-columns: 220px repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .planning-label {
+      display: grid;
+      gap: 8px;
+    }
+
+    .planning-label .flag {
+      padding: 10px 14px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, rgba(216, 0, 0, 0.94), rgba(189, 42, 31, 0.86));
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .planning-label .rule {
+      padding: 9px 12px;
+      border-radius: 14px;
+      background: rgba(255, 243, 240, 0.95);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      color: #bb2d20;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .planning-step {
+      display: grid;
+      gap: 8px;
+    }
+
+    .planning-step .step-head {
+      padding: 9px 10px;
+      border-radius: 14px;
+      background: rgba(255, 248, 247, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      color: #1d2430;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .planning-step .step-note {
+      padding: 8px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.08);
+      color: #586173;
+      font-size: 11px;
+      line-height: 1.42;
+      text-align: center;
+    }
+
+    .matrix {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .matrix-row {
+      display: grid;
+      grid-template-columns: 220px 1fr 1fr;
+      gap: 14px;
+    }
+
+    .matrix-head,
+    .matrix-cell {
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(111, 131, 255, 0.16);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .matrix-head {
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.08), rgba(255, 255, 255, 0.95));
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 850;
+      color: #1f2632;
+    }
+
+    .matrix-cell h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .matrix-cell p,
+    .matrix-cell li {
+      font-size: 13px;
+      line-height: 1.58;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .option-card {
+      padding: 22px 22px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(111, 131, 255, 0.2);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: var(--panel-shadow);
+    }
+
+    .option-card.recommended {
+      border-color: rgba(216, 0, 0, 0.26);
+      background: linear-gradient(180deg, rgba(255, 245, 245, 0.95), rgba(255, 255, 255, 0.98));
+    }
+
+    .option-label {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: #4c60d1;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .option-card.recommended .option-label {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      padding: 18px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(111, 131, 255, 0.18);
+      box-shadow: var(--panel-shadow);
+      text-align: center;
+    }
+
+    .metric-value {
+      display: block;
+      color: var(--red);
+      font-size: 26px;
+      line-height: 1.15;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .metric-label {
+      display: block;
+      color: #4a5566;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .summary-box {
+      margin-top: 18px;
+      padding: 18px 22px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(216, 0, 0, 0.07), rgba(111, 131, 255, 0.06));
+      color: #1f2632;
+      font-size: 15px;
+      line-height: 1.68;
+      border: 1px solid rgba(216, 0, 0, 0.12);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .toc-card {
+      padding: 18px 18px 16px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(216, 0, 0, 0.12);
+      box-shadow: var(--warm-shadow);
+      min-height: 194px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .toc-card::before {
+      content: "";
+      position: absolute;
+      right: -16px;
+      top: -16px;
+      width: 86px;
+      height: 86px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(216, 0, 0, 0.12) 0%, rgba(216, 0, 0, 0) 72%);
+    }
+
+    .toc-index {
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: 0.8px;
+    }
+
+    .toc-card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .toc-card ul {
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .section-anchor {
+      display: none;
+    }
+
+    .section-anchor b {
+      display: grid;
+      place-items: center;
+      min-width: 28px;
+      height: 28px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.94), rgba(188, 33, 20, 0.86));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .section-track {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      max-width: 560px;
+    }
+
+    .section-track span {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      color: #6c7382;
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .section-track span.active {
+      background: linear-gradient(180deg, rgba(216, 0, 0, 0.92), rgba(188, 33, 20, 0.84));
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .chapter-track {
+      max-width: 520px;
+    }
+
+    .model-arch-slide .hero,
+    .roadmap-slide .hero {
+      position: relative;
+      padding-right: 250px;
+    }
+
+    .model-arch-slide .section-anchor,
+    .roadmap-slide .section-anchor {
+      position: absolute;
+      top: 4px;
+      right: 0;
+      margin-top: 0;
+    }
+
+    .closing-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .template-roadmap .timeline {
+      gap: 16px;
+    }
+
+    .template-roadmap .phase:nth-child(2) {
+      transform: translateY(18px);
+    }
+
+    .template-roadmap .phase:nth-child(3) {
+      transform: translateY(36px);
+    }
+
+    .template-catalog .toc-grid {
+      gap: 14px;
+    }
+
+    .template-catalog .summary-box {
+      background: linear-gradient(135deg, rgba(216, 0, 0, 0.1), rgba(255, 243, 240, 0.88));
+      border-color: rgba(216, 0, 0, 0.16);
+    }
+
+    .template-closing .closing-quote {
+      background: linear-gradient(180deg, rgba(255, 245, 242, 0.98), rgba(255, 255, 255, 0.96));
+      border-radius: 30px;
+      box-shadow: var(--warm-shadow);
+    }
+
+    .template-closing .closing-quote::before {
+      height: 8px;
+    }
+
+    .strategy-vision {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 26px;
+      align-items: center;
+      margin-top: 26px;
+    }
+
+    .strategy-lead {
+      min-height: 420px;
+      padding: 20px 10px 10px 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .strategy-lead::before,
+    .strategy-lead::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(216, 0, 0, 0.08) 0%, rgba(216, 0, 0, 0) 72%);
+      pointer-events: none;
+    }
+
+    .strategy-lead::before {
+      width: 220px;
+      height: 220px;
+      left: -90px;
+      top: -10px;
+    }
+
+    .strategy-lead::after {
+      width: 260px;
+      height: 260px;
+      left: 20px;
+      bottom: -120px;
+    }
+
+    .strategy-word {
+      margin: 0;
+      color: #b2261a;
+      font-size: 64px;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -1.4px;
+    }
+
+    .strategy-subword {
+      margin-top: 10px;
+      color: #404955;
+      font-size: 26px;
+      line-height: 1.18;
+      font-weight: 500;
+    }
+
+    .strategy-copy {
+      max-width: 520px;
+      margin-top: 28px;
+      color: #596374;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .strategy-side {
+      display: grid;
+      gap: 22px;
+    }
+
+    .strategy-card {
+      padding: 26px 28px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      box-shadow: var(--warm-shadow);
+      min-height: 152px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .strategy-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(216, 0, 0, 0.02), transparent 40%);
+      pointer-events: none;
+    }
+
+    .strategy-card h3 {
+      margin: 0 0 12px;
+      color: #1f2632;
+      font-size: 34px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .strategy-card p {
+      margin: 0;
+      color: #5a6372;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .chapter-divider {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 26px;
+      align-items: center;
+      min-height: 560px;
+      margin-top: 18px;
+    }
+
+    .chapter-lead {
+      position: relative;
+      padding: 22px 12px 22px 4px;
+    }
+
+    .chapter-lead::before,
+    .chapter-lead::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(216, 0, 0, 0.08) 0%, rgba(216, 0, 0, 0) 72%);
+      pointer-events: none;
+    }
+
+    .chapter-lead::before {
+      width: 220px;
+      height: 220px;
+      left: -110px;
+      top: -30px;
+    }
+
+    .chapter-lead::after {
+      width: 280px;
+      height: 280px;
+      left: -40px;
+      bottom: -140px;
+    }
+
+    .chapter-index {
+      margin: 0 0 8px;
+      color: #bb2d20;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+    }
+
+    .chapter-title {
+      margin: 0;
+      color: #1f2632;
+      font-size: 42px;
+      line-height: 1.08;
+      font-weight: 900;
+      letter-spacing: -0.6px;
+    }
+
+    .chapter-subtitle {
+      margin-top: 10px;
+      color: #505968;
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+
+    .chapter-copy {
+      max-width: 480px;
+      margin-top: 24px;
+      color: #5c6575;
+      font-size: 15px;
+      line-height: 1.82;
+    }
+
+    .chapter-side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .chapter-card {
+      padding: 22px 24px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(216, 0, 0, 0.1);
+      box-shadow: var(--warm-shadow);
+      min-height: 136px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chapter-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(216, 0, 0, 0.02), transparent 42%);
+      pointer-events: none;
+    }
+
+    .chapter-card h3 {
+      margin: 0 0 8px;
+      color: #1f2632;
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .chapter-card p {
+      margin: 0;
+      color: #5a6372;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .closing-quote {
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .closing-quote strong {
+      display: block;
+      font-size: 34px;
+      line-height: 1.34;
+      color: #1b2230;
+      margin-bottom: 16px;
+    }
+
+    .closing-quote p {
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    .slide-page {
+      position: absolute;
+      right: 58px;
+      bottom: 28px;
+      color: #8b95a3;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      z-index: 2;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .deck {
+        gap: 0;
+        padding: 0;
+      }
+
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <main class="slide cover-slide">
+      <div class="brand">
+        <div class="brand-mark"><span>i</span>SoftStone</div>
+        <div>数字转型新动力</div>
+      </div>
+      <section class="hero">
+        <div class="title-row">
+          <div class="title-bar"></div>
+          <h1>AZ DDC NEXT 投标方案</h1>
+        </div>
+        <p class="subtitle">由 OneTeam 承接核心系统责任，以统一治理降低管理复杂度，并通过 AI 与 CKP 形成持续增强能力。</p>
+      </section>
+      <section class="content cover-layout cover-showcase">
+        <div class="showcase-orbit">
+          <div class="showcase-node node-1">1</div>
+          <div class="showcase-node node-2">2</div>
+          <div class="showcase-node node-3">3</div>
+          <div class="showcase-circle">
+            <h2>核心<br>主张</h2>
+          </div>
+        </div>
+        <div class="showcase-stack">
+          <article class="showcase-row">
+            <div class="showcase-iconbox"><div class="showcase-glyph">OT</div></div>
+            <div class="showcase-copy">
+              <div class="showcase-copy-head">
+                <h3>OneTeam 责任承接</h3>
+                <div class="showcase-tags">
+                  <span class="showcase-tag">核心系统</span>
+                  <span class="showcase-tag">稳定团队</span>
+                </div>
+              </div>
+              <p>以稳定主责团队承接核心系统的持续交付、运营保障与知识沉淀责任，避免系统域在多供应商协作中出现责任断点。</p>
+            </div>
+          </article>
+          <article class="showcase-row">
+            <div class="showcase-iconbox"><div class="showcase-glyph">UG</div></div>
+            <div class="showcase-copy">
+              <div class="showcase-copy-head">
+                <h3>统一治理与管理减负</h3>
+                <div class="showcase-tags">
+                  <span class="showcase-tag">统一接口</span>
+                  <span class="showcase-tag">透明管理</span>
+                </div>
+              </div>
+              <p>通过统一质量、安全、审计和经营看板接口，帮助 AZ 管理 Pod 与治理节奏，而不是逐个管理工程师与零散交付活动。</p>
+            </div>
+          </article>
+          <article class="showcase-row">
+            <div class="showcase-iconbox"><div class="showcase-glyph">AI</div></div>
+            <div class="showcase-copy">
+              <div class="showcase-copy-head">
+                <h3>AI + CKP 增强交付</h3>
+                <div class="showcase-tags">
+                  <span class="showcase-tag">效率提升</span>
+                  <span class="showcase-tag">专项能力</span>
+                </div>
+              </div>
+              <p>将 AI 能力嵌入需求、开发、测试与运营流程，并以 CKP 专项方案支撑知识治理、增量更新和可持续优化能力建设。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+      <div class="slide-page">01 / 14</div>
+    </main>
+
+    <main class="slide template-roadmap">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>投标总述</h1></div>
+        <p class="subtitle">本次投标以 OneTeam 承接核心系统责任，以弹性供给提供资源保障，以统一治理降低管理成本，并通过 AI 与 CKP 增强交付效率与专项能力。</p>
+      </section>
+      <section class="content bid-summary-board">
+        <div class="proof-summary">
+          <div class="proof-summary-card">
+            <div class="proof-icon">AZ</div>
+            <div><strong>投标判断</strong><span>本次投标的重点不是单点资源供给，而是建立长期可承接的 DDC NEXT 体系。</span></div>
+          </div>
+          <div class="proof-summary-metric"><div class="proof-metric-number">1</div><div class="proof-metric-copy">OneTeam 主责<br>承接核心系统结果</div></div>
+          <div class="proof-summary-metric"><div class="proof-metric-number">4</div><div class="proof-metric-copy">四个关键支柱<br>构成完整方案</div></div>
+          <div class="proof-summary-card">
+            <div class="proof-icon">OK</div>
+            <div><strong>交付承诺</strong><span>责任、资源、治理与能力增强一体化响应 AZ 招标目标。</span></div>
+          </div>
+        </div>
+        <div class="bid-summary-grid">
+          <article class="bid-summary-box">
+            <strong>OneTeam 主责交付</strong>
+            <p>围绕 AZ 核心系统建立稳定主责交付组织，对持续交付、运营保障和知识沉淀负责。</p>
+          </article>
+          <article class="bid-summary-box">
+            <strong>弹性供给补位</strong>
+            <p>通过可认证、可调度、可快速接入的能力池支撑峰值产能、关键岗位补位和专项专家支援。</p>
+          </article>
+          <article class="bid-summary-box">
+            <strong>统一治理减负</strong>
+            <p>以统一工具链、控制点和经营看板承接质量、安全、审计与经营管理要求，降低协同复杂度。</p>
+          </article>
+          <article class="bid-summary-box">
+            <strong>AI / CKP 增强</strong>
+            <p>把 AI 和 CKP 纳入主交付流程，形成效率提升、专项落地和持续优化能力，而不是独立能力展示。</p>
+          </article>
+        </div>
+        <div class="bid-summary-note"><strong>核心结论：</strong> 软通提交的是一套可长期承接核心系统责任、可规模化运行、可治理、可验收的 DDC NEXT 服务方案，而不是分散的人力供给组合。</div>
+      </section>
+      <div class="slide-page">02 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>需求拆解与响应原则</h1></div>
+        <p class="subtitle">本方案按照“需求项 - 响应原则 - 对应章节”的方式组织，确保每项招标关注点均有明确响应路径与交付载体。</p>
+      </section>
+      <section class="content response-cycle-board">
+        <div class="response-cycle-grid">
+          <div class="response-side">
+            <article class="response-card">
+              <div class="response-card-head"><strong>OneTeam 承接责任</strong><span class="response-chip">01</span></div>
+              <p>把“责任承接”作为首要判断点，由稳定 Pod 对核心系统生命周期结果负责，而不是只提供短期角色补位。</p>
+            </article>
+            <article class="response-card">
+              <div class="response-card-head"><strong>弹性能力供给</strong><span class="response-chip">02</span></div>
+              <p>对高峰期、专项期和关键技能缺口建立可认证、可调度、可快速接入的支撑机制，保证连续交付。</p>
+            </article>
+          </div>
+          <div class="response-core">
+            <div class="response-core-ring"></div>
+            <div class="response-core-center"><strong>响应原则</strong><span>需求项 - 原则 - 章节<br>形成闭环映射</span></div>
+            <div class="response-orbit response-orbit-1">需求对齐<br>先看边界</div>
+            <div class="response-orbit response-orbit-2">能力增强<br>进入主流程</div>
+            <div class="response-orbit response-orbit-3">章节映射<br>形成闭环</div>
+            <div class="response-orbit response-orbit-4">管理减负<br>统一接口</div>
+          </div>
+          <div class="response-side">
+            <article class="response-card">
+              <div class="response-card-head"><strong>统一治理接口</strong><span class="response-chip">03</span></div>
+              <p>通过工具链、控制点与经营看板统一承接质量、安全、审计和经营要求，降低多伙伴协同复杂度。</p>
+            </article>
+            <article class="response-card">
+              <div class="response-card-head"><strong>AI / CKP 专项增强</strong><span class="response-chip">04</span></div>
+              <p>把 AI Engineering 和 CKP 从“能力说明”转化为有路径、有交付件、有验收口径的专项落地机制。</p>
+            </article>
+          </div>
+        </div>
+        <div class="response-link-row">
+          <div class="response-link-box"><strong>03 总体方案</strong><span>承接服务主线与 Operating Model</span></div>
+          <div class="response-link-box"><strong>04 实施机制</strong><span>对应组织设计、责任承接与阶段路径</span></div>
+          <div class="response-link-box"><strong>05 保障治理</strong><span>对应资源保障、统一治理与减负机制</span></div>
+          <div class="response-link-box"><strong>06-08 能力承诺</strong><span>对应 AI 证据、CKP 专项与交付承诺</span></div>
+        </div>
+      </section>
+      <div class="slide-page">03 / 14</div>
+    </main>
+
+    <main class="slide template-closing">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>总体服务方案总览</h1></div>
+        <p class="subtitle">整体方案由 OneTeam 主责交付、弹性能力供给、统一治理接口以及 AI/CKP 增强能力共同构成，形成面向核心系统的完整服务体系。</p>
+        <div class="section-anchor"><b>03</b><span>目录定位：总体服务方案</span></div>
+      </section>
+      <section class="content service-overview-board">
+        <div class="service-pillar-grid">
+          <article class="service-pillar">
+            <strong>OneTeam 主责层</strong>
+            <p>负责核心系统持续交付、结果承接、知识沉淀与稳定团队运行，是整体服务体系的责任中心。</p>
+          </article>
+          <article class="service-pillar">
+            <strong>弹性供给层</strong>
+            <p>负责高峰产能补位、专家支援和关键能力补充，保障不同阶段的交付连续性和资源弹性。</p>
+          </article>
+          <article class="service-pillar">
+            <strong>统一治理接口</strong>
+            <p>负责质量、安全、审计、经营和协同控制，让 AZ 以单一界面完成管理判断和风险前置。</p>
+          </article>
+          <article class="service-pillar">
+            <strong>AI / CKP 增强层</strong>
+            <p>把 AI 与 CKP 嵌入需求、开发、测试、运营和专项建设流程，形成持续增强能力。</p>
+          </article>
+        </div>
+        <div class="service-flow">
+          <div class="service-flow-step">
+            <div class="service-flow-dot"></div>
+            <strong>责任承接</strong>
+            <span>先完成核心系统责任交接与稳定团队建制</span>
+          </div>
+          <div class="service-flow-step">
+            <div class="service-flow-dot"></div>
+            <strong>资源补位</strong>
+            <span>通过认证供给和共享专家满足容量与专项需求</span>
+          </div>
+          <div class="service-flow-step">
+            <div class="service-flow-dot"></div>
+            <strong>治理落地</strong>
+            <span>同步建立治理底座、控制点和经营看板机制</span>
+          </div>
+          <div class="service-flow-step">
+            <div class="service-flow-dot"></div>
+            <strong>能力增强</strong>
+            <span>分阶段导入 AI 快赢场景与 CKP 专项建设闭环</span>
+          </div>
+        </div>
+        <div class="service-overview-note"><strong>总体服务逻辑：</strong> 以 OneTeam 负责结果，以弹性供给补位，以统一治理降复杂度，并以 AI / CKP 形成面向核心系统的持续增强能力。</div>
+      </section>
+      <div class="slide-page">04 / 14</div>
+    </main>
+
+    <main class="slide model-arch-slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>AZ 专属 DDC NEXT Operating Model</h1></div>
+        <p class="subtitle">该总图统一表达 AZ 的治理边界、OneTeam 主责交付、弹性能力供给、AI 共享交付能力与统一治理接口，是整套方案的核心服务模型。</p>
+        <div class="section-anchor"><b>03</b><span>目录定位：总体响应方案</span></div>
+      </section>
+      <section class="content model-arch-wrap">
+        <div class="model-arch-row">
+          <div class="model-arch-label">治理层</div>
+          <div class="model-arch-content">
+            <div class="model-arch-cards three">
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">业务与产品治理</div><span class="model-arch-status">核心</span></div>
+                <ul><li>业务战略、产品组合与投资优先级</li><li>业务目标、OKR 与年度重点排序</li></ul>
+              </article>
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">统一规则与标准</div><span class="model-arch-status">核心</span></div>
+                <ul><li>架构、安全、合规与数据原则</li><li>多伙伴准入、绩效与边界规则</li></ul>
+              </article>
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">决策权归属 AZ</div><span class="model-arch-status">核心</span></div>
+                <ul><li>AZ 保留方向、预算与关键决策权</li><li>供应商负责执行，不替代产品判断</li></ul>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-arch-row">
+          <div class="model-arch-label">OneTeam<br>主责层</div>
+          <div class="model-arch-content">
+            <div class="model-arch-cards four">
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">CRM &amp; Customer Engagement Pod</div><span class="model-arch-status">主责</span></div>
+                <ul><li>NCEP、HCP360、AZ Connect 等核心客户域系统</li><li>负责持续迭代、运营保障与 AI 融合落地</li></ul>
+              </article>
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">Data &amp; Insight Pod</div><span class="model-arch-status">主责</span></div>
+                <ul><li>Power Insight、CDP、报告中心与 BI 能力域</li><li>负责数据产品、洞察服务与质量结果</li></ul>
+              </article>
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">Customer Platform Pod</div><span class="model-arch-status">主责</span></div>
+                <ul><li>HCP Portal、Workmate 与业务前台平台</li><li>负责体验运营与业务流程数字化协同</li></ul>
+              </article>
+              <article class="model-arch-card primary">
+                <div class="model-arch-head"><div class="model-arch-title">Integration &amp; Experience Pod</div><span class="model-arch-status">主责</span></div>
+                <ul><li>跨系统流程、API、门户与消息集成能力</li><li>负责减少伙伴边界摩擦与交付断点</li></ul>
+              </article>
+            </div>
+            <div class="model-arch-note">OneTeam 以稳定产品 Pod 承担系统 Backlog、知识沉淀、持续交付、SLA/SLO、技术债、安全质量与 AI 融合责任，是本次竞标的核心交付主体。</div>
+          </div>
+        </div>
+
+        <div class="model-arch-row">
+          <div class="model-arch-label">弹性能力<br>供给层</div>
+          <div class="model-arch-content">
+            <div class="model-arch-cards three">
+              <article class="model-arch-card support">
+                <div class="model-arch-head"><div class="model-arch-title">专业能力供给</div><span class="model-arch-status blue">支撑</span></div>
+                <ul><li>AI &amp; Agent、Data、App Engineering、CRM、Quality、Product &amp; UX</li><li>按峰谷需求向 OneTeam 提供阶段性补位与专家支援</li></ul>
+              </article>
+              <article class="model-arch-card support">
+                <div class="model-arch-head"><div class="model-arch-title">认证与动员机制</div><span class="model-arch-status blue">支撑</span></div>
+                <ul><li>统一认证标准、Ready 状态、动员周期与替换 SLA</li><li>确保补充资源可快速进入 AZ 交付体系</li></ul>
+              </article>
+              <article class="model-arch-card support">
+                <div class="model-arch-head"><div class="model-arch-title">共享专家调度</div><span class="model-arch-status blue">支撑</span></div>
+                <ul><li>跨 Pod 共享 AI、数据、质量与架构专家能力</li><li>由软通内部统一调度，不增加 AZ 逐人管理成本</li></ul>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-arch-row">
+          <div class="model-arch-label">AI 共享<br>交付层</div>
+          <div class="model-arch-content">
+            <div class="model-arch-cards three">
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">AI Requirement Services</div><span class="model-arch-status blue">共享</span></div>
+                <ul><li>Spec 生成、影响分析、知识召回与需求澄清</li><li>提升需求质量与澄清效率</li></ul>
+              </article>
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">AI Engineering Services</div><span class="model-arch-status blue">共享</span></div>
+                <ul><li>AI Coding、测试生成、Code Review、安全扫描与评测</li><li>进入 OneTeam 的开发、测试与发布流程</li></ul>
+              </article>
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">Delivery Intelligence Services</div><span class="model-arch-status blue">共享</span></div>
+                <ul><li>风险预测、知识捕获、发布智能与工程度量</li><li>支撑持续优化和证据化治理</li></ul>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-arch-row">
+          <div class="model-arch-label">统一治理<br>接口层</div>
+          <div class="model-arch-content">
+            <div class="model-arch-cards three">
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">统一工具链</div><span class="model-arch-status blue">治理</span></div>
+                <ul><li>Jira、Repo、CI/CD、ADR 与 Knowledge Base</li><li>统一任务、代码、决策与知识记录方式</li></ul>
+              </article>
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">统一控制点</div><span class="model-arch-status blue">治理</span></div>
+                <ul><li>Quality Gates、Security Controls、AI Usage Audit、SLA/SLO</li><li>把质量、安全和 AI 使用纳入一致的控制框架</li></ul>
+              </article>
+              <article class="model-arch-card secondary">
+                <div class="model-arch-head"><div class="model-arch-title">统一经营看板</div><span class="model-arch-status blue">治理</span></div>
+                <ul><li>Capacity、Cost、Risk、Quality 与 Partner Scorecard</li><li>让 AZ 通过单一界面完成经营判断与绩效管理</li></ul>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-foundation-bar"><span class="model-arch-status">底座</span> DDC NEXT Operating Principle：OneTeam 承担核心系统责任，弹性能力供给机制提供资源支撑，AI 共享服务提升交付效率，统一治理接口降低 AZ 管理成本</div>
+        <div class="model-foundation-bar secondary"><span class="model-arch-status blue">基础</span> Enterprise Delivery Baseline：统一架构、安全、数据、流程、度量和审计规则，确保多伙伴协作在同一 operating model 下运行</div>
+      </section>
+      <div class="slide-page">05 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>交付组织与系统责任设计</h1></div>
+        <p class="subtitle">OneTeam 交付组织以 Product Pod 为核心交付单元，并通过稳定团队机制与系统责任映射，确保核心系统长期承接与持续优化。</p>
+        <div class="section-anchor"><b>04</b><span>目录定位：核心交付机制</span></div>
+      </section>
+      <section class="content pod-board">
+        <div class="pod-summary-row">
+          <div class="pod-summary-card">
+            <strong>OneTeam 组织主线</strong>
+            <p>以 Product Pod 作为长期承接单元，每个 Pod 对系统 Backlog、知识沉淀、持续交付与 AI 融合结果负责，并由稳定团队机制降低替换风险。</p>
+          </div>
+          <div class="pod-summary-metric"><strong>4</strong><span>核心 Pod<br>长期承接系统责任</span></div>
+          <div class="pod-summary-metric"><strong>7+</strong><span>标准角色组合<br>覆盖产品到运维</span></div>
+          <div class="pod-summary-metric"><strong>1</strong><span>统一稳定机制<br>AB 角 / Shadow / SLA</span></div>
+        </div>
+        <div class="pod-matrix">
+          <div class="pod-head-row">
+            <div></div>
+            <div class="pod-col-head">CRM &amp; Customer<br>Engagement</div>
+            <div class="pod-col-head">Data &amp;<br>Insight</div>
+            <div class="pod-col-head">Customer<br>Platform</div>
+            <div class="pod-col-head">Integration &amp;<br>Experience</div>
+          </div>
+          <div class="pod-row">
+            <div class="pod-row-label">主责系统域</div>
+            <div class="pod-cell"><span class="pod-chip">客户域</span><p>NCEP、HCP360、AZ Connect 等核心客户系统持续交付。</p></div>
+            <div class="pod-cell"><span class="pod-chip">数据域</span><p>Power Insight、CDP、报告中心与 BI 能力域结果负责。</p></div>
+            <div class="pod-cell"><span class="pod-chip">平台域</span><p>HCP Portal、Workmate 与前台体验平台运营协同。</p></div>
+            <div class="pod-cell"><span class="pod-chip">集成域</span><p>跨系统流程、API、消息和体验集成能力承接。</p></div>
+          </div>
+          <div class="pod-row">
+            <div class="pod-row-label">核心责任</div>
+            <div class="pod-cell"><span class="pod-chip">持续交付</span><p>围绕客户域需求、运营与缺陷处理形成长期结果责任。</p></div>
+            <div class="pod-cell"><span class="pod-chip">产品与洞察</span><p>承接数据产品建设、分析服务和 BI 质量结果。</p></div>
+            <div class="pod-cell"><span class="pod-chip">体验运营</span><p>负责门户体验、业务流程协同和前台数字化运营。</p></div>
+            <div class="pod-cell"><span class="pod-chip">流程贯通</span><p>减少边界摩擦，保障跨系统链路和交付协同顺畅。</p></div>
+          </div>
+          <div class="pod-row">
+            <div class="pod-row-label">AI 融合方向</div>
+            <div class="pod-cell"><span class="pod-chip">推荐 / 助手</span><p>智能推荐、知识助手、自动测试进入客户域交付流程。</p></div>
+            <div class="pod-cell"><span class="pod-chip">NL2BI</span><p>智能分群、关系洞察、洞察生成支撑数据场景落地。</p></div>
+            <div class="pod-cell"><span class="pod-chip">运营助手</span><p>面向前台平台提供交互优化、内容生成和流程辅助能力。</p></div>
+            <div class="pod-cell"><span class="pod-chip">治理自动化</span><p>AI 辅助治理、自动报告、异常解释和接口协同增强。</p></div>
+          </div>
+        </div>
+      </section>
+      <div class="slide-page">06 / 14</div>
+    </main>
+
+    <main class="slide roadmap-slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>实施机制与阶段路径</h1></div>
+        <p class="subtitle">实施路径围绕核心系统责任承接、治理底座搭建、AI 快速收益验证与 CKP 专项深化四个阶段展开，形成分阶段落地与持续优化机制。</p>
+        <div class="section-anchor"><b>04</b><span>目录定位：交付组织与实施机制</span></div>
+      </section>
+      <section class="content execution-plan-board">
+        <div class="execution-plan-grid">
+          <article class="execution-phase">
+            <div class="execution-phase-head">
+              <div class="execution-pill">第一阶段：试点启动</div>
+              <h2 class="execution-title">完成责任承接</h2>
+            </div>
+            <ol class="execution-list">
+              <li>以 OneTeam 试点 Pod 启动 transition，明确系统责任边界、RACI 与交接节奏。</li>
+              <li>同步建立统一工具链、基础质量门禁、安全规则与经营看板基线。</li>
+              <li>完成首批 AI 快赢用例识别与 CKP POC 范围确认。</li>
+            </ol>
+          </article>
+          <article class="execution-phase">
+            <div class="execution-phase-head">
+              <div class="execution-pill">第二阶段：规模扩展</div>
+              <h2 class="execution-title">建立运行机制</h2>
+            </div>
+            <ol class="execution-list">
+              <li>把试点经验扩展到关键系统域，形成稳定团队与替补机制。</li>
+              <li>运行资源认证、共享专家调度与治理看板，建立周期性经营视图。</li>
+              <li>固化需求、开发、测试和发布环节的 AI 使用边界与审批流程。</li>
+            </ol>
+          </article>
+          <article class="execution-phase">
+            <div class="execution-phase-head">
+              <div class="execution-pill">第三阶段：专项落地</div>
+              <h2 class="execution-title">深化 AI / CKP</h2>
+            </div>
+            <ol class="execution-list">
+              <li>让 AI Engineering 进入主流程，形成需求澄清、代码生成、测试生成和风险预测能力。</li>
+              <li>推动 CKP 从 POC 走向生产机制，建立版本控制、增量处理与评测回滚。</li>
+              <li>对专项建设结果形成可量化的阶段评估与经营复盘。</li>
+            </ol>
+          </article>
+          <article class="execution-phase">
+            <div class="execution-phase-head">
+              <div class="execution-pill">第四阶段：闭环运营</div>
+              <h2 class="execution-title">持续优化运营</h2>
+            </div>
+            <ol class="execution-list">
+              <li>形成容量优化、风险预测、知识沉淀和持续改进的运营闭环。</li>
+              <li>基于统一经营看板持续优化人力结构、质量表现和专项产出。</li>
+              <li>沉淀可复制的方法论，为后续系统域复制提供模板。</li>
+            </ol>
+          </article>
+        </div>
+        <div class="execution-quarter-bar">
+          <div class="execution-quarter">V1.0（0-3 月）</div>
+          <div class="execution-quarter">V1.1（4-6 月）</div>
+          <div class="execution-quarter">V1.2（7-12 月）</div>
+          <div class="execution-quarter">V2.0（13-18 月）</div>
+        </div>
+      </section>
+      <div class="slide-page">07 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>资源保障机制</h1></div>
+        <p class="subtitle">资源保障机制由弹性能力供给、共享专家调度和补位闭环共同构成，确保 OneTeam 在不同阶段持续获得可控、可认证的能力支撑。</p>
+        <div class="section-anchor"><b>05</b><span>目录定位：资源保障与治理机制</span></div>
+      </section>
+      <section class="content resource-stage-board">
+        <div class="resource-stage-grid">
+          <div class="resource-label-col">
+            <div class="resource-label">机制</div>
+            <div class="resource-label">执行<br>方式</div>
+            <div class="resource-label">指标</div>
+          </div>
+          <article class="resource-col">
+            <div class="resource-stage">第一阶段</div>
+            <h2 class="resource-card-title">预测需求缺口</h2>
+            <div class="resource-tag">Demand Forecasting</div>
+            <ol class="resource-list">
+              <li>基于 Roadmap、工单走势和新技能需求预测系统域的容量缺口。</li>
+              <li>提前识别高峰期、专项期和关键岗位风险，避免被动补位。</li>
+              <li>把预测结果转化为资源准备计划与专家调度清单。</li>
+            </ol>
+            <div class="resource-metric"><strong>预测前置</strong><span>关键系统容量需求提前识别</span></div>
+          </article>
+          <article class="resource-col">
+            <div class="resource-stage">第二阶段</div>
+            <h2 class="resource-card-title">认证供给能力</h2>
+            <div class="resource-tag">Capability Certification</div>
+            <ol class="resource-list">
+              <li>按技术、场景、安全、AI 工具使用和英语协作能力进行统一认证。</li>
+              <li>划分 Ready Now、Ready Soon 与 Build Pool 三类状态，建立可调用名单。</li>
+              <li>确保补充资源进入 AZ 交付前已完成标准化筛选。</li>
+            </ol>
+            <div class="resource-metric"><strong>Ready 名单</strong><span>形成可认证、可调度的能力池</span></div>
+          </article>
+          <article class="resource-col">
+            <div class="resource-stage">第三阶段</div>
+            <h2 class="resource-card-title">快速融入交付</h2>
+            <div class="resource-tag">Rapid Onboarding</div>
+            <ol class="resource-list">
+              <li>通过 7-10 天融入包完成业务、架构、规范、安全与代码库接入。</li>
+              <li>使用 Shadow Task 和 First Deliverable 缩短新成员进入有效产出的周期。</li>
+              <li>保证补位成员能在不增加 AZ 管理负担的情况下进入 OneTeam。</li>
+            </ol>
+            <div class="resource-metric"><strong>7-10 天</strong><span>标准化融入周期与首个可交付</span></div>
+          </article>
+          <article class="resource-col">
+            <div class="resource-stage">第四阶段</div>
+            <h2 class="resource-card-title">持续绩效回收</h2>
+            <div class="resource-tag">Continuous Performance</div>
+            <ol class="resource-list">
+              <li>跟踪首周融入、30 天绩效、知识贡献与质量结果，持续回收供给效果。</li>
+              <li>优秀成员沉淀为稳定 OneTeam 成员，形成正向能力回流。</li>
+              <li>通过绩效回收持续优化能力池结构与专家调度策略。</li>
+            </ol>
+            <div class="resource-metric"><strong>持续优化</strong><span>供给结果进入绩效与资源复盘</span></div>
+          </article>
+        </div>
+      </section>
+      <div class="slide-page">08 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>治理机制与管理减负</h1></div>
+        <p class="subtitle">治理机制通过统一工具链、统一控制点和统一经营看板承接质量、安全、审计与经营管理要求，并以 Zero Incremental Management 降低 AZ 管理负担。</p>
+        <div class="section-anchor"><b>05</b><span>目录定位：资源保障与治理机制</span></div>
+      </section>
+      <section class="content governance-board">
+        <div class="governance-grid">
+          <div class="governance-side">
+            <article class="governance-card">
+              <div class="governance-card-head"><strong>统一工具链</strong><span class="governance-chip">PLAN</span></div>
+              <p>统一 Jira、Repo、CI/CD、ADR 与 Knowledge Base，让任务、代码、知识与决策记录进入同一套交付环境。</p>
+            </article>
+            <article class="governance-card">
+              <div class="governance-card-head"><strong>经营看板</strong><span class="governance-chip">ACT</span></div>
+              <p>统一 Capacity、Cost、Risk、Quality 与 Partner Scorecard，形成可持续复盘与经营决策依据。</p>
+            </article>
+          </div>
+          <div class="governance-core">
+            <div class="governance-ring"></div>
+            <div class="governance-center"><strong>统一治理</strong><span>Zero Incremental Management</span></div>
+            <div class="governance-quadrant governance-q1">规则统一<br>标准先行</div>
+            <div class="governance-quadrant governance-q2">状态透明<br>风险前置</div>
+            <div class="governance-quadrant governance-q3">经营复盘<br>持续优化</div>
+            <div class="governance-quadrant governance-q4">责任清晰<br>管理减负</div>
+          </div>
+          <div class="governance-side">
+            <article class="governance-card">
+              <div class="governance-card-head"><strong>统一控制点</strong><span class="governance-chip">DO</span></div>
+              <p>统一 Quality Gates、Security Controls、AI Usage Audit 与 SLA/SLO，把质量、安全和 AI 使用纳入一致框架。</p>
+            </article>
+            <article class="governance-card">
+              <div class="governance-card-head"><strong>管理减负机制</strong><span class="governance-chip">CHECK</span></div>
+              <p>AZ 聚焦方向、预算、验收与关键决策，软通负责执行与风险控制，AZ 管理 Pod Lead 而不是逐个工程师。</p>
+            </article>
+          </div>
+        </div>
+        <div class="governance-kpis">
+          <div class="governance-kpi"><strong>1</strong><span>统一规则与接口</span></div>
+          <div class="governance-kpi"><strong>2</strong><span>状态、风险自动化呈现</span></div>
+          <div class="governance-kpi"><strong>3</strong><span>固定关键会议，其他异步化</span></div>
+          <div class="governance-kpi"><strong>4</strong><span>以单一界面完成经营判断</span></div>
+        </div>
+      </section>
+      <div class="slide-page">09 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>AI 能力证明总览</h1></div>
+        <p class="subtitle">AI 能力证明围绕六个维度展开，覆盖能力矩阵、平台实践、案例、团队、工程控制与交付收益，形成完整证据链。</p>
+        <div class="section-anchor"><b>07</b><span>目录定位：AI 能力证据</span></div>
+      </section>
+      <section class="content proof-dashboard">
+        <div class="proof-summary">
+          <div class="proof-summary-card">
+            <div class="proof-icon">AI</div>
+            <div><strong>证据总览</strong><span>围绕 AZ 评标视角组织 AI 能力证明</span></div>
+          </div>
+          <div class="proof-summary-metric"><div class="proof-metric-number">6</div><div class="proof-metric-copy">证据维度<br>完整覆盖</div></div>
+          <div class="proof-summary-metric"><div class="proof-metric-number">4</div><div class="proof-metric-copy">平台实践<br>核心类别</div></div>
+          <div class="proof-summary-card">
+            <div class="proof-icon">OK</div>
+            <div><strong>交付证明</strong><span>能力矩阵、案例、团队与控制框架一体呈现</span></div>
+          </div>
+        </div>
+        <div class="proof-track">
+          <div class="proof-evidence-grid">
+            <article class="proof-evidence-col">
+              <div class="proof-badge">01. 能力矩阵</div>
+              <div class="proof-node"></div>
+              <div class="proof-card">
+                <h3>Capability Matrix</h3>
+                <ul>
+                  <li>以 AZ 技术环境为中心组织能力矩阵，而不是泛行业九宫格。</li>
+                  <li>覆盖 AI / Agent、Data、CRM、Integration 与 Governance 能力。</li>
+                </ul>
+                <div class="proof-tags"><span>AZ 环境</span><span>能力覆盖</span></div>
+              </div>
+            </article>
+            <article class="proof-evidence-col">
+              <div class="proof-badge">02. 平台实践</div>
+              <div class="proof-node"></div>
+              <div class="proof-card">
+                <h3>Platform Practice</h3>
+                <ul>
+                  <li>区分客户平台经验与软通自有平台，说明在哪些环节投入使用。</li>
+                  <li>对应用户覆盖、效率提升、审计能力与投产状态。</li>
+                </ul>
+                <div class="proof-tags"><span>平台经验</span><span>投产状态</span></div>
+              </div>
+            </article>
+            <article class="proof-evidence-col">
+              <div class="proof-badge">03. 企业案例</div>
+              <div class="proof-node"></div>
+              <div class="proof-card">
+                <h3>Enterprise Cases</h3>
+                <ul>
+                  <li>案例不在多，而在可验证，统一使用 Challenge / Scope / Result 模板。</li>
+                  <li>重点覆盖 AZ MindSearch、RAG Plus 与企业级 AI 实践场景。</li>
+                </ul>
+                <div class="proof-tags"><span>统一模板</span><span>可验证</span></div>
+              </div>
+            </article>
+            <article class="proof-evidence-col">
+              <div class="proof-badge">04. 团队结构</div>
+              <div class="proof-node"></div>
+              <div class="proof-card">
+                <h3>Team Composition</h3>
+                <ul>
+                  <li>给出角色、人数、经验分布、已投产项目数、可投入时间和关键专家摘要。</li>
+                  <li>确保团队证明与交付边界一一对应。</li>
+                </ul>
+                <div class="proof-tags"><span>角色人数</span><span>专家摘要</span></div>
+              </div>
+            </article>
+            <article class="proof-evidence-col">
+              <div class="proof-badge">05. 控制与收益</div>
+              <div class="proof-node"></div>
+              <div class="proof-card">
+                <h3>Standards &amp; Value</h3>
+                <ul>
+                  <li>补齐 AI 特有控制：版本、评测、幻觉、安全、发布审批、监控回滚。</li>
+                  <li>把内部 AI 使用数据转成 AZ 可理解的 use case、时间区间和收益证明。</li>
+                </ul>
+                <div class="proof-tags"><span>控制框架</span><span>交付收益</span></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+      <div class="slide-page">10 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>AI 平台实践、案例与团队</h1></div>
+        <p class="subtitle">通过能力矩阵、平台实践、企业级案例与核心团队投入，证明软通具备将 AI 能力落到 AZ 交付场景的真实经验与组织保障。</p>
+      </section>
+      <section class="content grid-2">
+        <article class="panel red">
+          <h2>平台实践与能力矩阵</h2>
+          <ul>
+            <li>阿里百炼与国内 GenAI 能力</li>
+            <li>International / Global Agent 集成</li>
+            <li>RAG 与 Enterprise Knowledge Platform</li>
+            <li>Data / BI、CRM、Enterprise Integration</li>
+            <li>AI Engineering、AI Governance、MLOps / LLMOps</li>
+            <li>覆盖使用环节、用户覆盖、效率提升、审计能力与投产状态。</li>
+          </ul>
+        </article>
+        <article class="panel blue">
+          <h2>案例与团队</h2>
+          <ul>
+            <li>重点案例覆盖 AZ MindSearch、RAG Plus、企业级 AI 实践与全球 Agent 场景。</li>
+            <li>核心团队覆盖 Solution Architect、AI / Agent、RAG / Knowledge、Data、QA / Evaluation、PM / BA 等角色。</li>
+            <li>明确人数、经验分布、已投产项目数、投入时间与关键专家摘要。</li>
+          </ul>
+        </article>
+      </section>
+      <div class="table-note">案例呈现采用统一模板：Challenge / Scope / Architecture / Scale / Result / Responsibility / Relevance to AZ。</div>
+      <div class="slide-page">11 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>AI Engineering 控制框架与 AZ Delivery Use Cases</h1></div>
+        <p class="subtitle">AI 交付能力通过控制框架与场景化 use case 呈现，确保效率提升、人工控制与审计要求同时成立。</p>
+      </section>
+      <section class="content ai-control-board">
+        <div class="ai-control-grid">
+          <div class="ai-control-side">
+            <article class="ai-control-card">
+              <strong>Use Case Intake &amp; Data Classification</strong>
+              <p>先定义使用场景、数据等级与风险边界，确保 AI 使用先入池、再评估、再进入交付流程。</p>
+            </article>
+            <article class="ai-control-card">
+              <strong>Evaluation &amp; Security Testing</strong>
+              <p>通过 Evaluation Dataset、Groundedness、Security / Privacy Testing 验证 AI 输出可用且可控。</p>
+            </article>
+          </div>
+          <div class="ai-control-center">
+            <div class="ai-pyramid">
+              <div class="ai-tier ai-tier-top"><span>Human Review<br>&amp; Audit<br>Evidence</span></div>
+              <div class="ai-tier ai-tier-mid"><span>AI Engineering<br>Controls</span></div>
+              <div class="ai-tier ai-tier-base"><span>AZ Delivery<br>Use Cases</span></div>
+            </div>
+          </div>
+          <div class="ai-control-side">
+            <article class="ai-control-card">
+              <strong>Version Control &amp; Release Approval</strong>
+              <p>对 Model、Prompt、Agent 版本进行管理，并通过 Release Approval 保留人工审批权。</p>
+            </article>
+            <article class="ai-control-card">
+              <strong>Monitoring, Incident &amp; Rollback</strong>
+              <p>上线后持续监控 AI 行为与质量，一旦异常可回滚、定位和补充审计证据。</p>
+            </article>
+          </div>
+        </div>
+        <div class="ai-control-footer">
+          <div class="ai-footer-box"><strong>需求 / 设计</strong><span>Spec 生成、完整性检查、影响分析，BA / Architect 审批</span></div>
+          <div class="ai-footer-box"><strong>开发 / 测试</strong><span>代码生成、重构、测试生成、缺陷定位，Code Review / QA 验收</span></div>
+          <div class="ai-footer-box"><strong>发布 / 运维</strong><span>风险分析、Release Note、日志分析、根因定位，Release Manager / SRE 处置</span></div>
+          <div class="ai-footer-box"><strong>管理 / 经营</strong><span>进度、风险、容量预测，Delivery Lead 决策，管理时间下降</span></div>
+        </div>
+      </section>
+      <div class="slide-page">12 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>CKP 专项方案</h1></div>
+        <p class="subtitle">CKP 专项方案围绕问题定义、目标架构与推荐路径展开，目标是在保证百炼平台衔接的同时，建立稳定的知识对象、增量处理与评测回滚机制。</p>
+        <div class="section-anchor"><b>08</b><span>目录定位：CKP 专项方案与交付件</span></div>
+      </section>
+      <section class="content ckp-evolution-board">
+        <div class="ckp-evolution-wave">
+          <svg viewBox="0 0 1280 420" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M30 220 C170 110, 280 150, 390 215 S610 300, 720 188 S940 108, 1080 180 S1210 250, 1250 150" />
+          </svg>
+        </div>
+
+        <div class="ckp-stage-label ckp-stage-a-label">现状问题<span>Parser / Chunk / Traceability</span></div>
+        <div class="ckp-stage-line ckp-stage-a-line"></div>
+        <div class="ckp-stage-dot ckp-stage-a-dot"></div>
+        <article class="ckp-stage-card ckp-stage-a-card ckp-stage-a">
+          <span class="ckp-stage-chip">STEP 1</span>
+          <strong>识别关键断点</strong>
+          <p>解析器能力不足、表格图片处理不稳、Chunk ID 不稳定、全量重建替代增量更新，导致人工调整无法沉淀。</p>
+        </article>
+
+        <div class="ckp-stage-label ckp-stage-b-label">稳定结构<span>Document Object Model</span></div>
+        <div class="ckp-stage-line ckp-stage-b-line"></div>
+        <div class="ckp-stage-dot ckp-stage-b-dot"></div>
+        <article class="ckp-stage-card ckp-stage-b-card ckp-stage-b">
+          <span class="ckp-stage-chip">STEP 2</span>
+          <strong>建立知识对象</strong>
+          <p>统一 Document / Section / Paragraph / Table / Figure / Clause 稳定结构，让文档、Chunk 和规则具备可追溯关系。</p>
+        </article>
+
+        <div class="ckp-stage-label ckp-stage-c-label">增量治理<span>Incremental Processing</span></div>
+        <div class="ckp-stage-line ckp-stage-c-line"></div>
+        <div class="ckp-stage-dot ckp-stage-c-dot"></div>
+        <article class="ckp-stage-card ckp-stage-c-card ckp-stage-c">
+          <span class="ckp-stage-chip">STEP 3</span>
+          <strong>形成版本控制层</strong>
+          <p>通过稳定语义身份、差异检测和版本控制层支持增量处理，避免每次变更都全量重建知识内容。</p>
+        </article>
+
+        <div class="ckp-stage-label ckp-stage-d-label">评测回滚<span>Evaluation &amp; Rollback</span></div>
+        <div class="ckp-stage-line ckp-stage-d-line"></div>
+        <div class="ckp-stage-dot ckp-stage-d-dot"></div>
+        <article class="ckp-stage-card ckp-stage-d-card ckp-stage-d">
+          <span class="ckp-stage-chip">STEP 4</span>
+          <strong>沉淀规则与评测</strong>
+          <p>把人工调整抽象为规则，配套 Golden Set、自动评测和异常回滚机制，确保 CKP 从 POC 走向可运营状态。</p>
+        </article>
+
+        <div class="ckp-stage-label ckp-stage-e-label">生产演进<span>Rollout / Scale</span></div>
+        <div class="ckp-stage-line ckp-stage-e-line"></div>
+        <div class="ckp-stage-dot ckp-stage-e-dot"></div>
+        <article class="ckp-stage-card ckp-stage-e-card ckp-stage-e">
+          <span class="ckp-stage-chip">STEP 5</span>
+          <strong>推荐实施路径</strong>
+          <p>在不改变百炼平台方向的前提下，优先建设外置预处理与版本控制层，平衡控制力、周期与运维成本。</p>
+        </article>
+
+        <div class="ckp-evolution-footer"><strong>推荐方案：</strong> 以外置预处理与版本控制层构建稳定知识对象、增量处理与评测回滚闭环，支持 CKP 持续演进。</div>
+      </section>
+      <div class="slide-page">13 / 14</div>
+    </main>
+
+    <main class="slide">
+      <div class="brand"><div class="brand-mark"><span>i</span>SoftStone</div><div>数字转型新动力</div></div>
+      <section class="hero">
+        <div class="title-row"><div class="title-bar"></div><h1>CKP 实施与验证</h1></div>
+        <p class="subtitle">CKP 实施以 POC 成功标准、资源投入、实施路径与验收方式为核心，确保专项方案可量化、可验收、可对账。</p>
+      </section>
+      <section class="content ckp-progress-board">
+        <div class="ckp-summary-row">
+          <div class="ckp-summary-card"><strong>≥90%</strong><span>人工调整保留率</span></div>
+          <div class="ckp-summary-card"><strong>≥80%</strong><span>增量处理比例</span></div>
+          <div class="ckp-summary-card"><strong>≥70%</strong><span>重复调整工作量下降</span></div>
+          <div class="ckp-summary-card"><strong>≥95%</strong><span>Golden Set 回归通过率</span></div>
+          <div class="ckp-summary-note"><strong>CKP 实施回顾</strong><p>以 POC 成功标准、资源投入、阶段交付和验收口径为主线，确保 CKP 从验证走向生产时具备清晰的进度视图与对账依据。</p></div>
+        </div>
+        <div class="ckp-timeline">
+          <div class="ckp-phase-heads">
+            <div></div>
+            <div class="ckp-phase-title">POC</div>
+            <div class="ckp-phase-title">Core Development</div>
+            <div class="ckp-phase-title">Integration / UAT</div>
+            <div class="ckp-phase-title">Rollout / Hypercare</div>
+          </div>
+          <div class="ckp-lane-grid">
+            <div class="ckp-lane-label">实施路径</div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">Discovery</span><p>完成现状评估、问题归因、目标架构和 POC 范围确认。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">Core Build</span><p>建设稳定对象模型、Chunk 版本控制、增量处理与规则沉淀机制。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">Bailian 接入</span><p>完成集成、迁移、UAT 与评测链路打通。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">Production</span><p>完成上线、Hypercare 与运行监控，形成生产机制。</p></div>
+
+            <div class="ckp-lane-label">核心交付件</div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">POC 报告</span><p>输出问题清单、方案边界、成功标准与资源估算。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">设计方案</span><p>形成对象模型、处理流程、评测方法与迁移计划。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">验收材料</span><p>形成回归结果、UAT 记录和实施验证报告。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">运行手册</span><p>沉淀上线手册、运维机制和持续优化建议。</p></div>
+
+            <div class="ckp-lane-label">资源结构</div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">架构 / PM</span><p>Solution Architect、PM / BA 负责方案定义与边界收敛。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">研发 / 知识</span><p>RAG / Knowledge、Python / Backend 负责核心能力实现。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">集成 / 验收</span><p>Bailian Integration、QA / Evaluation、UAT 协同完成验证。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">运维 / 复盘</span><p>DevOps 与 PM / BA 负责运行期问题收敛与复盘。</p></div>
+
+            <div class="ckp-lane-label">验收口径</div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">口径确认</span><p>确认人工调整保留率、增量处理比例与成功阈值。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">中期评估</span><p>验证重复劳动下降与处理稳定性指标。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">回归验证</span><p>以 Golden Set 回归通过率作为关键验收依据。</p></div>
+            <div class="ckp-lane-cell"><span class="ckp-chip">正式对账</span><p>以最终指标结果、报告与运行数据完成交付对账。</p></div>
+          </div>
+        </div>
+      </section>
+      <div class="slide-page">14 / 14</div>
+    </main>
+  </div>
+</body>
+</html>

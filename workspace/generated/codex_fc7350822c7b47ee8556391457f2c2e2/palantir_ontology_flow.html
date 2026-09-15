@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palantir Ontology 建模细化流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f7fa; padding: 30px; }
+  h1 { text-align: center; font-size: 26px; color: #1a1a2e; margin-bottom: 8px; letter-spacing: 2px; }
+  .subtitle { text-align: center; font-size: 14px; color: #888; margin-bottom: 28px; }
+  .flowchart { max-width: 1400px; margin: 0 auto; position: relative; }
+  .lane-container { display: flex; gap: 0; border: 1px solid #d0d5dd; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  .lane { flex: 1; min-width: 0; border-right: 1px dashed #e0e4ea; padding: 14px 10px 20px; background: #fff; }
+  .lane:last-child { border-right: none; }
+  .lane-header { text-align: center; font-weight: 700; font-size: 15px; color: #fff; padding: 10px 6px; border-radius: 8px; margin-bottom: 16px; letter-spacing: 1px; }
+  .lane-header.l1 { background: #1a3a5c; }
+  .lane-header.l2 { background: #2d6a4f; }
+  .lane-header.l3 { background: #b9770e; }
+  .lane-header.l4 { background: #7b2d8e; }
+  .lane-header.l5 { background: #c0392b; }
+  .node { background: #fff; border: 1.5px solid #d0d5dd; border-radius: 10px; padding: 12px 10px; margin-bottom: 10px; position: relative; cursor: default; transition: box-shadow 0.15s; }
+  .node:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.10); }
+  .node .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: #fff; margin-bottom: 5px; }
+  .node .tag.t1 { background: #1a3a5c; }
+  .node .tag.t2 { background: #2d6a4f; }
+  .node .tag.t3 { background: #b9770e; }
+  .node .tag.t4 { background: #7b2d8e; }
+  .node .tag.t5 { background: #c0392b; }
+  .node .title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; line-height: 1.3; }
+  .node .desc { font-size: 12px; color: #555; line-height: 1.5; }
+  .node .badge { position: absolute; top: 8px; right: 10px; font-size: 10px; background: #e8ecf1; padding: 1px 7px; border-radius: 8px; color: #666; }
+  .arrow-down { text-align: center; font-size: 18px; color: #b0b8c4; line-height: 1; margin: 0 0 8px; }
+  .phase-summary { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+  .phase-card { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; padding: 14px 18px; flex: 1; min-width: 180px; max-width: 260px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+  .phase-card .num { font-size: 28px; font-weight: 800; color: #1a3a5c; }
+  .phase-card .label { font-size: 13px; color: #555; margin-top: 4px; }
+  .output-badge { margin-top: 6px; font-size: 11px; color: #2d6a4f; background: #e8f5e9; padding: 3px 8px; border-radius: 6px; display: inline-block; }
+  .output-badge::before { content: "\25b6 \u4ea7\u51fa: "; }
+  @media (max-width: 900px) {
+    .lane-container { flex-direction: column; }
+    .lane { border-right: none; border-bottom: 1px dashed #e0e4ea; }
+  }
+</style>
+</head>
+<body>
+</head>
+<body>
+
+<h1>Palantir Ontology 建模细化流程</h1>
+<p class="subtitle">从数据源接入 → 可被规则引擎直接消费的 Ontology 对象</p>
+
+<div class="flowchart">
+  <div class="lane-container">
+
+    <!-- Lane 1: 对象建模 -->
+    <div class="lane">
+      <div class="lane-header l1">① 对象建模</div>
+      <div class="node">
+        <span class="tag t1">1.1</span>
+        <div class="title">识别业务实体</div>
+        <div class="desc">与业务方/PM对齐，确定核心业务对象（如 Order、Customer、Asset、Transaction）</div>
+        <div class="badge">输入</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t1">1.2</span>
+        <div class="title">定义对象类型</div>
+        <div class="desc">在 Ontology Manager 中创建 Object Type，设定名称、描述、主键字段</div>
+        <div class="badge">建模</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t1">1.3</span>
+        <div class="title">定义属性集</div>
+        <div class="desc">为每个 Object Type 定义属性：字段名、数据类型、默认值、是否必填</div>
+        <div class="badge">建模</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t1">1.4</span>
+        <div class="title">建立对象关系</div>
+        <div class="desc">定义 Link & Reverse Link，设置 Cardinality 约束（1:1 / 1:N / N:N）</div>
+        <div class="badge">建模</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t1">1.5</span>
+        <div class="title">定义搜索与索引</div>
+        <div class="desc">设定 Searchable / Sortable 属性，配置全文索引与 FreeText 搜索范围</div>
+        <div class="badge">优化</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node" style="background:#f0f4f8;">
+        <span class="tag t1" style="background:#1a3a5c;">产出</span>
+        <div class="title">对象模型草稿</div>
+        <div class="desc">Object Type 定义文档 + 属性字典 + 关系图</div>
+        <div class="output-badge">Object Type 定义</div>
+      </div>
+    </div>
+
+    <!-- Lane 2: 数据清洗 -->
+    <div class="lane">
+      <div class="lane-header l2">② 数据清洗</div>
+      <div class="node">
+        <span class="tag t2">2.1</span>
+        <div class="title">数据源接入评估</div>
+        <div class="desc">确定数据源类型（PostgreSQL / Spark / S3 / API），评估数据质量与时效性</div>
+        <div class="badge">输入</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t2">2.2</span>
+        <div class="title">重复数据去重</div>
+        <div class="desc">基于主键或业务唯一键做 Dedup，确定去重策略</div>
+        <div class="badge">清洗</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t2">2.3</span>
+        <div class="title">空值 & 异常值处理</div>
+        <div class="desc">处理 Null / NaN / 越界值：填充默认值、均值填充、丢弃异常行</div>
+        <div class="badge">清洗</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t2">2.4</span>
+        <div class="title">数据格式标准化</div>
+        <div class="desc">统一日期格式、时区、货币单位、枚举值映射、大小写规范化</div>
+        <div class="badge">清洗</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t2">2.5</span>
+        <div class="title">数据质量验证</div>
+        <div class="desc">完整性、唯一性、引用完整性、值域校验、异常记录审计</div>
+        <div class="badge">验证</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node" style="background:#f0f8f4;">
+        <span class="tag t2" style="background:#2d6a4f;">产出</span>
+        <div class="title">清洗后数据集</div>
+        <div class="desc">符合数据质量标准的干净数据集，附带数据质量报告</div>
+        <div class="output-badge">清洗后数据</div>
+      </div>
+    </div>
+
+    <!-- Lane 3: 数据映射 & 转换 -->
+    <div class="lane">
+      <div class="lane-header l3">③ 数据映射 & 转换</div>
+      <div class="node">
+        <span class="tag t3">3.1</span>
+        <div class="title">源字段 → 属性映射</div>
+        <div class="desc">建立源数据字段到 Ontology 属性的映射关系表，处理字段重命名与类型转换</div>
+        <div class="badge">映射</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t3">3.2</span>
+        <div class="title">派生属性计算</div>
+        <div class="desc">定义计算字段：聚合值、分类推导、金额计算、时间跨度、状态机推导</div>
+        <div class="badge">转换</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t3">3.3</span>
+        <div class="title">实体关联映射</div>
+        <div class="desc">通过外键/业务键建立对象间关联，配置 Link 映射规则，处理孤儿记录</div>
+        <div class="badge">映射</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t3">3.4</span>
+        <div class="title">Pipeline 配置</div>
+        <div class="desc">在 Pipeline Builder 中配置 ETL 管线，设定调度频率、重试策略、监控告警</div>
+        <div class="badge">工程</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t3">3.5</span>
+        <div class="title">加载至 Ontology</div>
+        <div class="desc">配置 Sync 写入方式（全量覆盖 / 增量 Upsert / 快照），运行全量加载验证</div>
+        <div class="badge">加载</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node" style="background:#fef8f0;">
+        <span class="tag t3" style="background:#b9770e;">产出</span>
+        <div class="title">已同步的 Ontology</div>
+        <div class="desc">数据已成功加载至 Ontology，对象可查询、可关联</div>
+        <div class="output-badge">Ontology 数据</div>
+      </div>
+    </div>
+
+    <!-- Lane 4: 角色 & 权限配置 -->
+    <div class="lane">
+      <div class="lane-header l4">④ 角色 & 权限配置</div>
+      <div class="node">
+        <span class="tag t4">4.1</span>
+        <div class="title">角色定义</div>
+        <div class="desc">定义角色体系并映射 LDAP/SSO 组：Admin / Editor / Viewer / Read-Only</div>
+        <div class="badge">权限</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t4">4.2</span>
+        <div class="title">对象级权限</div>
+        <div class="desc">配置 Object Type 级别的 CRUD 权限：哪些角色可创建/读取/更新/删除</div>
+        <div class="badge">权限</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t4">4.3</span>
+        <div class="title">属性级权限</div>
+        <div class="desc">敏感字段（身份证号、金额等）对特定角色隐藏或脱敏处理</div>
+        <div class="badge">权限</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t4">4.4</span>
+        <div class="title">行级数据权限</div>
+        <div class="desc">基于 Marking 实现数据隔离：按组织/地域/项目维度限制数据行访问</div>
+        <div class="badge">权限</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t4">4.5</span>
+        <div class="title">权限验证</div>
+        <div class="desc">模拟不同角色用户访问 Ontology，验证权限预期，记录审计日志</div>
+        <div class="badge">验证</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node" style="background:#f8f0fa;">
+        <span class="tag t4" style="background:#7b2d8e;">产出</span>
+        <div class="title">权限策略文档</div>
+        <div class="desc">角色矩阵 + 权限配置快照 + 审计报告</div>
+        <div class="output-badge">权限配置</div>
+      </div>
+    </div>
+
+    <!-- Lane 5: 验证 & 交付 -->
+    <div class="lane">
+      <div class="lane-header l5">⑤ 验证 & 交付</div>
+      <div class="node">
+        <span class="tag t5">5.1</span>
+        <div class="title">Ontology 数据校验</div>
+        <div class="desc">在 Object Explorer 中验证行数、字段值、关联关系、搜索功能</div>
+        <div class="badge">验证</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t5">5.2</span>
+        <div class="title">性能测试</div>
+        <div class="desc">测试单对象查询、关联查询、聚合查询、全文搜索的响应时间</div>
+        <div class="badge">验证</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t5">5.3</span>
+        <div class="title">上下游集成测试</div>
+        <div class="desc">验证下游 Workshop / Quiver / Function / 规则引擎能否正常消费数据</div>
+        <div class="badge">验证</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node">
+        <span class="tag t5">5.4</span>
+        <div class="title">文档 & 知识移交</div>
+        <div class="desc">输出建模文档、属性字典、映射说明、权限配置、运维手册、数据血缘</div>
+        <div class="badge">交付</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="node" style="border-color:#27ae60; background:#eafaf1;">
+        <span class="tag t5" style="background:#27ae60;">完成</span>
+        <div class="title">✅ 可进入下一步：规则梳理</div>
+        <div class="desc">Ontology 数据就绪，可直接供规则引擎、策略引擎、Workflow 等下游使用</div>
+        <div class="output-badge">交付基线</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="phase-summary">
+    <div class="phase-card"><div class="num">5</div><div class="label">对象建模步骤</div></div>
+    <div class="phase-card"><div class="num">5</div><div class="label">数据清洗步骤</div></div>
+    <div class="phase-card"><div class="num">5</div><div class="label">映射 & 转换步骤</div></div>
+    <div class="phase-card"><div class="num">5</div><div class="label">权限配置步骤</div></div>
+    <div class="phase-card"><div class="num">4</div><div class="label">验证 & 交付步骤</div></div>
+    <div class="phase-card" style="background:#eafaf1; border-color:#27ae60;"><div class="num">→</div><div class="label">规则梳理 下一阶段</div></div>
+  </div>
+
+  <div style="margin-top: 30px; padding: 18px 22px; background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; line-height: 1.8; font-size: 13px; color: #444;">
+    <strong style="color:#1a3a5c;">关键说明：</strong><br>
+    • 本流程覆盖 Palantir Ontology 建模的完整生命周期，从对象建模(①) 到 验证交付(⑤)，五个阶段依次递进。<br>
+    • 每个阶段均有明确产出物，确保阶段间可追溯、可审计。<br>
+    • 最终交付物为经过清洗、映射、权限配置的 Ontology 数据，可直接用于下游规则引擎、策略引擎、Workflow、Workshop 等场景。<br>
+    • 建议在进入规则梳理前，完成一次全量数据回顾及跨团队评审（建模 + 数据 + 安全三方签字）。<br>
+    • 如遇数据量级较大（>1000万行），建议在 Pipeline 配置阶段（3.4）提前规划分区策略与增量同步方案。
+  </div>
+</div>
+
+</body>
+</html>

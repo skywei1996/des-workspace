@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阶段复盘 PPT</title>
+    <style>
+        :root {
+            --c-dark: #003087;
+            --c-blue: #4A77B4;
+            --c-light: #7E9ECA;
+            --c-lighter: #AABFE1;
+            --c-gray: #A6A6A6;
+            --c-text-main: #333333;
+            --c-text-sub: #666666;
+            --bg-main: #F4F5F7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', -apple-system, sans-serif;
+        }
+
+        body {
+            background: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+            gap: 40px;
+        }
+
+        .export-toolbar {
+            position: fixed;
+            top: 18px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(0, 48, 135, 0.12);
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(0, 34, 92, 0.12);
+            backdrop-filter: blur(8px);
+        }
+
+        .export-btn {
+            border: none;
+            background: linear-gradient(135deg, var(--c-dark) 0%, #1c56b3 100%);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+            box-shadow: 0 10px 22px rgba(0, 48, 135, 0.2);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .export-btn:disabled {
+            cursor: wait;
+            opacity: 0.7;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .export-status {
+            min-width: 132px;
+            font-size: 12px;
+            color: var(--c-text-sub);
+            text-align: right;
+        }
+
+        .slide {
+            width: 1200px;
+            height: 675px;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            padding: 40px 50px;
+            border: 10px solid var(--bg-main);
+            page-break-after: always;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid var(--c-dark);
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+        }
+        .header-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--c-dark);
+            display: flex;
+            align-items: center;
+        }
+        .header-subtitle {
+            font-size: 20px;
+            color: var(--c-blue);
+        }
+
+        /* Main Timeline container */
+        .timeline-container {
+            position: absolute;
+            top: 50%;
+            left: 200px;
+            right: 200px;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .chevron {
+            flex: 1;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%, 20px 50%);
+            margin-left: -10px;
+        }
+        
+        .chevron:first-child {
+            clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%);
+            margin-left: 0;
+            background: var(--c-dark);
+        }
+        .chevron:nth-child(2) { background: var(--c-blue); }
+        .chevron:nth-child(3) { background: var(--c-light); }
+        .chevron:nth-child(4) { background: var(--c-dark); }
+        .chevron:nth-child(5) { background: var(--c-gray); }
+
+        /* Left Side Badges */
+        .left-badges {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .badge-left {
+            background: var(--c-dark);
+            color: white;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .badge-left:nth-child(2) { background: var(--c-blue); }
+
+        /* Right Side List */
+        .right-list {
+            position: absolute;
+            right: 50px;
+            top: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .right-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .right-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--c-dark);
+        }
+        .right-dot-line {
+            width: 30px;
+            height: 1px;
+            background: #d0d0d0;
+            margin-right: -10px;
+        }
+        .badge-right {
+            width: 120px;
+            background: var(--c-dark);
+            color: white;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .right-item:nth-child(2) .badge-right { background: var(--c-blue); }
+        .right-item:nth-child(2) .right-dot { background: var(--c-blue); }
+        
+        .right-item:nth-child(3) .badge-right { background: var(--c-light); }
+        .right-item:nth-child(3) .right-dot { background: var(--c-light); }
+        
+        .right-item:nth-child(4) .badge-right { background: var(--c-lighter); color: var(--c-dark); }
+        .right-item:nth-child(4) .right-dot { background: var(--c-lighter); }
+
+        /* Content Blocks */
+        .content-blocks {
+            position: absolute;
+            top: 120px;
+            left: 200px;
+            right: 200px;
+            bottom: 60px;
+            pointer-events: none;
+        }
+
+        .block {
+            position: absolute;
+                width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .block-top-left { top: 0; left: 0; }
+        .block-top-right { top: 0; right: 0; }
+        .block-bottom-left { bottom: 0; left: 100px; }
+            .block-bottom-right { bottom: 0; right: 40px; }
+
+        .block-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .block-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--c-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .block-top-right .block-icon,
+        .block-bottom-right .block-icon {
+            background: var(--c-lighter);
+            color: var(--c-dark);
+        }
+        .block-bottom-left .block-icon {
+            background: var(--c-blue);
+        }
+
+        .block-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--c-text-main);
+        }
+        .block-text {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--c-text-sub);
+        }
+        .block-text strong {
+            color: var(--c-dark);
+        }
+
+        /* Connecting Lines */
+        .connect-line {
+            position: absolute;
+            width: 1px;
+            border-left: 1.5px dashed #cccccc;
+            z-index: 1;
+        }
+        .line-tl { left: 240px; top: 220px; height: 100px; }
+        .line-tr { right: 380px; top: 220px; height: 100px; }
+        .line-bl { left: 450px; bottom: 200px; height: 110px; }
+        .line-br { right: 290px; bottom: 200px; height: 110px; }
+
+        .slide-workmate .timeline-container {
+            left: 240px;
+            right: 240px;
+            top: 51%;
+        }
+
+        .slide-workmate .content-blocks {
+            left: 190px;
+            right: 320px;
+        }
+
+        .slide-workmate .right-list {
+            right: 18px;
+            top: 165px;
+            gap: 18px;
+        }
+
+        .slide-workmate .badge-right {
+            width: 126px;
+        }
+
+        .slide-workmate .block-top-left,
+        .slide-workmate .block-top-right {
+            width: 280px;
+        }
+
+        .slide-workmate .block-bottom-left {
+            left: 30px;
+            width: 250px;
+        }
+
+        .slide-workmate .block-bottom-right {
+            width: 250px;
+            right: 0;
+        }
+
+        .slide-workmate .block-top-right {
+            width: 270px;
+            right: 0;
+        }
+
+        .slide-workmate .block-bottom-left .block-title,
+        .slide-workmate .block-bottom-right .block-title {
+            font-size: 16px;
+            line-height: 1.35;
+        }
+
+        .slide-workmate .block-bottom-left .block-text,
+        .slide-workmate .block-bottom-right .block-text {
+            font-size: 11px;
+            line-height: 1.75;
+        }
+
+        .slide-workmate .workmate-summary {
+            margin-top: -8px;
+            margin-bottom: 14px;
+            padding: 12px 18px;
+            background: #f2f2f2;
+            border-left: 5px solid #c40000;
+            display: grid;
+            gap: 8px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--c-text-main);
+        }
+
+        .slide-workmate .workmate-summary strong {
+            color: #111111;
+        }
+
+        .slide-workmate .workmate-headings {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+
+        .slide-workmate .workmate-headings h3 {
+            font-size: 18px;
+            color: #c40000;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .slide-workmate .workmate-main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .slide-workmate .workmate-plan-panel,
+        .slide-workmate .workmate-progress-panel {
+            min-height: 332px;
+        }
+
+        .slide-workmate .workmate-plan-panel {
+            display: grid;
+            grid-template-rows: auto auto;
+            gap: 10px;
+        }
+
+        .slide-workmate .workmate-arch-card {
+            background: #ffffff;
+            border: 2px solid #d9d9d9;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            padding: 14px 16px;
+        }
+
+        .slide-workmate .workmate-arch-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #666666;
+            font-weight: 700;
+        }
+
+        .slide-workmate .workmate-arch-placeholder {
+            height: 220px;
+            border: 2px dashed #b8c3d6;
+            background:
+                linear-gradient(90deg, rgba(74, 119, 180, 0.08) 1px, transparent 1px),
+                linear-gradient(rgba(74, 119, 180, 0.08) 1px, transparent 1px),
+                linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
+            background-size: 24px 24px, 24px 24px, 100% 100%;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .slide-workmate .workmate-arch-footnote {
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--c-text-sub);
+            text-align: center;
+        }
+
+        .slide-workmate .placeholder-eyebrow {
+            font-size: 12px;
+            color: var(--c-blue);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .slide-workmate .placeholder-title {
+            font-size: 24px;
+            color: var(--c-dark);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .slide-workmate .placeholder-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--c-text-sub);
+            max-width: 460px;
+        }
+
+        .slide-workmate .workmate-stage-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .slide-workmate .stage-chip {
+            background: linear-gradient(135deg, var(--c-dark) 0%, var(--c-blue) 100%);
+            color: #ffffff;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .slide-workmate .stage-chip.light {
+            background: linear-gradient(135deg, #7f9eca 0%, #a9c0e3 100%);
+            color: var(--c-dark);
+        }
+
+        .slide-workmate .workmate-progress-card {
+            background: #111111;
+            border: 3px solid #202020;
+            color: #ffffff;
+            padding: 12px 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            margin-bottom: 12px;
+        }
+
+        .slide-workmate .progress-image-placeholder {
+            height: 198px;
+            border: 2px solid #4a4a4a;
+            background:
+                linear-gradient(135deg, rgba(118, 185, 0, 0.12) 0%, rgba(74, 119, 180, 0.08) 100%),
+                #151515;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 18px;
+        }
+
+        .slide-workmate .progress-image-placeholder strong {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .slide-workmate .progress-image-placeholder span {
+            font-size: 12px;
+            color: #cdd7e5;
+            line-height: 1.5;
+            max-width: 230px;
+        }
+
+        .slide-workmate .workmate-progress-card.secondary {
+            background: #f7f9fc;
+            color: var(--c-text-main);
+            border: 2px dashed #d94848;
+            box-shadow: none;
+        }
+
+        .slide-workmate .progress-card-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .slide-workmate .workmate-progress-card.secondary .progress-card-title {
+            color: #c40000;
+        }
+
+        .slide-workmate .progress-list {
+            display: grid;
+            gap: 10px;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .slide-workmate .progress-list div {
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .slide-workmate .progress-list div::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #76b900;
+            font-weight: 800;
+        }
+
+        .slide-workmate .workmate-progress-card.secondary .progress-list div::before {
+            color: #c40000;
+        }
+
+        .slide-workmate .workmate-goal-bar {
+            margin-top: 12px;
+            background: #c40000;
+            color: #ffffff;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .slide-workmate .workmate-note-box {
+            border: 2px dashed #d94848;
+            border-top: none;
+            padding: 12px 16px;
+            display: grid;
+            gap: 8px;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--c-text-main);
+        }
+
+        .slide-workmate .workmate-note-box div {
+            padding-left: 18px;
+            position: relative;
+        }
+
+        .slide-workmate .workmate-note-box div::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #c40000;
+            font-weight: 800;
+        }
+
+        @media print {
+            .export-toolbar { display: none; }
+            body { background: white; padding: 0; display: block; }
+            .slide { margin: 0; box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="export-toolbar">
+        <button class="export-btn" id="exportPptBtn" onclick="exportToPPT()">导出PPT</button>
+        <div class="export-status" id="exportStatus">可导出可编辑 .pptx</div>
+    </div>
+
+    <!-- Slide 1: AIE -->
+    <div class="slide slide-workmate">
+        <div class="header">
+            <div class="header-title">阶段复盘：AIE 平台项目进展</div>
+            <div class="header-subtitle">Technical Progress Report</div>
+        </div>
+
+        <div class="workmate-summary">
+            <div><strong>2025年研发目标：</strong>以 AIE 作为统一智能体平台底座，围绕平台能力、标准化服务、可观测运维与业务智能体场景持续建设，其中 AI Workmate 作为重点子模块承接数字员工与企业级智能体应用能力落地。</div>
+            <div><strong>Q1已实现：</strong>完成 AIE 基础平台能力整合，推进 NIM 推理微服务、统一运维面板和生态集成链路建设，同时启动 AI Workmate 子模块，形成数字员工对话、MCP/知识能力扩展与复盘闭环的演进路线。</div>
+        </div>
+
+        <div class="workmate-headings">
+            <h3>2025年研发计划</h3>
+            <h3>Q1研发进展及主要成果</h3>
+        </div>
+
+        <div class="workmate-main-grid">
+            <div class="workmate-plan-panel">
+                <div class="workmate-arch-card">
+                    <div class="workmate-arch-topline">
+                        <span>AIE 总体架构与子模块关系图</span>
+                        <span>Architecture Placeholder</span>
+                    </div>
+                    <div class="workmate-arch-placeholder">
+                        <div class="placeholder-eyebrow">AIE Platform + AI Workmate</div>
+                        <div class="placeholder-title">预留总体架构图区</div>
+                        <div class="placeholder-desc">此处用于放置 AIE 平台总体架构图，建议体现基础设施层、模型服务层、平台能力层以及 AI Workmate 等业务智能体子模块之间的关系，当前先保留用于后续替换正式架构素材。</div>
+                    </div>
+                    <div class="workmate-arch-footnote">建议后续在此放入：基础设施层、NIM 推理微服务层、监控运维层、智能体编排层，以及 AI Workmate 等子模块的能力映射关系。</div>
+                </div>
+
+                <div>
+                    <div class="workmate-goal-bar">2025年研发计划：持续完善 AIE 平台底座，并推动 AI Workmate 等业务智能体子模块在平台上标准化接入与演进</div>
+                    <div class="workmate-note-box">
+                        <div data-step="1.">第一阶段整合 NVIDIA AI Enterprise 核心能力，形成统一的平台入口、部署流程与运行管理框架，为后续智能体子模块提供底层支撑。</div>
+                        <div data-step="2.">第二阶段完善 NIM 推理微服务与标准接口体系，推进模型服务能力复用，并支持 AI Workmate 等子模块标准化接入。</div>
+                        <div data-step="3.">第三阶段建设统一监控与可观测体系，打通 GPU 资源、模型推理、Token 消耗和运维面板，同时沉淀业务智能体运行反馈数据。</div>
+                        <div data-step="4.">第四阶段在 AIE 底座上持续扩展业务子模块，其中 AI Workmate 重点推进数字员工对话、MCP/Skill/Knowledge Base 接入及复盘提升闭环。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workmate-progress-panel">
+                <div class="workmate-progress-card">
+                    <div class="progress-card-title">Q1研发进展及主要成果</div>
+                    <div class="progress-image-placeholder">
+                        <strong>预留平台成果图 / 模块关系图位置</strong>
+                        <span>这里可以放 AIE 平台控制台截图、服务编排图、模块拓扑图，或 AIE 与 AI Workmate 子模块之间的关系示意图，当前先预留图片区位置。</span>
+                    </div>
+                </div>
+
+                <div class="workmate-progress-card secondary">
+                    <div class="progress-card-title">已实现内容</div>
+                    <div class="progress-list">
+                        <div>已完成 AIE 平台基础能力整合，形成围绕模型部署、运行管理、应用接入与智能体扩展的统一技术框架。</div>
+                        <div>已推进 NIM 推理微服务标准化建设，增强模型服务复用性和平台组件化交付能力，为业务子模块提供统一能力底座。</div>
+                        <div>已建立统一监控与运维面板，具备对 GPU 资源、模型推理和 Token 消耗的可观测性支撑，并可为后续智能体复盘提供运行数据基础。</div>
+                        <div>已在 AIE 平台上启动 AI Workmate 子模块建设，明确数字员工对话、能力扩展和复盘演进方向，并完成与 Kubernetes、GPU Operator、CI/CD 的工程衔接及性能优化验证。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Slide 2: AI Workmate -->
+    <div class="slide slide-workmate">
+        <div class="header">
+            <div class="header-title">阶段复盘：AIE 子模块 AI Workmate 技术进展</div>
+            <div class="header-subtitle">Technical Progress Report</div>
+        </div>
+
+        <div class="workmate-summary">
+            <div><strong>模块定位：</strong>AI Workmate 是 AIE 平台上的重点业务智能体子模块，承接数字员工交互、工具调用、知识接入与复盘闭环能力落地。</div>
+            <div><strong>Q1已实现：</strong>在 AIE 底座支持下，完成数字员工基础对话能力建设，并形成 MCP 工具接入、知识能力扩展和后续复盘提升路线。</div>
+        </div>
+
+        <div class="workmate-headings">
+            <h3>2025年研发计划</h3>
+            <h3>Q1研发进展及主要成果</h3>
+        </div>
+
+        <div class="workmate-main-grid">
+            <div class="workmate-plan-panel">
+                <div class="workmate-arch-card">
+                    <div class="workmate-arch-topline">
+                        <span>中间区域预留架构图</span>
+                        <span>Architecture Placeholder</span>
+                    </div>
+                    <div class="workmate-arch-placeholder">
+                        <div class="placeholder-eyebrow">AI Workmate Architecture</div>
+                        <div class="placeholder-title">预留架构图区</div>
+                        <div class="placeholder-desc">此处用于放置 AI Workmate 总体架构图 / 双循环架构图 / 能力分层图。当前先保留版面空间，后续可直接替换为正式图片或 SVG 图示。</div>
+                    </div>
+                    <div class="workmate-arch-footnote">建议后续在此放入：数字员工层、MCP/Skill/Knowledge Base 接入层、复盘反馈闭环和持续演进能力层。</div>
+                </div>
+
+                <div>
+                    <div class="workmate-goal-bar">2025年研发计划：作为 AIE 平台重点子模块，持续完善 AI Workmate 的数字员工能力与复盘演进闭环</div>
+                    <div class="workmate-note-box">
+                        <div data-step="1.">第一阶段在 AIE 平台底座上实现数字员工基础对话能力，完成会话入口、角色配置、上下文管理和基础响应能力建设。</div>
+                        <div data-step="2.">第二阶段对接 MCP、Skill 与 Knowledge Base，逐步增强工具调用、知识检索、任务执行和能力复用，并复用 AIE 平台标准能力。</div>
+                        <div data-step="3.">第三阶段基于用户与 Agent 对话沉淀复盘机制，将问题、经验与最佳实践反哺为 Agent 能力提升，并纳入 AIE 平台统一治理。</div>
+                        <div data-step="4.">第四阶段进入持续演进，推动 AI Workmate 在 AIE 平台内部向标准化、可治理和可扩展方向沉淀为成熟子模块。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workmate-progress-panel">
+                <div class="workmate-progress-card">
+                    <div class="progress-card-title">Q1研发进展及主要成果</div>
+                    <div class="progress-image-placeholder">
+                        <strong>预留成果图 / 架构图位置</strong>
+                        <span>这里可以放已实现能力示意图、产品界面截图、执行链路图或架构成果图。当前先预留图片区位置。</span>
+                    </div>
+                </div>
+
+                <div class="workmate-progress-card secondary">
+                    <div class="progress-card-title">已实现内容</div>
+                    <div class="progress-list">
+                        <div>已完成数字员工基础对话能力，实现用户与 Agent 的稳定自然语言交互，并跑通在 AIE 平台上的基础接入模式。</div>
+                        <div>已明确第二阶段能力建设方向，进入 MCP、Skill、Knowledge Base 接入与扩展准备。</div>
+                        <div>已形成基于真实对话沉淀复盘并反哺 Agent 能力提升的后续闭环设计。</div>
+                        <div>已明确持续演进方向，后续将作为 AIE 平台重点智能体子模块向标准化、可治理与可扩展持续收敛。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const exportButton = document.getElementById('exportPptBtn');
+        const exportStatus = document.getElementById('exportStatus');
+        const PPT_THEME = {
+            dark: '003087',
+            blue: '4A77B4',
+            light: '7E9ECA',
+            lighter: 'AABFE1',
+            gray: 'A6A6A6',
+            textMain: '333333',
+            textSub: '666666',
+            bgMain: 'F4F5F7',
+            white: 'FFFFFF',
+            line: 'CFCFCF'
+        };
+
+        function loadScriptOnce(src) {
+            const existing = document.querySelector(`script[data-src="${src}"]`);
+            if (existing) {
+                if (existing.dataset.loaded === 'true') {
+                    return Promise.resolve();
+                }
+
+                return new Promise((resolve, reject) => {
+                    existing.addEventListener('load', () => resolve(), { once: true });
+                    existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+                });
+            }
+
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.dataset.src = src;
+                script.onload = () => {
+                    script.dataset.loaded = 'true';
+                    resolve();
+                };
+                script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        async function ensureExportDependencies() {
+            exportStatus.textContent = '加载导出组件...';
+            await loadScriptOnce('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+        }
+
+        function buildExportFileName() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `阶段复盘_可编辑_v2_${year}${month}${day}.pptx`;
+        }
+
+        function rgbToHex(colorValue) {
+            if (!colorValue) {
+                return PPT_THEME.dark;
+            }
+
+            if (colorValue.startsWith('#')) {
+                return colorValue.replace('#', '').toUpperCase();
+            }
+
+            const matched = colorValue.match(/\d+/g);
+            if (!matched || matched.length < 3) {
+                return PPT_THEME.dark;
+            }
+
+            return matched.slice(0, 3)
+                .map((value) => Number(value).toString(16).padStart(2, '0'))
+                .join('')
+                .toUpperCase();
+        }
+
+        function extractSlideModel(slideElement) {
+            if (slideElement.classList.contains('slide-workmate')) {
+                return {
+                    type: 'workmate',
+                    title: slideElement.querySelector('.header-title')?.innerText.trim() || '',
+                    subtitle: slideElement.querySelector('.header-subtitle')?.innerText.trim() || '',
+                    summary: Array.from(slideElement.querySelectorAll('.workmate-summary > div')).map((item) => item.innerText.trim()),
+                    headings: Array.from(slideElement.querySelectorAll('.workmate-headings h3')).map((item) => item.innerText.trim()),
+                    archTopline: Array.from(slideElement.querySelectorAll('.workmate-arch-topline span')).map((item) => item.innerText.trim()),
+                    archPlaceholderTitle: slideElement.querySelector('.placeholder-title')?.innerText.trim() || '',
+                    archPlaceholderDesc: slideElement.querySelector('.placeholder-desc')?.innerText.trim() || '',
+                    archFootnote: slideElement.querySelector('.workmate-arch-footnote')?.innerText.trim() || '',
+                    goalBar: slideElement.querySelector('.workmate-goal-bar')?.innerText.trim() || '',
+                    annualPlanItems: Array.from(slideElement.querySelectorAll('.workmate-note-box div')).map((item) => item.innerText.trim()),
+                    progressCardTitle: slideElement.querySelector('.workmate-progress-card .progress-card-title')?.innerText.trim() || '',
+                    progressPlaceholderTitle: slideElement.querySelector('.progress-image-placeholder strong')?.innerText.trim() || '',
+                    progressPlaceholderDesc: slideElement.querySelector('.progress-image-placeholder span')?.innerText.trim() || '',
+                    implementedTitle: slideElement.querySelector('.workmate-progress-card.secondary .progress-card-title')?.innerText.trim() || '',
+                    implementedItems: Array.from(slideElement.querySelectorAll('.workmate-progress-card.secondary .progress-list div')).map((item) => item.innerText.trim())
+                };
+            }
+
+            return {
+                type: 'aie',
+                title: slideElement.querySelector('.header-title')?.innerText.trim() || '',
+                subtitle: slideElement.querySelector('.header-subtitle')?.innerText.trim() || '',
+                leftBadges: Array.from(slideElement.querySelectorAll('.badge-left')).map((item) => ({
+                    text: item.innerText.trim(),
+                    fill: rgbToHex(window.getComputedStyle(item).backgroundColor)
+                })),
+                rightItems: Array.from(slideElement.querySelectorAll('.right-item')).map((item) => ({
+                    text: item.querySelector('.badge-right')?.innerText.trim() || '',
+                    fill: rgbToHex(window.getComputedStyle(item.querySelector('.badge-right')).backgroundColor),
+                    textColor: rgbToHex(window.getComputedStyle(item.querySelector('.badge-right')).color),
+                    dotFill: rgbToHex(window.getComputedStyle(item.querySelector('.right-dot')).backgroundColor)
+                })),
+                timeline: Array.from(slideElement.querySelectorAll('.chevron')).map((item) => ({
+                    text: item.innerText.trim(),
+                    fill: rgbToHex(window.getComputedStyle(item).backgroundColor)
+                })),
+                blocks: Array.from(slideElement.querySelectorAll('.block')).map((item) => ({
+                    icon: item.querySelector('.block-icon')?.innerText.trim() || '',
+                    iconFill: rgbToHex(window.getComputedStyle(item.querySelector('.block-icon')).backgroundColor),
+                    iconColor: rgbToHex(window.getComputedStyle(item.querySelector('.block-icon')).color),
+                    title: item.querySelector('.block-title')?.innerText.trim() || '',
+                    body: item.querySelector('.block-text')?.innerText.trim() || ''
+                }))
+            };
+        }
+
+        function addWorkmateExportSlide(slide, model) {
+            addSlideBackground(slide);
+            addHeader(slide, model);
+
+            slide.addShape('rect', {
+                x: 0.25,
+                y: 1.18,
+                w: 12.4,
+                h: 0.72,
+                line: { color: 'EFEFEF', pt: 0 },
+                fill: { color: 'F2F2F2' }
+            });
+
+            slide.addShape('line', {
+                x: 0.28,
+                y: 1.18,
+                w: 0,
+                h: 0.72,
+                line: { color: 'C40000', pt: 2.5 }
+            });
+
+            slide.addText(model.summary[0] || '', {
+                x: 0.42,
+                y: 1.28,
+                w: 11.9,
+                h: 0.18,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 11.5,
+                bold: false,
+                color: PPT_THEME.textMain,
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addText(model.summary[1] || '', {
+                x: 0.42,
+                y: 1.55,
+                w: 11.9,
+                h: 0.18,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 11.5,
+                bold: false,
+                color: PPT_THEME.textMain,
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addText(model.headings[0] || '2025年研发计划', {
+                x: 2.2,
+                y: 2.02,
+                w: 4.5,
+                h: 0.28,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 18,
+                bold: true,
+                color: 'C40000',
+                align: 'center',
+                margin: 0
+            });
+
+            slide.addText(model.headings[1] || 'Q1研发进展及主要成果', {
+                x: 8.9,
+                y: 2.02,
+                w: 3.0,
+                h: 0.28,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 18,
+                bold: true,
+                color: 'C40000',
+                align: 'center',
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 0.9,
+                y: 2.45,
+                w: 7.55,
+                h: 3.72,
+                line: { color: 'D8D8D8', pt: 1.2 },
+                fill: { color: 'FFFFFF' },
+                shadow: { type: 'outer', color: 'C8CED8', blur: 2, angle: 45, distance: 2, opacity: 0.2 }
+            });
+
+            slide.addText(model.archTopline[0] || '中间区域预留架构图', {
+                x: 1.18,
+                y: 2.62,
+                w: 2.5,
+                h: 0.18,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 10,
+                bold: true,
+                color: PPT_THEME.textSub,
+                margin: 0
+            });
+
+            slide.addText(model.archTopline[1] || 'Architecture Placeholder', {
+                x: 5.9,
+                y: 2.62,
+                w: 2.1,
+                h: 0.18,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 10,
+                bold: true,
+                color: PPT_THEME.textSub,
+                align: 'right',
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 1.18,
+                y: 2.9,
+                w: 7.0,
+                h: 2.38,
+                line: { color: 'B8C3D6', pt: 1.4, dash: 'dash' },
+                fill: { color: 'F5F9FF' }
+            });
+
+            slide.addText(model.archPlaceholderTitle || '预留架构图区', {
+                x: 3.15,
+                y: 3.72,
+                w: 3.0,
+                h: 0.32,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 20,
+                bold: true,
+                color: PPT_THEME.dark,
+                align: 'center',
+                margin: 0
+            });
+
+            slide.addText(model.archPlaceholderDesc || '', {
+                x: 1.95,
+                y: 4.18,
+                w: 5.45,
+                h: 0.6,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 10.5,
+                color: PPT_THEME.textSub,
+                align: 'center',
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addText(model.archFootnote || '', {
+                x: 1.25,
+                y: 5.44,
+                w: 6.9,
+                h: 0.28,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 9.5,
+                color: PPT_THEME.textSub,
+                align: 'center',
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 8.65,
+                y: 2.45,
+                w: 3.55,
+                h: 2.26,
+                line: { color: '202020', pt: 2 },
+                fill: { color: '111111' }
+            });
+
+            slide.addText(model.progressCardTitle || 'Q1研发进展及主要成果', {
+                x: 8.88,
+                y: 2.58,
+                w: 3.1,
+                h: 0.2,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 12.5,
+                bold: true,
+                color: PPT_THEME.white,
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 8.88,
+                y: 2.9,
+                w: 3.08,
+                h: 1.58,
+                line: { color: '4A4A4A', pt: 1.2 },
+                fill: { color: '151515' }
+            });
+
+            slide.addText(model.progressPlaceholderTitle || '预留成果图 / 架构图位置', {
+                x: 9.18,
+                y: 3.48,
+                w: 2.48,
+                h: 0.22,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 13,
+                bold: true,
+                color: PPT_THEME.white,
+                align: 'center',
+                margin: 0
+            });
+
+            slide.addText(model.progressPlaceholderDesc || '', {
+                x: 9.08,
+                y: 3.82,
+                w: 2.68,
+                h: 0.4,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 9.8,
+                color: 'CDD7E5',
+                align: 'center',
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 0.9,
+                y: 6.25,
+                w: 7.55,
+                h: 0.36,
+                line: { color: 'C40000', pt: 0 },
+                fill: { color: 'C40000' }
+            });
+
+            slide.addText(model.goalBar || '', {
+                x: 1.0,
+                y: 6.31,
+                w: 7.35,
+                h: 0.18,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 11,
+                bold: true,
+                color: PPT_THEME.white,
+                align: 'center',
+                fit: 'shrink',
+                margin: 0
+            });
+
+            slide.addShape('rect', {
+                x: 0.9,
+                y: 6.62,
+                w: 7.55,
+                h: 0.72,
+                line: { color: 'D94848', pt: 1.2, dash: 'dash' },
+                fill: { color: 'FFFFFF', transparency: 100 }
+            });
+
+            (model.annualPlanItems || []).slice(0, 4).forEach((item, index) => {
+                slide.addText(`${index + 1}. ${item.replace(/^\d+\.\s*/, '')}`, {
+                    x: 1.02,
+                    y: 6.71 + index * 0.14,
+                    w: 7.1,
+                    h: 0.12,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: 9.4,
+                    color: PPT_THEME.textMain,
+                    fit: 'shrink',
+                    margin: 0
+                });
+            });
+
+            slide.addShape('rect', {
+                x: 8.65,
+                y: 4.9,
+                w: 3.55,
+                h: 2.44,
+                line: { color: 'D94848', pt: 1.2, dash: 'dash' },
+                fill: { color: 'F7F9FC' }
+            });
+
+            slide.addText(model.implementedTitle || '已实现内容', {
+                x: 8.88,
+                y: 5.02,
+                w: 3.08,
+                h: 0.2,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 12.5,
+                bold: true,
+                color: 'C40000',
+                margin: 0
+            });
+
+            (model.implementedItems || []).slice(0, 4).forEach((item, index) => {
+                slide.addText(`• ${item}`, {
+                    x: 8.92,
+                    y: 5.34 + index * 0.43,
+                    w: 2.95,
+                    h: 0.32,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: 10.2,
+                    color: PPT_THEME.textMain,
+                    fit: 'shrink',
+                    margin: 0
+                });
+            });
+        }
+
+        function addSlideBackground(slide) {
+            slide.background = { color: PPT_THEME.white };
+            slide.addShape('rect', {
+                x: 0.08,
+                y: 0.08,
+                w: 13.17,
+                h: 7.34,
+                line: { color: PPT_THEME.bgMain, pt: 1.2 },
+                fill: { color: PPT_THEME.white }
+            });
+        }
+
+        function addHeader(slide, model) {
+            slide.addText(model.title, {
+                x: 0.45,
+                y: 0.28,
+                w: 7.2,
+                h: 0.42,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 24,
+                bold: true,
+                color: PPT_THEME.dark,
+                margin: 0
+            });
+
+            slide.addText(model.subtitle, {
+                x: 9.7,
+                y: 0.34,
+                w: 2.75,
+                h: 0.26,
+                fontFace: 'Microsoft YaHei',
+                fontSize: 15,
+                color: PPT_THEME.blue,
+                align: 'right',
+                margin: 0
+            });
+
+            slide.addShape('line', {
+                x: 0.45,
+                y: 0.93,
+                w: 11.95,
+                h: 0,
+                line: { color: PPT_THEME.dark, pt: 1.1 }
+            });
+        }
+
+        function addLeftBadges(slide, model) {
+            const positions = [3.58, 4.14];
+            model.leftBadges.forEach((badge, index) => {
+                slide.addShape('rect', {
+                    x: 0.45,
+                    y: positions[index] || (3.58 + index * 0.56),
+                    w: 1.0,
+                    h: 0.42,
+                    line: { color: badge.fill, pt: 0 },
+                    fill: { color: badge.fill }
+                });
+
+                slide.addText(badge.text, {
+                    x: 0.45,
+                    y: positions[index] || (3.58 + index * 0.56),
+                    w: 1.0,
+                    h: 0.42,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: 11.5,
+                    bold: true,
+                    color: PPT_THEME.white,
+                    align: 'center',
+                    valign: 'mid',
+                    margin: 0
+                });
+            });
+        }
+
+        function addRightItems(slide, model) {
+            const startY = model.type === 'workmate' ? 1.58 : 1.48;
+            model.rightItems.forEach((item, index) => {
+                const currentY = startY + index * 0.54;
+                slide.addShape('ellipse', {
+                    x: 10.28,
+                    y: currentY + 0.1,
+                    w: 0.12,
+                    h: 0.12,
+                    line: { color: item.dotFill, pt: 0 },
+                    fill: { color: item.dotFill }
+                });
+                slide.addShape('line', {
+                    x: 10.53,
+                    y: currentY + 0.16,
+                    w: 0.33,
+                    h: 0,
+                    line: { color: PPT_THEME.line, pt: 1 }
+                });
+                slide.addShape('rect', {
+                    x: 10.9,
+                    y: currentY,
+                    w: 1.35,
+                    h: 0.37,
+                    line: { color: item.fill, pt: 0 },
+                    fill: { color: item.fill }
+                });
+                slide.addText(item.text, {
+                    x: 10.9,
+                    y: currentY,
+                    w: 1.35,
+                    h: 0.37,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: 10.5,
+                    bold: true,
+                    color: item.textColor,
+                    align: 'center',
+                    valign: 'mid',
+                    margin: 0
+                });
+            });
+        }
+
+        function addTimeline(slide, model) {
+            const count = model.timeline.length;
+            const timelineY = model.type === 'workmate' ? 4.06 : 4.12;
+            const startX = model.type === 'workmate' ? 1.95 : 1.88;
+            const totalWidth = model.type === 'workmate' ? 8.65 : 8.95;
+            const itemWidth = totalWidth / count + 0.08;
+            const step = totalWidth / count;
+
+            model.timeline.forEach((item, index) => {
+                const x = startX + index * step;
+                slide.addShape('chevron', {
+                    x,
+                    y: timelineY,
+                    w: itemWidth,
+                    h: 0.62,
+                    line: { color: PPT_THEME.white, pt: 1.1 },
+                    fill: { color: item.fill }
+                });
+                slide.addText(item.text, {
+                    x: x + 0.16,
+                    y: timelineY + 0.15,
+                    w: itemWidth - 0.34,
+                    h: 0.26,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: count === 4 ? 12.5 : 11.5,
+                    bold: true,
+                    color: PPT_THEME.white,
+                    align: 'center',
+                    margin: 0
+                });
+            });
+        }
+
+        function addConnectorLines(slide, model) {
+            const lines = model.type === 'workmate'
+                ? [
+                    { x: 4.2, y: 2.9, h: 1.08 },
+                    { x: 9.78, y: 2.86, h: 1.12 },
+                    { x: 4.95, y: 4.68, h: 1.12 },
+                    { x: 9.26, y: 4.68, h: 1.12 }
+                ]
+                : [
+                    { x: 2.7, y: 2.98, h: 1.05 },
+                    { x: 8.48, y: 2.98, h: 1.05 },
+                    { x: 4.12, y: 4.67, h: 1.05 },
+                    { x: 7.84, y: 4.67, h: 1.05 }
+                ];
+
+            lines.forEach((item) => {
+                slide.addShape('line', {
+                    x: item.x,
+                    y: item.y,
+                    w: 0,
+                    h: item.h,
+                    line: { color: PPT_THEME.line, pt: 1, dash: 'dash' }
+                });
+            });
+        }
+
+        function getBlockLayout(type, index) {
+            if (type === 'workmate') {
+                return [
+                    { x: 1.9, y: 1.4, w: 3.0, titleSize: 18.5, bodySize: 12.2, iconX: 1.9, iconY: 1.52 },
+                    { x: 6.85, y: 1.4, w: 2.85, titleSize: 18.5, bodySize: 11.7, iconX: 6.85, iconY: 1.52 },
+                    { x: 1.95, y: 5.2, w: 2.85, titleSize: 16.2, bodySize: 10.8, iconX: 1.95, iconY: 5.3 },
+                    { x: 6.15, y: 5.2, w: 3.35, titleSize: 16.2, bodySize: 10.8, iconX: 6.15, iconY: 5.3 }
+                ][index];
+            }
+
+            return [
+                { x: 1.9, y: 1.4, w: 3.15, titleSize: 19, bodySize: 12.2, iconX: 1.9, iconY: 1.52 },
+                { x: 6.95, y: 1.4, w: 3.0, titleSize: 19, bodySize: 11.7, iconX: 6.95, iconY: 1.52 },
+                { x: 1.95, y: 5.2, w: 3.2, titleSize: 18, bodySize: 11.7, iconX: 1.95, iconY: 5.3 },
+                { x: 6.75, y: 5.2, w: 3.2, titleSize: 18, bodySize: 11.7, iconX: 6.75, iconY: 5.3 }
+            ][index];
+        }
+
+        function addBlocks(slide, model) {
+            model.blocks.forEach((block, index) => {
+                const layout = getBlockLayout(model.type, index);
+
+                slide.addShape('ellipse', {
+                    x: layout.iconX,
+                    y: layout.iconY,
+                    w: 0.44,
+                    h: 0.44,
+                    line: { color: block.iconFill, pt: 0 },
+                    fill: { color: block.iconFill }
+                });
+
+                slide.addText(block.icon, {
+                    x: layout.iconX,
+                    y: layout.iconY + 0.02,
+                    w: 0.44,
+                    h: 0.34,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: 18,
+                    bold: true,
+                    color: block.iconColor,
+                    align: 'center',
+                    valign: 'mid',
+                    margin: 0
+                });
+
+                slide.addText(block.title, {
+                    x: layout.x + 0.58,
+                    y: layout.y + 0.02,
+                    w: layout.w - 0.58,
+                    h: model.type === 'workmate' && index > 1 ? 0.7 : 0.58,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: layout.titleSize,
+                    bold: true,
+                    color: PPT_THEME.textMain,
+                    margin: 0,
+                    breakLine: false,
+                    fit: 'shrink'
+                });
+
+                slide.addText(block.body, {
+                    x: layout.x,
+                    y: layout.y + (model.type === 'workmate' && index > 1 ? 0.92 : 0.74),
+                    w: layout.w,
+                    h: model.type === 'workmate' && index > 1 ? 1.55 : 1.42,
+                    fontFace: 'Microsoft YaHei',
+                    fontSize: layout.bodySize,
+                    color: PPT_THEME.textSub,
+                    breakLine: false,
+                    margin: 0,
+                    fit: 'shrink',
+                    valign: 'top'
+                });
+            });
+        }
+
+        function buildEditableSlides(pptx) {
+            const models = Array.from(document.querySelectorAll('.slide')).map(extractSlideModel);
+
+            models.forEach((model, index) => {
+                exportStatus.textContent = `正在生成可编辑第 ${index + 1}/${models.length} 页...`;
+                const slide = pptx.addSlide();
+                if (model.type === 'workmate') {
+                    addWorkmateExportSlide(slide, model);
+                } else {
+                    addSlideBackground(slide);
+                    addHeader(slide, model);
+                    addLeftBadges(slide, model);
+                    addRightItems(slide, model);
+                    addTimeline(slide, model);
+                    addConnectorLines(slide, model);
+                    addBlocks(slide, model);
+                }
+            });
+        }
+
+        async function exportToPPT() {
+            if (exportButton.disabled) {
+                return;
+            }
+
+            exportButton.disabled = true;
+            exportButton.textContent = '导出中...';
+
+            try {
+                await ensureExportDependencies();
+
+                const pptx = new PptxGenJS();
+                pptx.layout = 'LAYOUT_WIDE';
+                pptx.author = 'GitHub Copilot';
+                pptx.company = 'DES';
+                pptx.subject = '阶段复盘';
+                pptx.title = document.title;
+                pptx.lang = 'zh-CN';
+
+                buildEditableSlides(pptx);
+
+                exportStatus.textContent = '正在写入 PPT 文件...';
+                await pptx.writeFile({ fileName: buildExportFileName() });
+                exportStatus.textContent = '可编辑 PPT 导出完成';
+            } catch (error) {
+                console.error(error);
+                exportStatus.textContent = '导出失败，请重试';
+                alert(`导出失败: ${error.message}`);
+            } finally {
+                exportButton.disabled = false;
+                exportButton.textContent = '导出PPT';
+            }
+        }
+    </script>
+
+</body>
+</html>

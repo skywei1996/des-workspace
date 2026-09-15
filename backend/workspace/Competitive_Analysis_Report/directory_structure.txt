@@ -1,0 +1,22 @@
+# Directory Structure for Xiaohongshu Competitive Analysis Report
+
+- /competitive_analysis_report
+  - /introduction
+    - overview.txt
+    - objectives.txt
+  - /market_overview
+    - market_size.txt
+    - growth_trends.txt
+    - user_demographics.txt
+  - /competitor_analysis
+    - competitor_profiles.txt
+    - swot_analysis.txt
+  - /feature_comparison
+    - feature_matrix.txt
+    - user_feedback.txt
+  - /pricing_analysis
+    - pricing_models.txt
+    - revenue_streams.txt
+  - /conclusion
+    - strategic_recommendations.txt
+    - summary.txt

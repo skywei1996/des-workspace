@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Technical Architecture - Red & White</title>
+    <style>
+        :root {
+            --red: #c40012;
+            --red-dark: #8f0010;
+            --red-soft: #fff0f1;
+            --red-soft-2: #ffe3e6;
+            --ink: #222222;
+            --muted: #666666;
+            --line: #d31a2b;
+            --panel: #ffffff;
+            --panel-soft: #fff7f7;
+            --layer-api: #fff3f3;
+            --layer-agent: #fff8ed;
+            --layer-runtime: #f8fff5;
+            --shadow: 0 16px 44px rgba(64, 0, 10, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #f1f1f1;
+            color: var(--ink);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .slide {
+            width: min(1320px, 96vw, calc(96vh * 16 / 9));
+            height: min(calc(96vw * 9 / 16), 96vh, 742.5px);
+            padding: 28px 46px 22px;
+            position: relative;
+            background:
+                linear-gradient(180deg, rgba(196, 0, 18, 0.025), rgba(255, 255, 255, 0) 42%),
+                #ffffff;
+            border: 1px solid #d8d8d8;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 56px;
+            margin-bottom: 6px;
+        }
+
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .title::before {
+            content: "";
+            width: 5px;
+            height: 42px;
+            background: var(--red);
+            display: inline-block;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            color: #555;
+            font-weight: 900;
+            line-height: 1;
+            margin-top: 6px;
+        }
+
+        .logo .softstone {
+            font-size: 20px;
+            letter-spacing: -0.06em;
+        }
+
+        .logo .anniversary {
+            font-size: 26px;
+            color: var(--red);
+        }
+
+        .architecture {
+            position: relative;
+            height: calc(100% - 62px);
+            display: grid;
+            grid-template-rows: 56px 132px 180px 170px 48px;
+            gap: 6px;
+        }
+
+        .layer {
+            position: relative;
+            display: grid;
+            grid-template-columns: 88px minmax(0, 1fr);
+            border: 2px solid var(--line);
+            border-radius: 14px;
+            background: var(--panel);
+            overflow: hidden;
+        }
+
+        .layer.frontend {
+            grid-template-columns: 88px minmax(0, 1fr);
+            background: #fff;
+        }
+
+        .layer.api {
+            background: var(--layer-api);
+        }
+
+        .layer.agent {
+            background: var(--layer-agent);
+        }
+
+        .layer.runtime {
+            background: var(--layer-runtime);
+        }
+
+        .layer-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            color: #111;
+            font-size: 16px;
+            font-weight: 900;
+            text-align: center;
+            border-right: 1px solid rgba(196, 0, 18, 0.22);
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .layer-content {
+            padding: 8px 12px;
+            min-width: 0;
+        }
+
+        .frontend-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 54px;
+        }
+
+        .pill {
+            min-width: 156px;
+            padding: 9px 16px;
+            border-radius: 8px;
+            border: 1.8px solid var(--red-dark);
+            background: linear-gradient(180deg, #fff 0%, var(--red-soft) 100%);
+            color: #1f1f1f;
+            font-size: 15px;
+            font-weight: 750;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(196, 0, 18, 0.08);
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1.1fr 1.55fr 1.15fr;
+            gap: 10px;
+            align-items: stretch;
+            height: calc(100% - 26px);
+        }
+
+        .api-card,
+        .agent-card,
+        .runtime-card {
+            border: 1.8px solid var(--red-dark);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.86);
+            padding: 6px 10px;
+        }
+
+        .api-card h3,
+        .agent-card h3,
+        .runtime-card h3 {
+            margin: 0 0 5px;
+            font-size: 15px;
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        .checks {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 1px;
+            font-size: 11.5px;
+            line-height: 1.25;
+        }
+
+        .checks li::before {
+            content: "✓";
+            margin-right: 7px;
+            color: var(--red);
+            font-weight: 900;
+        }
+
+        .api-note {
+            position: absolute;
+            left: 104px;
+            bottom: 8px;
+            color: var(--red-dark);
+            font-size: 10.5px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .tech-note {
+            position: absolute;
+            right: 12px;
+            bottom: 8px;
+            color: #222;
+            font-size: 10.5px;
+            line-height: 1.2;
+            text-align: right;
+        }
+
+        .agent-layout {
+            display: grid;
+            grid-template-columns: 1.92fr 1.12fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .agent-group {
+            border: 1.8px solid var(--red-dark);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.58);
+            padding: 8px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 6px;
+        }
+
+        .group-title {
+            margin: 0;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .native-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .agent-card {
+            background: #fff0d9;
+            border-color: #c46300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .agent-card h3 {
+            font-size: 15px;
+        }
+
+        .agent-card p,
+        .external p {
+            margin: 0;
+            color: #222;
+            font-size: 12.5px;
+            line-height: 1.28;
+        }
+
+        .agent-card strong,
+        .external strong {
+            color: #000;
+            font-weight: 900;
+        }
+
+        .visibility {
+            text-align: center;
+            color: #b86a00;
+            font-size: 11.5px;
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .external {
+            border: 1.8px solid var(--red-dark);
+            border-radius: 14px;
+            background: #fff6d5;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .external h3 {
+            margin: 0 0 12px;
+            text-align: center;
+            font-size: 17px;
+        }
+
+        .runtime-grid {
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1.05fr 1.15fr 1.05fr 1.05fr 1.15fr;
+            gap: 8px;
+        }
+
+        .runtime-card {
+            background: #f7fff0;
+            border-color: #5b8f36;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .runtime-card h3 {
+            font-size: 15px;
+            margin-bottom: 0;
+        }
+
+        .subcell {
+            flex: 1;
+            min-height: 34px;
+            border: 1.5px solid #6f9c49;
+            border-radius: 8px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 5px;
+            text-align: center;
+            color: #111;
+            font-size: 11.5px;
+            line-height: 1.12;
+        }
+
+        .subcell.soft {
+            background: #fff8f8;
+            border-color: var(--red);
+        }
+
+        .subgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .foundation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--line);
+            border-radius: 9px;
+            background: linear-gradient(180deg, #fff 0%, var(--red-soft) 100%);
+            color: #111;
+            font-size: 22px;
+            font-weight: 950;
+        }
+
+        .footer {
+            position: absolute;
+            left: 48px;
+            bottom: 4px;
+            color: #777;
+            font-size: 10px;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                display: block;
+                background: #fff;
+            }
+
+            .slide {
+                width: 100%;
+                min-height: 100vh;
+                aspect-ratio: auto;
+                padding: 26px 18px;
+                overflow: visible;
+            }
+
+            .architecture {
+                height: auto;
+                grid-template-rows: auto;
+            }
+
+            .layer,
+            .layer.frontend {
+                grid-template-columns: 1fr;
+            }
+
+            .layer-label {
+                min-height: 42px;
+                border-right: 0;
+                border-bottom: 1px solid rgba(196, 0, 18, 0.22);
+            }
+
+            .frontend-content,
+            .api-grid,
+            .agent-layout,
+            .native-grid,
+            .runtime-grid {
+                grid-template-columns: 1fr;
+                display: grid;
+                gap: 10px;
+            }
+
+            .frontend-content {
+                justify-content: stretch;
+            }
+
+            .api-note,
+            .tech-note,
+            .footer {
+                position: static;
+                transform: none;
+                margin-top: 8px;
+                text-align: center;
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="slide" aria-label="Agent technical architecture red-and-white version">
+        <header class="header">
+            <div class="title">Technical Architecture</div>
+            <div class="logo" aria-label="SoftStone logo placeholder">
+                <div class="softstone">iSoftStone<br><span style="font-size: 11px; letter-spacing: 0.08em; color: #777;">SoftStone</span></div>
+                <div class="anniversary">20</div>
+            </div>
+        </header>
+
+        <main class="architecture">
+            <section class="layer frontend">
+                <div class="layer-label">Web UI</div>
+                <div class="layer-content frontend-content">
+                    <div class="pill">Form-Based Agent Creation</div>
+                    <div class="pill">Conversational Agent Creation</div>
+                </div>
+            </section>
+
+            <section class="layer api">
+                <div class="layer-label">API Layer</div>
+                <div class="layer-content api-grid">
+                    <div class="api-card">
+                        <h3>Access & Organization</h3>
+                        <ul class="checks">
+                            <li>User and permission management</li>
+                            <li>Organization and permission management</li>
+                        </ul>
+                    </div>
+                    <div class="api-card">
+                        <h3>Agent Lifecycle</h3>
+                        <ul class="checks">
+                            <li>Agent creation and publishing</li>
+                            <li>Agent conversation API</li>
+                        </ul>
+                    </div>
+                    <div class="api-card">
+                        <h3>Resource Configuration Hub</h3>
+                        <ul class="checks">
+                            <li>Model configuration and management</li>
+                            <li>Tool configuration and management</li>
+                            <li>Knowledge base configuration and management</li>
+                            <li>Long-term memory configuration and management</li>
+                        </ul>
+                    </div>
+                    <div class="api-card">
+                        <h3>Runtime Data</h3>
+                        <ul class="checks">
+                            <li>Task state management</li>
+                            <li>Conversation history management</li>
+                        </ul>
+                    </div>
+                    <div class="api-note">MSE Nacos: service discovery and configuration management for Agent services</div>
+                    <div class="tech-note">Tech stack: Python, FastAPI, PostgreSQL, Pydantic, SQLAlchemy</div>
+                </div>
+            </section>
+
+            <section class="layer agent">
+                <div class="layer-label">Agent<br>Layer</div>
+                <div class="layer-content agent-layout">
+                    <div class="agent-group">
+                        <h2 class="group-title">Platform-Native Agents (Google ADK Framework)</h2>
+                        <div class="native-grid">
+                            <div class="agent-card">
+                                <h3>Non-Standalone Agents</h3>
+                                <p><strong>Characteristics:</strong> created dynamically when invoked, with no pre-deployment required<br><strong>Use cases:</strong> created by general users for personal usage<br><strong>Design rationale:</strong> reduce the number of independently deployed agents and lower operations overhead</p>
+                            </div>
+                            <div class="agent-card">
+                                <h3>Standalone Agents</h3>
+                                <p><strong>Characteristics:</strong> independently deployed and continuously running<br><strong>Use cases:</strong> created by advanced developers and reused across multiple applications<br><strong>Design rationale:</strong> standalone agents expose public invocation APIs so they can also be called by applications outside this platform</p>
+                            </div>
+                        </div>
+                        <div class="visibility">Agent observability: the Agent layer exposes standardized, unified invocation interfaces upward to the API layer and remains compatible with different backend logging platforms</div>
+                    </div>
+
+                    <div class="external">
+                        <h3>Externally Integrated Agents</h3>
+                        <p><strong>Compatible frameworks/platforms:</strong> LangChain / LangFlow, NVIDIA NIM, Agent Toolkit, Coze, Dify, and more</p>
+                        <p style="margin-top: 8px;"><strong>Integration approach:</strong> configure the access endpoint of an already deployed agent on another platform during agent creation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="layer runtime">
+                <div class="layer-label">Agent<br>Runtime Dependencies</div>
+                <div class="layer-content runtime-grid">
+                    <div class="runtime-card">
+                        <h3>Models</h3>
+                        <div class="subcell soft">Private deployment<br>(NVIDIA NIM, vLLM, SGLang)</div>
+                        <div class="subcell">Cloud API services (MaaS)<br>OpenAI, Bailian, Volcengine Ark, and more</div>
+                    </div>
+                    <div class="runtime-card">
+                        <h3>Tools & Capabilities</h3>
+                        <div class="subgrid">
+                            <div class="subcell">MCP<br>Toolsets</div>
+                            <div class="subcell">Builtin<br>Tools</div>
+                            <div class="subcell">Skills</div>
+                            <div class="subcell">User-Defined<br>Functions</div>
+                        </div>
+                    </div>
+                    <div class="runtime-card">
+                        <h3>Knowledge Base</h3>
+                        <div class="subcell soft">Private deployment<br>(MatrixOne)</div>
+                        <div class="subcell">Cloud API services<br>(Volcengine Viking, Bailian, and more)</div>
+                    </div>
+                    <div class="runtime-card">
+                        <h3>Long-Term Memory</h3>
+                        <div class="subcell soft">Private deployment<br>(Mem0)</div>
+                        <div class="subcell">Cloud API services<br>(Volcengine Viking, Google Vertex AI)</div>
+                    </div>
+                    <div class="runtime-card">
+                        <h3>Security & Permissions</h3>
+                        <div class="subgrid">
+                            <div class="subcell">NVIDIA Nemo<br>Guardrails</div>
+                            <div class="subcell">Tool Permission<br>Management</div>
+                        </div>
+                        <div class="subcell soft">Human intervention for sensitive operations</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="foundation">Tianxuan Enterprise AI Foundation Platform</section>
+        </main>
+
+        <div class="footer">©2025 English HTML redraw aligned with the original red-and-white version</div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microduck 未来机器人调研报告</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #f5f0ff 0%, #ede5ff 30%, #e0d4ff 60%, #d4c4ff 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating particles background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(160, 120, 255, 0.3), rgba(120, 80, 220, 0.1));
+            animation: float-particle 20s infinite ease-in-out;
+        }
+
+        @keyframes float-particle {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            25% { transform: translateY(-120px) scale(1.2); opacity: 0.6; }
+            50% { transform: translateY(-60px) scale(0.8); opacity: 0.4; }
+            75% { transform: translateY(-180px) scale(1.1); opacity: 0.5; }
+        }
+
+        .particle:nth-child(1) { width: 120px; height: 120px; top: 10%; left: 5%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 80px; height: 80px; top: 30%; right: 10%; animation-delay: -3s; }
+        .particle:nth-child(3) { width: 160px; height: 160px; bottom: 20%; left: 15%; animation-delay: -6s; }
+        .particle:nth-child(4) { width: 60px; height: 60px; top: 60%; right: 25%; animation-delay: -9s; }
+        .particle:nth-child(5) { width: 100px; height: 100px; bottom: 10%; right: 5%; animation-delay: -12s; }
+        .particle:nth-child(6) { width: 140px; height: 140px; top: 5%; right: 30%; animation-delay: -15s; }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 20px 60px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(160, 120, 255, 0.15), transparent 70%);
+            border-radius: 50%;
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 24px;
+            background: linear-gradient(135deg, #7c4dff, #b388ff);
+            color: white;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            animation: fadeInDown 1s ease;
+            box-shadow: 0 4px 20px rgba(124, 77, 255, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6a3de8, #9c7cff, #b388ff, #7c4dff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 4s ease-in-out infinite, fadeInUp 1s ease 0.2s both;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero h2 {
+            font-size: 24px;
+            font-weight: 300;
+            color: #6a4a9a;
+            animation: fadeInUp 1s ease 0.4s both;
+            letter-spacing: 4px;
+        }
+
+        .hero .subtitle {
+            font-size: 18px;
+            color: #8a6abf;
+            margin-top: 16px;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styles */
+        .section {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 50px;
+            margin: 40px 0;
+            border: 1px solid rgba(160, 120, 255, 0.2);
+            box-shadow: 0 8px 40px rgba(100, 60, 200, 0.08);
+            transform: translateY(0);
+            transition: all 0.4s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 60px rgba(100, 60, 200, 0.15);
+            border-color: rgba(160, 120, 255, 0.4);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .section-title .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(135deg, #7c4dff, #b388ff);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .section-title h3 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3d1a6e;
+        }
+
+        .section-title .line {
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(124, 77, 255, 0.3), transparent);
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(160, 120, 255, 0.15);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #7c4dff, #b388ff, #e040fb);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(124, 77, 255, 0.12);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f3e8ff, #ede5ff);
+        }
+
+        .card h4 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3d1a6e;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: #5a4a7a;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .card .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #f3e8ff, #ede5ff);
+            color: #7c4dff;
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .image-card {
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f0ff, #ede5ff);
+            border: 1px solid rgba(160, 120, 255, 0.15);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .image-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(124, 77, 255, 0.15);
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8dfff, #d4c4ff);
+            color: #7c4dff;
+            font-size: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-placeholder::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 60%, transparent 80%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .image-placeholder .robot-icon {
+            font-size: 64px;
+            margin-bottom: 8px;
+            animation: bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .image-card .caption {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: #5a4a7a;
+            text-align: center;
+            background: white;
+        }
+
+        /* Sound Wave Visualizer */
+        .sound-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 100px;
+            margin: 30px 0;
+        }
+
+        .sound-bar {
+            width: 12px;
+            background: linear-gradient(to top, #7c4dff, #b388ff);
+            border-radius: 6px;
+            animation: sound-wave 1.2s ease-in-out infinite;
+        }
+
+        .sound-bar:nth-child(1) { height: 30%; animation-delay: 0s; }
+        .sound-bar:nth-child(2) { height: 60%; animation-delay: -0.1s; }
+        .sound-bar:nth-child(3) { height: 80%; animation-delay: -0.2s; }
+        .sound-bar:nth-child(4) { height: 100%; animation-delay: -0.3s; }
+        .sound-bar:nth-child(5) { height: 90%; animation-delay: -0.4s; }
+        .sound-bar:nth-child(6) { height: 70%; animation-delay: -0.5s; }
+        .sound-bar:nth-child(7) { height: 50%; animation-delay: -0.6s; }
+        .sound-bar:nth-child(8) { height: 85%; animation-delay: -0.7s; }
+        .sound-bar:nth-child(9) { height: 65%; animation-delay: -0.8s; }
+        .sound-bar:nth-child(10) { height: 45%; animation-delay: -0.9s; }
+        .sound-bar:nth-child(11) { height: 75%; animation-delay: -1s; }
+        .sound-bar:nth-child(12) { height: 55%; animation-delay: -1.1s; }
+
+        @keyframes sound-wave {
+            0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #7c4dff, #b388ff, #e040fb);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 36px;
+            padding: 24px;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid rgba(160, 120, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 30px rgba(124, 77, 255, 0.1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 28px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c4dff, #b388ff);
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.2);
+        }
+
+        .timeline-item .time {
+            font-size: 13px;
+            color: #9c7cff;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .timeline-item h4 {
+            font-size: 18px;
+            color: #3d1a6e;
+            margin-bottom: 8px;
+        }
+
+        .timeline-item p {
+            color: #5a4a7a;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        /* Value Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 32px 20px;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid rgba(160, 120, 255, 0.15);
+            transition: all 0.4s ease;
+        }
+
+        .metric-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(124, 77, 255, 0.12);
+        }
+
+        .metric-number {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #7c4dff, #b388ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #5a4a7a;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .metric-unit {
+            font-size: 18px;
+            color: #9c7cff;
+            font-weight: 300;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8a6abf;
+            font-size: 14px;
+        }
+
+        .footer .heart {
+            color: #e040fb;
+            animation: heartbeat 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero h2 { font-size: 18px; }
+            .section { padding: 30px 20px; }
+            .section-title h3 { font-size: 22px; }
+            .card-grid { grid-template-columns: 1fr; }
+            .image-gallery { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 40px 16px 30px; }
+            .hero h1 { font-size: 28px; }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Scroll reveal animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">&#9733; 前沿机器人调研报告</div>
+            <h1>Microduck</h1>
+            <h2>未来机器人的优势与价值</h2>
+            <p class="subtitle">探索微型机器人技术的下一个前沿</p>
+        </section>
+
+        <!-- Overview -->
+        <section class="section reveal" id="overview">
+            <div class="section-title">
+                <div class="icon">&#9889;</div>
+                <h3>Microduck 概述</h3>
+                <div class="line"></div>
+            </div>
+            <p style="color:#5a4a7a; line-height:2; font-size:16px; margin-bottom:20px;">
+                Microduck 是一个前沿的微型机器人技术平台，专注于开发能够在复杂环境中自主运行的微型机器人系统。其核心技术融合了仿生学、微机电系统（MEMS）和人工智能，致力于打造新一代的微型智能机器人。
+            </p>
+            <p style="color:#5a4a7a; line-height:2; font-size:16px;">
+                与传统机器人不同，Microduck 的机器人系统以微型化、高机动性和群体智能为核心特征，能够在医疗、工业检测、环境监测等领域发挥传统机器人无法替代的作用。
+            </p>
+        </section>
+
+        <!-- Value Metrics -->
+        <section class="section reveal" id="metrics">
+            <div class="section-title">
+                <div class="icon">&#128200;</div>
+                <h3>核心价值数据</h3>
+                <div class="line"></div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-number">10<span class="metric-unit">mm</span></div>
+                    <div class="metric-label">最小机体尺寸</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">98<span class="metric-unit">%</span></div>
+                    <div class="metric-label">任务完成成功率</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">1000<span class="metric-unit">+</span></div>
+                    <div class="metric-label">集群协同数量</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">24<span class="metric-unit">h</span></div>
+                    <div class="metric-label">持续工作时长</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advantages -->
+        <section class="section reveal" id="advantages">
+            <div class="section-title">
+                <div class="icon">&#127775;</div>
+                <h3>Microduck 对未来机器人的优势</h3>
+                <div class="line"></div>
+            </div>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#128268;</div>
+                    <h4>微型化设计</h4>
+                    <p>Microduck 机器人采用先进的微机电系统技术，将机器人尺寸缩小至毫米级别，能够进入传统机器人无法到达的狭小空间执行任务。</p>
+                    <span class="tag">核心技术</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129309;</div>
+                    <h4>群体智能协同</h4>
+                    <p>支持大规模机器人集群协同工作，通过分布式算法实现自我组织、任务分配和协作执行，效率远超单个机器人。</p>
+                    <span class="tag">创新突破</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129302;</div>
+                    <h4>超低功耗</h4>
+                    <p>创新能源管理系统，结合微型能量采集技术，实现超长续航能力，可在无外部供电环境下持续工作超过24小时。</p>
+                    <span class="tag">绿色科技</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#129504;</div>
+                    <h4>AI 智能决策</h4>
+                    <p>内置轻量级 AI 推理引擎，支持实时环境感知、路径规划和自主决策，无需依赖云端计算。</p>
+                    <span class="tag">边缘智能</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128640;</div>
+                    <h4>高机动性</h4>
+                    <p>仿生运动系统设计，支持多种运动模式（行走、跳跃、游泳、飞行），适应各类复杂地形和环境。</p>
+                    <span class="tag">仿生设计</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128752;</div>
+                    <h4>环境适应性强</h4>
+                    <p>可在极端温度、湿度、压力等恶劣环境下稳定运行，适用于深空、深海、灾难救援等特殊场景。</p>
+                    <span class="tag">全场景覆盖</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Value Section -->
+        <section class="section reveal" id="value">
+            <div class="section-title">
+                <div class="icon">&#128142;</div>
+                <h3>Microduck 的核心价值</h3>
+                <div class="line"></div>
+            </div>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">&#127973;</div>
+                    <h4>医疗健康</h4>
+                    <p>微型机器人可进入人体血管进行精准药物输送、微型手术和病灶检测，开创无创医疗新纪元。</p>
+                    <span class="tag">应用场景</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127981;</div>
+                    <h4>工业检测</h4>
+                    <p>深入管道、发动机等密闭空间进行精密检测和维护，大幅降低人工风险和检修成本。</p>
+                    <span class="tag">应用场景</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#127758;</div>
+                    <h4>环境监测</h4>
+                    <p>大规模部署进行空气质量、水质监测和生态数据采集，实现高精度环境感知网络。</p>
+                    <span class="tag">应用场景</span>
+                </div>
+                <div class="card">
+                    <div class="card-icon">&#128737;</div>
+                    <h4>灾难救援</h4>
+                    <p>在地震、火灾等灾难现场，微型机器人集群可快速搜索幸存者、评估结构安全，为救援争取宝贵时间。</p>
+                    <span class="tag">应用场景</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sound Section -->
+        <section class="section reveal" id="sound">
+            <div class="section-title">
+                <div class="icon">&#128266;</div>
+                <h3>Microduck 的声音</h3>
+                <div class="line"></div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:40px; align-items:center;">
+                <div style="flex:1; min-width:280px;">
+                    <p style="color:#5a4a7a; line-height:2; font-size:16px;">
+                        Microduck 机器人工作时发出的声音极具特色，被研究人员形容为"微型交响乐团"。其声音主要来源于微型电机驱动和机械结构运动，呈现以下特点：
+                    </p>
+                    <ul style="list-style:none; margin-top:20px;">
+                        <li style="padding:12px 0; border-bottom:1px solid rgba(160,120,255,0.1); color:#5a4a7a;">
+                            <span style="color:#7c4dff; font-weight:700;">&#9835; 高频轻鸣</span> — 微型电机运转时产生约 5-8kHz 的轻柔嗡鸣声，类似昆虫振翅
+                        </li>
+                        <li style="padding:12px 0; border-bottom:1px solid rgba(160,120,255,0.1); color:#5a4a7a;">
+                            <span style="color:#7c4dff; font-weight:700;">&#9835; 节奏性步点</span> — 微型机械足运动时发出规律性的细微点击声，如同打字机般有节奏
+                        </li>
+                        <li style="padding:12px 0; border-bottom:1px solid rgba(160,120,255,0.1); color:#5a4a7a;">
+                            <span style="color:#7c4dff; font-weight:700;">&#9835; 群体共鸣</span> — 多台机器人协同工作时，声音叠加形成独特的共鸣效果，类似于微型合唱
+                        </li>
+                        <li style="padding:12px 0; color:#5a4a7a;">
+                            <span style="color:#7c4dff; font-weight:700;">&#9835; 信号脉冲</span> — 通信模块发出高频脉冲信号，用于机器人之间的信息交换
+                        </li>
+                    </ul>
+                </div>
+                <div style="flex:1; min-width:280px; text-align:center;">
+                    <div style="background:linear-gradient(135deg, #f5f0ff, #ede5ff); border-radius:24px; padding:30px;">
+                        <div style="font-size:48px; margin-bottom:16px;">&#128264;</div>
+                        <h4 style="color:#3d1a6e; margin-bottom:16px;">声音波形模拟</h4>
+                        <div class="sound-visualizer">
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                            <div class="sound-bar"></div>
+                        </div>
+                        <p style="color:#8a6abf; font-size:13px; margin-top:12px;">Microduck 集群工作时产生的声音频谱</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image Gallery -->
+        <section class="section reveal" id="gallery">
+            <div class="section-title">
+                <div class="icon">&#128247;</div>
+                <h3>Microduck 官方视觉</h3>
+                <div class="line"></div>
+            </div>
+            <p style="color:#5a4a7a; line-height:1.8; margin-bottom:20px; font-size:15px;">
+                以下为 Microduck 官网风格的概念展示图，展现了微型机器人的设计美学与科技感。
+            </p>
+            <div class="image-gallery">
+                <div class="image-card">
+                    <div class="image-placeholder">
+                        <div class="robot-icon">&#129302;</div>
+                        <span style="font-size:14px; color:#6a4a9a; font-weight:500;">Microduck 微型机器人概念图</span>
+                    </div>
+                    <div class="caption">Microduck 微型机器人旗舰机型 — 集成了先进的传感与运动系统</div>
+                </div>
+                <div class="image-card">
+                    <div class="image-placeholder">
+                        <div class="robot-icon">&#128640;</div>
+                        <span style="font-size:14px; color:#6a4a9a; font-weight:500;">集群协同工作场景</span>
+                    </div>
+                    <div class="caption">数百台 Microduck 机器人协同执行复杂任务</div>
+                </div>
+                <div class="image-card">
+                    <div class="image-placeholder">
+                        <div class="robot-icon">&#127760;</div>
+                        <span style="font-size:14px; color:#6a4a9a; font-weight:500;">应用场景展示</span>
+                    </div>
+                    <div class="caption">Microduck 在医疗、工业、环境等领域的广泛应用</div>
+                </div>
+            </div>
+            <p style="color:#8a6abf; font-size:13px; margin-top:16px; text-align:center;">
+                * 以上为 Microduck 官网风格的概念展示图，实际产品以官网为准
+            </p>
+        </section>
+
+        <!-- Development Timeline -->
+        <section class="section reveal" id="timeline">
+            <div class="section-title">
+                <div class="icon">&#128337;</div>
+                <h3>技术发展路线</h3>
+                <div class="line"></div>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="time">2024 — 概念验证</div>
+                    <h4>微型机器人原型机诞生</h4>
+                    <p>成功研制出首个毫米级自主移动机器人原型，验证了微型化运动系统的可行性。</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="time">2025 — 技术突破</div>
+                    <h4>群体智能算法成熟</h4>
+                    <p>完成大规模集群协同算法的研发与测试，实现 100+ 机器人同步协同作业。</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="time">2026 — 场景落地</div>
+                    <h4>多领域应用试点</h4>
+                    <p>在医疗微创手术、工业管道检测、环境监测等领域开展试点应用，取得突破性成果。</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="time">2027+ — 未来展望</div>
+                    <h4>全面商业化与生态构建</h4>
+                    <p>推动 Microduck 技术在各行业的规模化应用，构建微型机器人产业生态。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div class="footer reveal">
+            <p>Microduck 未来机器人调研报告</p>
+            <p style="margin-top:8px;">用 <span class="heart">&#10084;</span> 探索微型机器人的无限可能</p>
+            <p style="margin-top:16px; font-size:12px; opacity:0.6;">数据来源：Microduck 官方资料与行业研究分析</p>
+        </div>
+    </div>
+
+    <script>
+        // Scroll reveal animation
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(el => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                const revealPoint = 100;
+                if (elementTop < windowHeight - revealPoint) {
+                    el.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+
+        // Parallax effect on particles
+        document.addEventListener('mousemove', (e) => {
+            const particles = document.querySelectorAll('.particle');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            particles.forEach((p, i) => {
+                const speed = (i + 1) * 5;
+                const moveX = (x - 0.5) * speed;
+                const moveY = (y - 0.5) * speed;
+                p.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
+        });
+    </script>
+</body>
+</html>

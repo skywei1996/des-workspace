@@ -1,0 +1,13 @@
+services:
+  dgraph:
+    image: dgraph/standalone:latest
+    container_name: workmate-dgraph
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    volumes:
+      - workmate-dgraph-data:/dgraph
+
+volumes:
+  workmate-dgraph-data:

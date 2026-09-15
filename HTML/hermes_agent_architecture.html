@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hermes Agent Architecture Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hairline: '#293126',
+                        primary: '#8ccb12',
+                        ink: '#f4f7f0',
+                        muted: '#a7b19d'
+                    },
+                    boxShadow: {
+                        poster: '0 32px 84px rgba(0,0,0,0.48)'
+                    },
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at top left, rgba(140, 203, 18, 0.14), transparent 22%),
+                radial-gradient(circle at bottom right, rgba(140, 203, 18, 0.08), transparent 20%),
+                #060805;
+            font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+        }
+
+        .poster {
+            height: calc(100vh - 32px);
+            max-height: 860px;
+        }
+
+        .frame {
+            background: #293126;
+            gap: 1px;
+            padding: 1px;
+        }
+
+        .panel {
+            background: #161a16;
+        }
+
+        .inset {
+            background: #101410;
+        }
+
+        .band {
+            border-top: 2px solid #8ccb12;
+            background: linear-gradient(90deg, rgba(140, 203, 18, 0.11), rgba(255,255,255,0.015));
+        }
+
+        .kpi {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+        }
+
+        .icon-box {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: rgba(140, 203, 18, 0.12);
+            color: #8ccb12;
+            flex: 0 0 auto;
+        }
+
+        .tag {
+            border: 1px solid rgba(140, 203, 18, 0.28);
+            background: rgba(140, 203, 18, 0.08);
+            color: #8ccb12;
+        }
+
+        .micro-grid {
+            display: grid;
+            gap: 1px;
+            background: #293126;
+            padding: 1px;
+        }
+
+        .flow-line {
+            width: 1px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(140, 203, 18, 0.08), rgba(140, 203, 18, 0.95), rgba(140, 203, 18, 0.08));
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 overflow-hidden text-ink">
+    <main class="poster w-full max-w-[1480px] border border-hairline bg-hairline shadow-poster overflow-hidden flex flex-col">
+        <section class="frame grid grid-cols-[1.25fr_2fr]">
+            <div class="panel band px-5 py-3 flex flex-col justify-between min-w-0">
+                <div class="flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-primary">
+                    <span class="inline-flex items-center gap-2"><i class="fa-solid fa-satellite-dish"></i> Hermes Agent</span>
+                    <span class="text-muted">Architecture Blueprint</span>
+                </div>
+                <div>
+                    <h1 class="text-[26px] font-bold leading-[1.02]">Hermes Agent Runtime Blueprint</h1>
+                    <p class="mt-1 text-[13px] text-muted max-w-[560px]">围绕请求理解、规划路由、工具执行、状态观测与业务交付构建的高密度智能体系统蓝图。</p>
+                </div>
+                <div class="text-[12px] text-primary font-semibold">Faster Task Delivery · Structured Tool Use · Reliable Grounding · Safer Multi-Step Execution</div>
+            </div>
+            <div class="frame grid grid-cols-5">
+                <div class="kpi px-4 py-3 flex flex-col justify-between">
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-muted">Core Path</div>
+                    <div class="text-[15px] leading-tight font-semibold">Request -> Plan -> Execute</div>
+                    <div class="text-xs text-muted">single runtime path</div>
+                </div>
+                <div class="kpi px-4 py-3 flex flex-col justify-between">
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-muted">Role Set</div>
+                    <div class="text-[15px] leading-tight font-semibold">Planner / Execution / Tool Proxy</div>
+                    <div class="text-xs text-muted">runtime separation</div>
+                </div>
+                <div class="kpi px-4 py-3 flex flex-col justify-between">
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-muted">Protocol</div>
+                    <div class="text-[15px] leading-tight font-semibold">ChatML + JSON Contract</div>
+                    <div class="text-xs text-muted">structured control</div>
+                </div>
+                <div class="kpi px-4 py-3 flex flex-col justify-between">
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-muted">Tool Surface</div>
+                    <div class="text-[15px] leading-tight font-semibold">Skills + MCP + Workspace</div>
+                    <div class="text-xs text-muted">grounded actions</div>
+                </div>
+                <div class="kpi px-4 py-3 flex flex-col justify-between">
+                    <div class="text-[10px] uppercase tracking-[0.22em] text-muted">Guardrails</div>
+                    <div class="text-[15px] leading-tight font-semibold">No Role-Play / Bounded Turns</div>
+                    <div class="text-xs text-muted">deterministic closure</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="frame flex-1 grid grid-rows-[1.55fr_0.95fr] overflow-hidden">
+            <div class="frame grid grid-cols-[0.92fr_2.45fr_1.05fr] overflow-hidden">
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-list-ol text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Typical Hermes Workflow</div>
+                                <div class="text-[11px] text-muted">典型运行链路</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">FLOW</span>
+                    </div>
+                    <div class="mt-3 flex-1 grid grid-rows-[1fr_12px_1fr_12px_1fr_12px_1fr_12px_1fr] min-h-0">
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">1</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Request Intake</div>
+                                <div class="text-xs text-muted mt-1">chat、task、automation、workflow_run 的请求统一进站。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">2</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Plan / Clarify / Route</div>
+                                <div class="text-xs text-muted mt-1">Planner 决定 direct、plan 或 clarify，并选出 skills 与后续执行路径。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">3</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Execution Loop</div>
+                                <div class="text-xs text-muted mt-1">ExecutionAgent 调用工具、搜索、MCP、文件与任务能力，收集 observation。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">4</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Artifact / State Update</div>
+                                <div class="text-xs text-muted mt-1">工作区文件、任务状态、workflow log 与执行记录同步更新。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">5</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Deliver / Terminate</div>
+                                <div class="text-xs text-muted mt-1">返回最终答复或单一澄清问题，结束当前控制回合。</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0 overflow-hidden">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-brain text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Hermes Runtime Platform</div>
+                                <div class="text-[11px] text-muted">控制平面、协议平面、执行平面、观测平面</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">CENTER PLATFORM</span>
+                    </div>
+
+                    <div class="mt-2 micro-grid grid-cols-4 rounded-sm overflow-hidden">
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Planner Policy</div>
+                            <div class="text-xs text-muted mt-1">route / clarify / step planning</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Prompt Contract</div>
+                            <div class="text-xs text-muted mt-1">system policy / tool schema / ChatML</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Execution Policy</div>
+                            <div class="text-xs text-muted mt-1">tool-first / grounded / non-fabricated</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Guardrail Policy</div>
+                            <div class="text-xs text-muted mt-1">turn caps / terminate / clarify fallback</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 frame grid grid-cols-[1.04fr_1.28fr_1.02fr] flex-1 overflow-hidden">
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2"><div class="text-[13px] font-semibold">Protocol & Control Contracts</div></div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-code text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Structured Planner Output</div>
+                                    <div class="text-xs text-muted mt-1">execution_mode、selected_skills、plan_steps、clarifying_question。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-toolbox text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Tool Signature Surface</div>
+                                    <div class="text-xs text-muted mt-1">技能、MCP 能力和函数 schema 被拼入执行上下文。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-eye text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Observation Contract</div>
+                                    <div class="text-xs text-muted mt-1">tool result、artifact path、task state、workflow trace 回流到下一轮。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-flag-checkered text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Termination Contract</div>
+                                    <div class="text-xs text-muted mt-1">自然语言最终答复，或单一高价值澄清问题。</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2 flex items-center justify-between">
+                                <div class="text-[13px] font-semibold">Primary Execution Spine</div>
+                                <span class="tag text-[10px] px-2 py-1 rounded-sm">MAIN PATH</span>
+                            </div>
+                            <div class="inset px-4 py-2 flex-1 grid grid-rows-[1fr_16px_1fr_16px_1fr_16px_1fr] min-h-0">
+                                <div class="micro-grid grid-cols-[34px_1fr_auto] rounded-sm overflow-hidden">
+                                    <div class="inset bg-primary text-black font-bold flex items-center justify-center">1</div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-sm font-semibold">TaskPlannerAgent</div>
+                                        <div class="text-xs text-muted mt-1">分析用户意图，决定 direct / plan / clarify 并选出工具能力。</div>
+                                    </div>
+                                    <div class="inset px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-primary">route</div>
+                                </div>
+                                <div class="flow-line h-full"></div>
+                                <div class="micro-grid grid-cols-[34px_1fr_auto] rounded-sm overflow-hidden">
+                                    <div class="inset bg-primary text-black font-bold flex items-center justify-center">2</div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-sm font-semibold">Execution Context Assembly</div>
+                                        <div class="text-xs text-muted mt-1">注入 system prompt、selected skill prompt、tool schema、workspace context。</div>
+                                    </div>
+                                    <div class="inset px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-primary">compose</div>
+                                </div>
+                                <div class="flow-line h-full"></div>
+                                <div class="micro-grid grid-cols-[34px_1fr_auto] rounded-sm overflow-hidden">
+                                    <div class="inset bg-primary text-black font-bold flex items-center justify-center">3</div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-sm font-semibold">ExecutionAgent + ToolProxy</div>
+                                        <div class="text-xs text-muted mt-1">执行文件读写、终端、浏览器、搜索、MCP 调用与 workflow action。</div>
+                                    </div>
+                                    <div class="inset px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-primary">act</div>
+                                </div>
+                                <div class="flow-line h-full"></div>
+                                <div class="micro-grid grid-cols-[34px_1fr_auto] rounded-sm overflow-hidden">
+                                    <div class="inset bg-primary text-black font-bold flex items-center justify-center">4</div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-sm font-semibold">Observe / Update / Deliver</div>
+                                        <div class="text-xs text-muted mt-1">汇总结果，写回状态，输出 artifact，并形成最终答复或澄清闭环。</div>
+                                    </div>
+                                    <div class="inset px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-primary">close</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2"><div class="text-[13px] font-semibold">Runtime Capability Matrix</div></div>
+                            <div class="micro-grid grid-cols-2 rounded-sm overflow-hidden">
+                                <div class="inset px-3 py-2">
+                                    <div class="text-sm font-semibold">Local Skills</div>
+                                    <div class="text-xs text-muted mt-1">read_file、apply_patch、browser、terminal、task tools</div>
+                                </div>
+                                <div class="inset px-3 py-2">
+                                    <div class="text-sm font-semibold">MCP Extensions</div>
+                                    <div class="text-xs text-muted mt-1">resolver、adapter、dynamic capability registration</div>
+                                </div>
+                                <div class="inset px-3 py-2">
+                                    <div class="text-sm font-semibold">Workspace Surface</div>
+                                    <div class="text-xs text-muted mt-1">artifact files、generated docs、execution traces</div>
+                                </div>
+                                <div class="inset px-3 py-2">
+                                    <div class="text-sm font-semibold">Grounding Inputs</div>
+                                    <div class="text-xs text-muted mt-1">repo context、knowledge bases、web search、memory</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-chart-column text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Observable Runtime State</div>
+                                    <div class="text-xs text-muted mt-1">plan steps、tool outputs、task status、automation history、workspace artifacts。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0 overflow-hidden">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-diagram-project text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Applications & Delivery Surfaces</div>
+                                <div class="text-[11px] text-muted">典型业务应用与结果形态</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">SCENARIOS</span>
+                    </div>
+                    <div class="mt-3 micro-grid grid-cols-1 flex-1 overflow-hidden">
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Automation Operations</div>
+                                <div class="text-xs text-muted mt-1">定时任务、批处理执行、workflow 自动推进。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">scheduler</div>
+                        </div>
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Document Generation</div>
+                                <div class="text-xs text-muted mt-1">HTML 报告、分析文档、PRD、架构图等工件生成。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">artifacts</div>
+                        </div>
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Tool Orchestration</div>
+                                <div class="text-xs text-muted mt-1">串联浏览器、终端、文件、搜索与外部工具执行复杂任务。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">toolchain</div>
+                        </div>
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Knowledge Grounding</div>
+                                <div class="text-xs text-muted mt-1">通过 repo、知识库与网页内容提高答复可核验性。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">grounding</div>
+                        </div>
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Collaborative Tasking</div>
+                                <div class="text-xs text-muted mt-1">todo、plan step、workflow state 与 chat answer 统一在工作台中呈现。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">ops view</div>
+                        </div>
+                        <div class="inset px-3 py-2 grid grid-cols-[1fr_84px] items-center gap-2">
+                            <div>
+                                <div class="text-sm font-semibold">Future Agentic Expansion</div>
+                                <div class="text-xs text-muted mt-1">更强的 structured planning、memory policy、governed subagent coordination。</div>
+                            </div>
+                            <div class="text-right text-[10px] uppercase tracking-[0.18em] text-primary">roadmap</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="frame grid grid-cols-[1.08fr_1.28fr_1.02fr] overflow-hidden">
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center gap-2">
+                        <span class="icon-box"><i class="fa-solid fa-cubes text-xs"></i></span>
+                        <div>
+                            <div class="text-[13px] font-semibold">Ecosystem & Integration Fabric</div>
+                            <div class="text-[11px] text-muted">底座能力与扩展面</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 micro-grid grid-cols-2 flex-1 overflow-hidden">
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">API & Runtime</div>
+                            <div class="text-xs text-muted mt-1">FastAPI app、routers、startup hooks、scheduler</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Data & State</div>
+                            <div class="text-xs text-muted mt-1">SQLAlchemy session、models、workflow records、chat history</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Workspace</div>
+                            <div class="text-xs text-muted mt-1">shared execution directory、generated files、artifact landing zone</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Knowledge Sources</div>
+                            <div class="text-xs text-muted mt-1">repo memory、knowledge bases、file retrieval、web search</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Skill Layer</div>
+                            <div class="text-xs text-muted mt-1">registry、prompt assembly、capability filtering by tool_ids</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">MCP Layer</div>
+                            <div class="text-xs text-muted mt-1">resolver、adapter、protocol bridge、dynamic expansion</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center gap-2">
+                        <span class="icon-box"><i class="fa-solid fa-table text-xs"></i></span>
+                        <div>
+                            <div class="text-[13px] font-semibold">Example Use Cases & Benefits</div>
+                            <div class="text-[11px] text-muted">场景、动作与收益映射</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 micro-grid grid-cols-5 rounded-sm overflow-hidden text-xs">
+                        <div class="inset px-3 py-2 font-semibold text-primary">Scenario</div>
+                        <div class="inset px-3 py-2 font-semibold text-primary">Need</div>
+                        <div class="inset px-3 py-2 font-semibold text-primary">Hermes Move</div>
+                        <div class="inset px-3 py-2 font-semibold text-primary">Acceleration</div>
+                        <div class="inset px-3 py-2 font-semibold text-primary">Benefit</div>
+
+                        <div class="inset px-3 py-2">Code Task</div>
+                        <div class="inset px-3 py-2">fix / inspect / refactor</div>
+                        <div class="inset px-3 py-2">plan + patch + verify</div>
+                        <div class="inset px-3 py-2">2 - 5x</div>
+                        <div class="inset px-3 py-2">faster grounded engineering loop</div>
+
+                        <div class="inset px-3 py-2">Knowledge Query</div>
+                        <div class="inset px-3 py-2">repo + web fact retrieval</div>
+                        <div class="inset px-3 py-2">search + summarize + contextualize</div>
+                        <div class="inset px-3 py-2">2 - 4x</div>
+                        <div class="inset px-3 py-2">higher answer reliability</div>
+
+                        <div class="inset px-3 py-2">HTML Report</div>
+                        <div class="inset px-3 py-2">poster / report generation</div>
+                        <div class="inset px-3 py-2">design system + artifact output</div>
+                        <div class="inset px-3 py-2">3 - 6x</div>
+                        <div class="inset px-3 py-2">lower manual formatting cost</div>
+
+                        <div class="inset px-3 py-2">Automation Flow</div>
+                        <div class="inset px-3 py-2">recurring execution</div>
+                        <div class="inset px-3 py-2">scheduler + workflow state handling</div>
+                        <div class="inset px-3 py-2">1.5 - 3x</div>
+                        <div class="inset px-3 py-2">reduced manual intervention</div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center gap-2">
+                        <span class="icon-box"><i class="fa-solid fa-rotate text-xs"></i></span>
+                        <div>
+                            <div class="text-[13px] font-semibold">Technology Roadmap & Future Focus</div>
+                            <div class="text-[11px] text-muted">能力演进方向</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-[1fr_150px] gap-3 flex-1 min-h-0">
+                        <div class="micro-grid grid-cols-1 rounded-sm overflow-hidden min-h-0">
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-brain text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Deeper Structured Planning</div>
+                                    <div class="text-xs text-muted mt-1">plan graph、dependency modeling、failure recovery policy。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-memory text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Memory Policy</div>
+                                    <div class="text-xs text-muted mt-1">session、repo、user memory 的命中、沉淀与淘汰规则。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-scale-balanced text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Governed Multi-Agent Expansion</div>
+                                    <div class="text-xs text-muted mt-1">受控 subagent 协同，而不是无约束的伪多代理对话。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-chart-column text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Operational Telemetry</div>
+                                    <div class="text-xs text-muted mt-1">tool latency、clarify rate、plan success、artifact quality tracking。</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="micro-grid grid-cols-1 rounded-sm overflow-hidden">
+                            <div class="inset flex items-center justify-center p-3">
+                                <div class="relative w-[116px] h-[116px] rounded-full border border-primary/30">
+                                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 py-1 text-[10px] rounded-full bg-primary text-black font-semibold">Plan</div>
+                                    <div class="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 px-2 py-1 text-[10px] rounded-full bg-primary text-black font-semibold">Act</div>
+                                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 px-2 py-1 text-[10px] rounded-full bg-primary text-black font-semibold">Observe</div>
+                                    <div class="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 py-1 text-[10px] rounded-full bg-primary text-black font-semibold">Improve</div>
+                                    <div class="absolute inset-[26px] rounded-full border border-primary/20 flex items-center justify-center text-center text-xs font-semibold text-primary">Simulation-Driven Agentic Loop</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

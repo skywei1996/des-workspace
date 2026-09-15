@@ -1,0 +1,4 @@
+Tasks:
+1. Collect data on market size, growth rate, and trends.
+2. Identify key user demographics and their needs.
+3. Analyze regional differences in market demand.

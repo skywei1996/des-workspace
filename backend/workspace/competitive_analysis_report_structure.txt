@@ -1,0 +1,57 @@
+### Directory Structure for Competitive Analysis Report
+
+1. **Executive Summary**
+   - Overview
+   - Key Findings
+   - Recommendations
+
+2. **Industry Overview**
+   - Market Trends
+   - Growth Opportunities
+   - Challenges
+
+3. **Competitor Profiles**
+   - Competitor 1
+     - Overview
+     - Strengths
+     - Weaknesses
+   - Competitor 2
+     - Overview
+     - Strengths
+     - Weaknesses
+   - (Add more competitors as needed)
+
+4. **Market Positioning**
+   - SWOT Analysis
+   - Market Share Analysis
+   - Pricing Strategies
+
+5. **Customer Insights**
+   - Target Audience
+   - Customer Preferences
+   - Feedback Analysis
+
+6. **Product/Service Comparison**
+   - Features Comparison
+   - Pricing Comparison
+   - Value Proposition
+
+7. **Marketing Strategies**
+   - Advertising Channels
+   - Social Media Presence
+   - Campaign Effectiveness
+
+8. **Financial Analysis**
+   - Revenue Comparisons
+   - Cost Structures
+   - Profit Margins
+
+9. **Future Outlook**
+   - Emerging Trends
+   - Potential Threats
+   - Strategic Recommendations
+
+10. **Appendices**
+    - Data Sources
+    - Research Methodology
+    - Additional Notes

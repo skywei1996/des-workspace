@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WORKMATE User Manual</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --page: #ffffff;
+            --line: #e8e3e4;
+            --text: #1a1515;
+            --muted: #6b6262;
+            --primary: #dc2626;
+            --primary-soft: #fef2f2;
+            --warning-soft: #fff7ed;
+            --shadow: 0 18px 44px rgba(220, 38, 38, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: #ffffff;
+            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 56px;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+        }
+
+        .toc {
+            position: sticky;
+            top: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            backdrop-filter: blur(12px);
+            padding: 24px 20px;
+        }
+
+        .toc h1 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .toc p {
+            margin: 0 0 14px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: #fff;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover,
+        .toc-list a:active {
+            color: #111827;
+            background: #fafafa;
+            border-color: var(--line);
+        }
+
+        .page {
+            background: var(--page);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 40px 48px 30px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .hero h2 {
+            margin: 16px 0 10px;
+            font-size: 34px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 860px;
+            color: #524b4b;
+            font-size: 16px;
+        }
+
+        .meta {
+            margin-top: 16px;
+        }
+
+        .meta span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 36px 48px 48px;
+        }
+
+        section + section {
+            margin-top: 52px;
+            padding-top: 20px;
+            border-top: 2px dashed #f6f1f1;
+        }
+
+        section {
+            scroll-margin-top: 20px;
+        }
+
+        h3 {
+            margin: 0 0 16px;
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        h4 {
+            margin: 28px 0 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        p {
+            margin: 0 0 14px;
+            font-size: 15px;
+            color: #374151;
+        }
+
+        ul,
+        ol {
+            margin: 0 0 14px 20px;
+            padding: 0;
+        }
+
+        li + li {
+            margin-top: 10px;
+            color: #374151;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin: 20px 0 24px;
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 24px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #fca5a5;
+            box-shadow: 0 12px 20px rgba(220, 38, 38, 0.04);
+        }
+
+        .card strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .card img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .tip,
+        .warning,
+        .note {
+            margin: 24px 0;
+            padding: 18px 24px;
+            border-radius: 8px;
+            color: #374151;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .tip {
+            background: #fffafa;
+            border-left: 4px solid #fca5a5;
+        }
+
+        .warning {
+            background: var(--warning-soft);
+            border-left: 4px solid #fdba74;
+        }
+
+        .note {
+            background: #fafafa;
+            border-left: 4px solid #e5e7eb;
+        }
+
+        .callout-title {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0 24px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead {
+            background: #faf8f8;
+            border-bottom: 2px solid var(--line);
+        }
+
+        th,
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            white-space: normal;
+        }
+
+        /* Keep the first column, such as field names, from wrapping too narrowly. */
+        td:first-child,
+        th:first-child {
+            white-space: nowrap;
+            width: 80px;
+        }
+
+        th {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .steps {
+            counter-reset: step;
+            margin: 0 0 24px 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .steps li {
+            counter-increment: step;
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+            padding: 16px 20px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+            transition: border-color 0.2s ease;
+        }
+
+        .steps li:hover {
+            border-color: #fca5a5;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .footer {
+            margin-top: 26px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .shell {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .hero,
+            .content {
+                padding: 22px 18px;
+            }
+
+            .hero h2 {
+                font-size: 28px;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm 20mm;
+            }
+            .toc {
+                display: none !important;
+            }
+            .shell {
+                display: block !important;
+                padding: 0 !important;
+            }
+            .page {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .hero {
+                background: none !important;
+                border-bottom: 2px solid #000 !important;
+            }
+            body {
+                background: #fff !important;
+            }
+            .table-wrap, .card, .tip, .warning, .note, .steps li, img, h3, h4, tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            h3, h4 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <aside class="toc">
+            <h1>AI WORKMATE User Manual</h1>
+            <ul class="toc-list">
+                <li><a href="#quickstart">1. Quick Start</a></li>
+                <li><a href="#create-worker">2. Create AI Workmate</a></li>
+                <li><a href="#chat-worker">3. Chat with AI Workmate</a></li>
+                <li><a href="#knowledge-base">4. Knowledge Base</a></li>
+                <li><a href="#skill-manual">5. Skills</a></li>
+                <li><a href="#mcp-manual">6. Toolset Management</a></li>
+                <li><a href="#model-config">7. Model Configuration</a></li>
+            </ul>
+        </aside>
+
+        <main class="page">
+            <div class="hero">
+                <span class="eyebrow">User Manual</span>
+                <h2>AI WORKMATE User Manual</h2>
+                <div class="meta">
+                    <span>Last updated: 2026-06-29</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <section id="quickstart">
+                    <h3>1. Quick Start</h3>
+                    <p>If this is your first time using AI WORKMATE, start here.</p>
+                    <p>Your organization may already provide public AI Workmates. In that case, you can select an existing worker and start a conversation without creating a new one first.</p>
+
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>Select a worker</strong>
+                                Choose an available public AI Workmate from the Team workspace and enter the collaboration view.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Send the request</strong>
+                                Describe the task directly, for example: "Summarize this week's AI industry highlights."
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Create a reusable worker when needed</strong>
+                                If you repeat the same type of task frequently, create a dedicated AI Workmate.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Add resources or tools when needed</strong>
+                                Use a Knowledge Base for documents, Skills for reusable workflows, and MCP Toolsets for external actions.
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="tip">
+                        <span class="callout-title">Recommendation</span>
+                        Start with a conversation first, then formalize the workflow. Add worker configuration and resources only after the task pattern is stable.
+                    </div>
+
+                    <div class="note">
+                        <span class="callout-title">Where to start</span>
+                        If you need a dedicated worker, read "Create AI Workmate". If you already have a worker and want to understand how to submit requests, upload files, and receive results, read "Chat with AI Workmate".
+                    </div>
+                </section>
+
+                <section id="create-worker">
+                    <h3>2. Create AI Workmate</h3>
+                    <p>Create an AI Workmate when you want to standardize a recurring task and let the worker operate with the same role, process, and output format over time.</p>
+
+                    <h4>How to create a worker</h4>
+                    <ol>
+                        <li>Open <strong>Team</strong> and enter <strong>AI WorkMate</strong>.</li>
+                        <li>Click <strong>New AI Workmate</strong>.</li>
+                        <li>Complete <strong>Basic Information</strong>.</li>
+                        <li>Configure <strong>Core Skills</strong> and resource bindings, then click <strong>Onboard</strong>.</li>
+                    </ol>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>AI WorkMate worker list</strong>
+                            <img
+                                src="screenshot-eg/Worker_List.png"
+                                alt="AI WorkMate worker list"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>New AI Workmate</strong>
+                            <img
+                                src="screenshot-eg/Create_digital_worker.png"
+                                alt="New AI Workmate"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>New AI Workmate</strong>
+                            <img
+                                src="screenshot-eg/Create_digital_worker_addcoretool.png"
+                                alt="New AI Workmate"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>Basic Information fields</h4>
+                        <div class="table-wrap">
+                            <table style="table-layout: auto;">
+                                <thead>
+                                    <tr>
+                                        <th style="white-space: nowrap; width: 120px;">Field</th>
+                                        <th>Recommended input</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Full Name</td>
+                                        <td>Name the worker clearly, such as "ReportGenerator" or "RecruitmentResumeScreening".</td>
+                                        <td>Helps users identify and select the correct AI Workmate.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Category</td>
+                                        <td>Select the worker category, such as PM or Recruitment.</td>
+                                        <td>Groups the worker under the right business area.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Tags</td>
+                                        <td>Add keywords that help with search and filtering.</td>
+                                        <td>Makes the worker easier to find and reuse.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Description</td>
+                                        <td>Describe the worker's role and task scope in one concise paragraph.</td>
+                                        <td>Clarifies what the worker is designed to do.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Model</td>
+                                        <td>Select an available model, such as <strong>gpt-5-PM</strong>, after it has been configured in <strong>Model Configuration</strong>.</td>
+                                        <td>Determines the underlying model used by the worker.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-weight: bold;">Instructions</td>
+                                        <td>Define the role, goals, workflow, output format, and constraints.</td>
+                                        <td>Controls how the worker understands the task and produces results.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>How to choose Core Skills</h4>
+                        <div class="card-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                            <div class="card">
+                                <strong style="color: #111827; display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 18px;">⚙️</span> planner
+                                </strong>
+                                Use this when the worker should break down the task, create steps, and plan before execution.
+                            </div>
+                            <div class="card">
+                                <strong style="color: #111827; display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 18px;">🔍</span> search
+                                </strong>
+                                Use this when the worker needs web search or recent public information, such as market news or competitor updates.
+                            </div>
+                        </div>
+                        <div class="tip" style="margin-top: 16px;">
+                            <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px;">
+                                Selection guidance
+                            </span>
+                            Enable <strong>planner</strong> when the worker needs structured reasoning and step planning.<br>
+                            Enable <strong>search</strong> when the worker must retrieve up-to-date public information.<br>
+                            <strong>Do not enable every skill by default. Select only what the task requires.</strong>
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid; break-inside: avoid;">
+                        <h4>How to configure resources</h4>
+                        <div class="card-grid">
+                            <div class="card">
+                                <strong>Extended Skills</strong>
+                                Add reusable business workflows, such as a weekly report process or brainstorming workflow.
+                            </div>
+                            <div class="card">
+                                <strong>Knowledge Bases</strong>
+                                Bind prepared document collections when the worker needs product materials, policies, or presales references.
+                            </div>
+                            <div class="card">
+                                <strong>MCP Toolsets</strong>
+                                Bind external tool capabilities when the worker must access enterprise services, web tools, or other systems.
+                            </div>
+                        </div>
+                        <div class="tip" style="margin-top: 16px;">
+                            <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px;">
+                                Recommended configuration order
+                            </span>
+                            Complete <strong>Basic Information</strong> and <strong>Instructions</strong> first, then add advanced resources only when required:
+                            <ul style="margin: 10px 0 0 20px; padding: 0;">
+                                <li><strong>Recent public information</strong>: enable <code>search</code>.</li>
+                                <li><strong>Reusable workflow</strong>: add an <code>Extended Skill</code>.</li>
+                                <li><strong>Private document reference</strong>: bind a processed <code>Knowledge Base</code>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tip" style="margin-top: 24px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight: 800;">
+                            Instructions writing guidance
+                        </span>
+                        <ul style="margin: 10px 0 14px 20px; padding: 0;">
+                            <li><strong>Role</strong>: define who the worker is, such as "You are an enterprise-level Product Manager."</li>
+                            <li><strong>Goals</strong>: state the expected result, such as "Produce five key insights."</li>
+                            <li><strong>Workflow</strong>: describe the order of work, such as collect, classify, analyze, and summarize.</li>
+                            <li><strong>Output format and constraints</strong>: specify tables, bullet points, length limits, and rules against unsupported claims.</li>
+                        </ul>
+                        <hr style="border: none; border-top: 1px dashed rgba(220, 38, 38, 0.15); margin: 12px 0;">
+                        <div style="font-size: 14px; color: #4b5563;">
+                            <strong>Adjustment note:</strong> worker quality depends primarily on the <strong>Instructions</strong>. If the output is unstable, improve the role, workflow, and constraints before adding more tools.
+                        </div>
+                    </div>
+                </section>
+
+                <section id="chat-worker">
+                    <h3>3. Chat with AI Workmate</h3>
+                    <p>Use the collaboration view to send tasks directly to a selected AI Workmate. You can also attach files or images when the task requires additional context.</p>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>ReportGenerator</strong>
+                            <img
+                                src="screenshot-eg/Chat.png"
+                                alt="ReportGenerator"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <h4>Typical use cases</h4>
+                    <div class="card-grid">
+                        <div class="card">
+                            <strong>Information organization</strong>
+                            Example: "Organize these meeting notes and extract five conclusions and three action items."
+                        </div>
+                        <div class="card">
+                            <strong>Content generation</strong>
+                            Example: "Use this product material to draft an external product introduction."
+                        </div>
+                        <div class="card">
+                            <strong>Research analysis</strong>
+                            Example: "Summarize this week's AI industry updates by company, product, and trend."
+                        </div>
+                        <div class="card">
+                            <strong>File-based tasks</strong>
+                            Example: upload a document and ask: "Read this file and list the summary and risks."
+                        </div>
+                    </div>
+
+                    <h4>How to write a request</h4>
+                    <ol>
+                        <li>Start with the task goal, such as "Generate a weekly report summary."</li>
+                        <li>Define the scope, such as "Only use this week's new information."</li>
+                        <li>Specify the output format, such as "Return a table and keep it within one page."</li>
+                    </ol>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>To-dos</strong>
+                            <img
+                                src="screenshot-eg/chat-2.png"
+                                alt="To-dos"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>Step 1 Summary: OpenAI Codex Overview &amp; Positioning</strong>
+                            <img
+                                src="screenshot-eg/chat-03.png"
+                                alt="Step 1 Summary: OpenAI Codex Overview &amp; Positioning"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <h4>Common scenarios</h4>
+                    <ul>
+                        <li>You already have a dedicated worker and want to send a daily task to it.</li>
+                        <li>You need the worker to read uploaded images, documents, or reference materials before responding.</li>
+                        <li>You want the worker to continue a task and iterate on the result within the same conversation.</li>
+                    </ul>
+
+                    <div class="tip">
+                        <span class="callout-title">Request writing</span>
+                        Avoid vague requests such as "Analyze this." A better request is: "Read this document, extract five key points, and list three risks."
+                    </div>
+                </section>
+
+                <section id="knowledge-base">
+                    <h3>4. Knowledge Base</h3>
+                    <p>A Knowledge Base is used to provide an AI Workmate with domain-specific documents and proprietary reference materials. Use it when the worker must answer based on internal documents, terminology, and approved sources.</p>
+
+                    <div class="note" style="border-left-color: #374151;">
+                        <span class="callout-title" style="color: #111827;">When to use a Knowledge Base</span>
+                        <strong>Temporary file upload</strong> is suitable for one-off tasks, such as reviewing a single contract or summarizing today's meeting notes.<br>
+                        <strong>Knowledge Base</strong> is suitable for reusable, team-level document collections, such as policies, sales playbooks, product manuals, and HR materials.
+                    </div>
+
+                    <h4 style="margin-top:24px;">Knowledge Base configuration steps</h4>
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>Create Knowledge Base</strong>
+                                Open <strong>Resources</strong> &gt; <strong>Knowledge Base</strong>, click <strong>New Knowledge Base</strong>, then fill in <strong>Name</strong> and <strong>Description</strong>.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Import Documents</strong>
+                                Open the Knowledge Base detail page, click <strong>Import Documents</strong>, and upload files for processing.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Bind the Knowledge Base to a worker</strong>
+                                Return to <strong>New AI Workmate</strong> or an existing worker configuration, then add the processed Knowledge Base under <strong>Knowledge Bases</strong>.
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>Knowledge Base</strong>
+                            <img
+                                src="screenshot-eg/KB_List.png"
+                                alt="Knowledge Base"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>Create Knowledge Base</strong>
+                            <img
+                                src="screenshot-eg/Create_KB.png"
+                                alt="Create Knowledge Base"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>Knowledge Base Detail</strong>
+                            <img
+                                src="screenshot-eg/KB_detail.png"
+                                alt="Knowledge Base Detail"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>Import Documents</strong>
+                            <img
+                                src="screenshot-eg/kb_upload.png"
+                                alt="Import Documents"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top:24px;">Import rules and limits</h4>
+                    <div class="card-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">Supported formats</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">TXT, PDF, DOC, PPT, XLS, JPG, PNG and other supported business document formats.</p>
+                        </div>
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">File count</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">Upload up to <strong>10 files</strong> at a time. Split larger batches into multiple imports.</p>
+                        </div>
+                        <div class="card" style="border-top: 3px solid var(--primary);">
+                            <strong style="color: #111827; font-size:15px; margin-bottom:4px;">File size</strong>
+                            <p style="font-size:13px; margin:0; line-height:1.5;">Each file must not exceed <strong>20 MB</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip" style="background: #fffafa; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            Knowledge Base maintenance principles
+                        </span>
+                        <ul style="margin: 8px 0 0 20px; padding:0; line-height:1.6; font-size:14px; color:#4b5563;">
+                            <li><strong>Keep scope focused</strong>: create separate Knowledge Bases by responsibility, such as policies, product manuals, or presales materials.</li>
+                            <li><strong>Refresh outdated content</strong>: remove obsolete regulations, expired campaign files, and outdated documentation regularly.</li>
+                            <li><strong>Bind only processed sources</strong>: if a Knowledge Base does not appear in the worker configuration, confirm that document processing has completed.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="skill-manual">
+                    <h3>5. Skills</h3>
+                    <p>Skills are reusable business capabilities that can be attached to an AI Workmate. Use them to standardize recurring workflows, formats, and operating procedures.</p>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>Skills</strong>
+                            <img
+                                src="screenshot-eg/Skill_List.png"
+                                alt="Skills"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>Update Skill</strong>
+                            <img
+                                src="screenshot-eg/Create_skill_1.png"
+                                alt="Update Skill"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="note" style="border-left-color: #374151;">
+                        <span class="callout-title" style="color: #111827;">How to understand Skills</span>
+                        A Skill is not just a small action. It can package a stable business process, including the trigger condition, expected inputs, workflow steps, and output format, so the same capability can be reused across workers.
+                    </div>
+
+                    <div class="tip" style="background: #fffafa; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            Skill authoring best practices
+                        </span>
+                        <ul style="margin: 8px 0 0 20px; padding:0; line-height:1.6; font-size:14px; color:#4b5563;">
+                            <li><strong>Single responsibility</strong>: each Skill should handle one clear capability or workflow.</li>
+                            <li><strong>Reusable process</strong>: turn frequently repeated analysis frameworks or output templates into Skills.</li>
+                            <li><strong>Define before configuring</strong>: clarify the trigger, inputs, workflow, and expected outputs before editing the Skill.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="mcp-manual">
+                    <h3>6. Toolset Management</h3>
+                    <p>MCP Toolsets connect AI Workmates to external systems, services, and execution environments. Configure a toolset when a worker must call APIs, retrieve system data, execute actions, or interact with enterprise applications.</p>
+
+                    <div style="display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; margin-bottom:16px;">
+                        <div class="card">
+                            <strong>Toolset Management</strong>
+                            <img
+                                src="screenshot-eg/Toolset_List.png"
+                                alt="Toolset Management"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                        <div class="card">
+                            <strong>Create Toolset</strong>
+                            <img
+                                src="screenshot-eg/Create_mcp.png"
+                                alt="Create Toolset"
+                                style="display:block; width:100%; border:1px solid #e5e7eb; border-radius:16px; margin-top:10px;"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="tip" style="background: #fffcfc; border-left: 4px solid var(--primary); margin-top:28px;">
+                        <span class="callout-title" style="font-size: 16px; color: #111827; display: flex; align-items: center; gap: 6px; font-weight:800;">
+                            Capability selection guide
+                        </span>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
+                                        <th style="padding: 8px; white-space: nowrap; color: #374151;">Need</th>
+                                        <th style="padding: 8px; white-space: nowrap; color: #374151;">Recommended component</th>
+                                        <th style="padding: 8px; color: #374151;">Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">Answer questions based on specific internal documents</td>
+                                        <td style="padding: 8px; white-space: nowrap;"><strong>Knowledge Base</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">Provides approved document sources such as policies, product references, and research reports.</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">Run a repeatable workflow or output format</td>
+                                        <td style="padding: 8px; white-space: nowrap;"><strong>Skill</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">Standardizes trigger conditions, workflow steps, and output structure.</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight:600; white-space: nowrap; color: #111827;">Call external systems, APIs, tools, or search services</td>
+                                        <td style="padding: 8px; white-space: nowrap;"><strong>MCP Toolset</strong></td>
+                                        <td style="padding: 8px; color: #6b7280;">Enables external actions through configured transport, domain, and JSON settings.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                    </div>
+                </section>
+
+                <section id="model-config">
+                    <h3>7. Model Configuration</h3>
+                    <p>Model Configuration manages the underlying models that can be selected when creating or updating an AI Workmate.</p>
+
+                    <p>
+                        <img
+                            src="screenshot-eg/Add_model.png"
+                            alt="Model Configuration"
+                            style="display:block; width:100%; max-width:920px; border:1px solid #e5e7eb; border-radius:20px; margin-bottom:16px;"
+                        >
+                    </p>
+
+                    <h4 style="margin-top:24px;">Model configuration steps</h4>
+                    <ol class="steps">
+                        <li>
+                            <div>
+                                <strong>Open Model Configuration</strong>
+                                Go to <strong>Settings</strong> &gt; <strong>Model Configuration</strong>.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Add model connection details</strong>
+                                Click <strong>New Model</strong>, then complete fields such as <strong>Name</strong>, <strong>Provider</strong>, <strong>Provider Type</strong>, <strong>Model Name</strong>, visibility, API endpoint, and credentials as required.
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Create and use the model</strong>
+                                Confirm that the connection details are correct, then click <strong>Create Model</strong>. The model can then be selected in the <strong>Model</strong> field when creating or updating an AI Workmate.
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="note" style="border-left-color: #374151; margin-top:28px;">
+                        <span class="callout-title" style="color: #111827;">Change effective rule</span>
+                        Changes to Model Configuration apply to newly started conversations and workflows. Tasks already running in the background continue through the original model connection and are not interrupted by mid-process configuration changes.
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

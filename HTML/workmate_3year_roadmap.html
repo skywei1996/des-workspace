@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkMate 三年路线图</title>
+  <style>
+    :root {
+      --bg: #f7f5ff;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: rgba(146, 129, 211, 0.22);
+      --ink: #54409c;
+      --muted: #7d769b;
+      --purple: #7758ef;
+      --purple-deep: #5a44cf;
+      --red: #d83b52;
+      --shadow: 0 28px 70px rgba(47, 35, 98, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(137, 107, 245, 0.12) 0%, rgba(137, 107, 245, 0) 24%),
+        radial-gradient(circle at 90% 12%, rgba(224, 169, 232, 0.16) 0%, rgba(224, 169, 232, 0) 24%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      color: var(--ink);
+    }
+
+    .page {
+      width: 1440px;
+      margin: 0 auto;
+      padding: 24px 0 32px;
+    }
+
+    .board {
+      position: relative;
+      width: 1440px;
+      min-height: 1080px;
+      padding: 28px 30px 30px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(251, 249, 255, 0.96) 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .board::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 24px;
+      border: 1px solid rgba(122, 101, 203, 0.12);
+      pointer-events: none;
+    }
+
+    .head {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 34px;
+      line-height: 1.15;
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+    }
+
+    .title::before {
+      content: "➤";
+      color: var(--purple);
+      font-size: 22px;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .matrix {
+      position: relative;
+      z-index: 1;
+      height: 700px;
+      border-radius: 26px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 40px rgba(46, 34, 92, 0.08);
+      overflow: hidden;
+    }
+
+    .axis-x,
+    .axis-y {
+      position: absolute;
+      color: #6f6890;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+    }
+
+    .axis-x {
+      left: 170px;
+      right: 40px;
+      top: 18px;
+      text-align: center;
+    }
+
+    .axis-y {
+      left: 18px;
+      top: 138px;
+      writing-mode: vertical-rl;
+      text-align: center;
+    }
+
+    .col-labels,
+    .row-labels {
+      position: absolute;
+      color: var(--muted);
+    }
+
+    .col-labels {
+      left: 170px;
+      right: 40px;
+      top: 56px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      text-align: center;
+    }
+
+    .row-labels {
+      left: 26px;
+      top: 120px;
+      bottom: 48px;
+      width: 108px;
+      display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      align-items: center;
+      text-align: right;
+    }
+
+    .col-labels div,
+    .row-labels div {
+      display: grid;
+      gap: 4px;
+      line-height: 1.15;
+    }
+
+    .col-labels strong,
+    .row-labels strong {
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .col-labels span,
+    .row-labels span {
+      color: #8e87ab;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .grid {
+      position: absolute;
+      left: 170px;
+      top: 116px;
+      right: 40px;
+      bottom: 48px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .cell {
+      border-radius: 22px;
+      border: 1px solid rgba(146, 129, 211, 0.14);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .cell.path-1 {
+      background: linear-gradient(135deg, rgba(216, 59, 82, 0.18) 0%, rgba(216, 59, 82, 0.05) 100%);
+    }
+
+    .cell.path-2 {
+      background: linear-gradient(135deg, rgba(119, 88, 239, 0.18) 0%, rgba(119, 88, 239, 0.05) 100%);
+    }
+
+    .cell.path-3 {
+      background: linear-gradient(135deg, rgba(90, 68, 207, 0.24) 0%, rgba(90, 68, 207, 0.08) 100%);
+    }
+
+    .flow {
+      position: absolute;
+      left: 520px;
+      top: 176px;
+      width: 620px;
+      height: 300px;
+      pointer-events: none;
+    }
+
+    .point {
+      position: absolute;
+      min-width: 154px;
+      padding: 14px 16px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.35;
+      text-align: center;
+      box-shadow: 0 18px 28px rgba(61, 44, 127, 0.16);
+    }
+
+    .point.now {
+      left: 556px;
+      top: 404px;
+      background: linear-gradient(135deg, var(--red) 0%, #c52039 100%);
+    }
+
+    .point.y1 {
+      left: 682px;
+      top: 350px;
+      background: linear-gradient(135deg, var(--purple) 0%, #916cff 100%);
+    }
+
+    .point.y2 {
+      left: 924px;
+      top: 240px;
+      background: linear-gradient(135deg, #6b57e2 0%, #8566ef 100%);
+    }
+
+    .point.y3 {
+      left: 1038px;
+      top: 130px;
+      background: linear-gradient(135deg, var(--purple-deep) 0%, #6959dd 100%);
+    }
+
+    .stage-note {
+      position: absolute;
+      width: 188px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(146, 129, 211, 0.16);
+      color: #766f95;
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+      box-shadow: 0 12px 24px rgba(46, 34, 92, 0.06);
+    }
+
+    .stage-note strong {
+      color: var(--ink);
+    }
+
+    .stage-note.now {
+      left: 544px;
+      top: 470px;
+    }
+
+    .stage-note.y1 {
+      left: 684px;
+      top: 440px;
+    }
+
+    .stage-note.y2 {
+      left: 934px;
+      top: 332px;
+    }
+
+    .stage-note.y3 {
+      left: 1090px;
+      top: 222px;
+    }
+
+    .legend {
+      position: absolute;
+      left: 170px;
+      right: 40px;
+      bottom: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .meaning-panel {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      padding: 18px 20px 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(146, 129, 211, 0.16);
+      box-shadow: 0 14px 30px rgba(46, 34, 92, 0.06);
+    }
+
+    .meaning-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .meaning-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .meaning-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .meaning-table {
+      display: grid;
+      grid-template-columns: 150px repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meaning-axis,
+    .meaning-cell {
+      min-height: 108px;
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(146, 129, 211, 0.14);
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .meaning-axis {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(119, 88, 239, 0.08) 0%, rgba(119, 88, 239, 0.03) 100%);
+    }
+
+    .meaning-axis strong,
+    .meaning-cell strong {
+      display: block;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .meaning-axis span,
+    .meaning-cell span {
+      display: block;
+      color: #827ca0;
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .meaning-cell p {
+      margin: 0;
+      color: #746d93;
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .capability-panel {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      padding: 20px 20px 22px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(146, 129, 211, 0.16);
+      box-shadow: 0 14px 30px rgba(46, 34, 92, 0.06);
+    }
+
+    .capability-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .capability-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .capability-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 700;
+      text-align: right;
+      max-width: 420px;
+    }
+
+    .capability-map {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .capability-side {
+      display: grid;
+      grid-template-rows: 116px 1fr;
+      gap: 14px;
+      padding-top: 12px;
+    }
+
+    .side-tag {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(119, 88, 239, 0.08) 0%, rgba(119, 88, 239, 0.03) 100%);
+      border: 1px solid rgba(146, 129, 211, 0.14);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.2;
+      writing-mode: vertical-rl;
+      letter-spacing: 1px;
+    }
+
+    .capability-main {
+      display: grid;
+      gap: 14px;
+    }
+
+    .curve-box {
+      position: relative;
+      height: 116px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(247, 243, 255, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+      border: 1px solid rgba(146, 129, 211, 0.12);
+      overflow: hidden;
+    }
+
+    .curve-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .curve-phase {
+      position: absolute;
+      top: 14px;
+      color: #777094;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      transform: translateX(-50%);
+    }
+
+    .curve-phase::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 24px;
+      width: 1px;
+      height: 56px;
+      background: rgba(146, 129, 211, 0.16);
+    }
+
+    .curve-phase.p1 {
+      left: 18%;
+    }
+
+    .curve-phase.p2 {
+      left: 50%;
+    }
+
+    .curve-phase.p3 {
+      left: 82%;
+    }
+
+    .lane-note {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      color: #8b84a8;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .cap-card {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(146, 129, 211, 0.14);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 10px 20px rgba(46, 34, 92, 0.05);
+    }
+
+    .cap-card-head {
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .cap-card-head small {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 700;
+      opacity: 0.92;
+    }
+
+    .cap-card.y1 .cap-card-head {
+      background: linear-gradient(90deg, #7660ee 0%, #a07bff 100%);
+    }
+
+    .cap-card.y2 .cap-card-head {
+      background: linear-gradient(90deg, #6c57e3 0%, #8e78f1 100%);
+    }
+
+    .cap-card.y3 .cap-card-head {
+      background: linear-gradient(90deg, #5a44cf 0%, #7963e2 100%);
+    }
+
+    .cap-card-body {
+      padding: 14px 16px 16px;
+    }
+
+    .cap-focus {
+      margin: 0 0 12px;
+      color: #7a7398;
+      font-size: 13px;
+      line-height: 1.65;
+      font-weight: 700;
+    }
+
+    .cap-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #736d92;
+    }
+
+    .cap-list li {
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .cap-list strong {
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="board">
+      <div class="head">
+        <h1 class="title">WorkMate 三年路线图：O1-O5 × D1-D5</h1>
+        <div class="note">横轴：组织成熟度 O1-O5<br />纵轴：任务自治程度 D1-D5</div>
+      </div>
+
+      <div class="matrix">
+        <div class="axis-x">横轴：组织成熟度 O1-O5</div>
+        <div class="axis-y">纵轴：任务自治程度 D1-D5</div>
+
+        <div class="col-labels">
+          <div><strong>O1</strong><span>工具化</span></div>
+          <div><strong>O2</strong><span>试点化</span></div>
+          <div><strong>O3</strong><span>治理化</span></div>
+          <div><strong>O4</strong><span>混编化</span></div>
+          <div><strong>O5</strong><span>原生化</span></div>
+        </div>
+
+        <div class="row-labels">
+          <div><strong>D5</strong><span>目标自治</span></div>
+          <div><strong>D4</strong><span>流程自治</span></div>
+          <div><strong>D3</strong><span>委托执行</span></div>
+          <div><strong>D2</strong><span>副驾驶</span></div>
+          <div><strong>D1</strong><span>助手级</span></div>
+        </div>
+
+        <div class="grid">
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell path-3"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell path-2"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell path-1"></div><div class="cell path-1"></div><div class="cell"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell path-1"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        </div>
+
+        <svg class="flow" viewBox="0 0 620 300" aria-hidden="true">
+          <defs>
+            <marker id="flow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#5c49cf"></path>
+            </marker>
+          </defs>
+          <path d="M 18 250 C 92 230, 158 208, 216 174 C 284 136, 360 108, 436 88 C 496 72, 548 48, 604 26" stroke="#5c49cf" stroke-width="4" stroke-dasharray="10 8" fill="none" marker-end="url(#flow-head)"></path>
+        </svg>
+
+        <div class="point now">现状<br />O2→O3 / D2→D3</div>
+        <div class="point y1">第1年<br />O3 / D3</div>
+        <div class="point y2">第2年<br />O4 / D4</div>
+        <div class="point y3">第3年<br />局部 O5 / 定向 D5</div>
+
+        <div class="stage-note now"><strong>重点：</strong>先补治理和放权机制，解决“能做但还不敢全面放权”。</div>
+        <div class="stage-note y1"><strong>重点：</strong>把 O3 和 D3 做扎实，让委托执行可审计、可回收、可复制。</div>
+        <div class="stage-note y2"><strong>重点：</strong>把已验证能力跨团队复制，形成稳定的人机混编管理方式。</div>
+        <div class="stage-note y3"><strong>重点：</strong>只在少数高价值场景试点局部 O5 和定向 D5，不做全量自治。</div>
+
+        <div class="legend">从当前点出发，先补治理能力进入 O3，再复制到 O4，最后只在少数高价值流程试点 O5 / D5。</div>
+      </div>
+
+      <section class="meaning-panel">
+        <div class="meaning-head">
+          <h2 class="meaning-title">O / D 表达是什么意思</h2>
+          <div class="meaning-subtitle">用一个 2 × 5 的矩阵表，把 O1-O5 和 D1-D5 的阶段含义放在页面下方统一说明。</div>
+        </div>
+
+        <div class="meaning-table">
+          <div class="meaning-axis">
+            <strong>O 轴</strong>
+            <span>组织成熟度</span>
+          </div>
+          <div class="meaning-cell">
+            <strong>O1 工具化</strong>
+            <p>把 AI 当工具使用，个人提效为主，没有组织级管理机制。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>O2 试点化</strong>
+            <p>已有部门试点和平台雏形，但仍以局部探索为主。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>O3 治理化</strong>
+            <p>权限、审批、审计、规则和责任边界开始形成闭环。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>O4 混编化</strong>
+            <p>团队稳定地管理人和 Agent，流程能跨团队复制运行。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>O5 原生化</strong>
+            <p>数字员工进入岗编、预算、绩效和经营单元的日常管理。</p>
+          </div>
+
+          <div class="meaning-axis">
+            <strong>D 轴</strong>
+            <span>任务自治程度</span>
+          </div>
+          <div class="meaning-cell">
+            <strong>D1 助手级</strong>
+            <p>只提供问答、检索、草稿和建议，不直接执行任务。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>D2 副驾驶</strong>
+            <p>能辅助计划和操作，但关键动作仍由人主导完成。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>D3 委托执行</strong>
+            <p>标准化、低风险任务可被明确委托给 AI 独立完成。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>D4 流程自治</strong>
+            <p>AI 持有局部流程 ownership，只在例外节点请求人工接管。</p>
+          </div>
+          <div class="meaning-cell">
+            <strong>D5 目标自治</strong>
+            <p>AI 围绕目标持续运行、调整策略并交付结果，但仍受边界约束。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="capability-panel">
+        <div class="capability-head">
+          <h2 class="capability-title">为了走到 D5 / O5，三年要补哪些核心产品能力</h2>
+          <div class="capability-subtitle">用一张“上方能力补齐路径 + 下方年度能力卡片”的图，把每一年产品上必须补齐的关键模块讲明白。</div>
+        </div>
+
+        <div class="capability-map">
+          <div class="capability-side">
+            <div class="side-tag">能力补齐路径</div>
+            <div class="side-tag">核心产品能力</div>
+          </div>
+
+          <div class="capability-main">
+            <div class="curve-box">
+              <svg class="curve-svg" viewBox="0 0 1200 116" aria-hidden="true">
+                <defs>
+                  <linearGradient id="cap-line" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#c79bff"></stop>
+                    <stop offset="45%" stop-color="#9a72f4"></stop>
+                    <stop offset="100%" stop-color="#744fe1"></stop>
+                  </linearGradient>
+                </defs>
+                <path d="M 26 86 C 120 6, 258 6, 354 72 C 442 132, 536 126, 624 68 C 716 8, 844 16, 938 70 C 1034 126, 1118 120, 1174 34" fill="none" stroke="rgba(185, 153, 255, 0.18)" stroke-width="12" stroke-linecap="round"></path>
+                <path d="M 26 86 C 120 6, 258 6, 354 72 C 442 132, 536 126, 624 68 C 716 8, 844 16, 938 70 C 1034 126, 1118 120, 1174 34" fill="none" stroke="url(#cap-line)" stroke-width="4" stroke-linecap="round"></path>
+              </svg>
+              <div class="curve-phase p1">治理打底</div>
+              <div class="curve-phase p2">复制扩张</div>
+              <div class="curve-phase p3">目标自治试点</div>
+              <div class="lane-note">
+                <span>先把可信执行做出来</span>
+                <span>再把能力平台化复制</span>
+                <span>最后只在高价值场景试 D5 / O5</span>
+              </div>
+            </div>
+
+            <div class="capability-grid">
+              <article class="cap-card y1">
+                <div class="cap-card-head">第1年：补齐 O3 / D3<small>让委托执行真正可上线、可治理、可回收</small></div>
+                <div class="cap-card-body">
+                  <p class="cap-focus">核心重点：先解决“能做但不敢放权”，把执行、权限和审计做成生产级底座。</p>
+                  <ul class="cap-list">
+                    <li><strong>身份权限体系：</strong>给数字员工明确身份、角色和资源边界，保证它只能在授权范围内访问数据和执行动作。</li>
+                    <li><strong>规则审批体系：</strong>把任务白名单、人工确认节点、预算上限和风险阈值配置进去，避免 AI 在高风险环节直接放权。</li>
+                    <li><strong>执行编排引擎：</strong>支持步骤编排、失败重试、异常回滚、超时中断和状态持久化，让任务执行过程可控且可恢复。</li>
+                    <li><strong>审计与评测：</strong>记录全链路日志，做结果验收、bad case 回流和成本分析，解决“做完了但不知道好不好”的问题。</li>
+                  </ul>
+                </div>
+              </article>
+
+              <article class="cap-card y2">
+                <div class="cap-card-head">第2年：补齐 O4 / D4<small>让能力不只可用，还能跨团队复制和稳定运营</small></div>
+                <div class="cap-card-body">
+                  <p class="cap-focus">核心重点：从单场景能力升级为平台能力，让人机混编和流程自治开始成立。</p>
+                  <ul class="cap-list">
+                    <li><strong>流程模板中心：</strong>把跑通的场景沉淀成标准模板和能力组件，支持跨团队复用、快速复制和版本迭代。</li>
+                    <li><strong>经理运营台：</strong>让管理者能分配任务、配置阈值、查看队列、接管异常并复盘效果，真正开始管理人和 Agent。</li>
+                    <li><strong>多 Agent 协同：</strong>支持角色拆分、上下文共享、任务交接和协作编排，让多个 Agent 能像小团队一样配合完成流程。</li>
+                    <li><strong>自动化运营能力：</strong>补齐 SLA 监控、异常告警、质量评分和容量治理，保证流程不是“能跑一次”，而是能稳定持续运行。</li>
+                  </ul>
+                </div>
+              </article>
+
+              <article class="cap-card y3">
+                <div class="cap-card-head">第3年：补齐局部 O5 / 定向 D5<small>让少数高价值流程具备目标自治和经营闭环</small></div>
+                <div class="cap-card-body">
+                  <p class="cap-focus">核心重点：不是全平台自治，而是让少数关键流程具备目标驱动、策略调整和责任闭环。</p>
+                  <ul class="cap-list">
+                    <li><strong>目标管理框架：</strong>把业务目标拆成阶段任务和策略选择规则，让 Agent 不只是执行步骤，而是围绕目标持续调整动作。</li>
+                    <li><strong>经营反馈闭环：</strong>建立结果看板、ROI 归因、预算消耗和收益对照分析，让自治效果能被经营层衡量和比较。</li>
+                    <li><strong>责任回收机制：</strong>一旦越界、失真或异常，系统可以熔断、人工接管并留痕问责，避免目标自治变成失控自治。</li>
+                    <li><strong>数字员工经营化：</strong>把数字员工纳入岗编、绩效、预算和经营单元管理，意味着它从工具变成真正被经营的生产资源。</li>
+                  </ul>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
+</body>
+</html>

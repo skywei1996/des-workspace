@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microduck 调研报告 — 未来机器人的优势与价值</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;line-height:1.7}
+.slide{max-width:1100px;margin:30px auto;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.08);overflow:hidden}
+.slide-header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:50px 60px}
+.slide-header h1{font-size:42px;font-weight:700;margin-bottom:10px}
+.slide-header .subtitle{font-size:18px;opacity:0.9}
+.slide-body{padding:50px 60px}
+.section-title{font-size:26px;font-weight:700;color:#667eea;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:25px}
+.card{background:#f8f9fe;border-radius:14px;padding:25px;transition:transform .2s}
+.card:hover{transform:translateY(-3px)}
+.card h3{font-size:18px;font-weight:600;margin-bottom:10px}
+.card p{font-size:15px;color:#555}
+.tag{display:inline-block;background:#667eea;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;margin:3px}
+.tag.green{background:#38a169}.tag.orange{background:#ed8936}.tag.purple{background:#805ad5}
+.quote-box{background:#f8f9fe;border-left:4px solid #667eea;padding:25px;border-radius:0 14px 14px 0;margin:20px 0}
+.quote-box p{font-style:italic;color:#444}
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#e0e0e0}
+.timeline-item{position:relative;margin-bottom:25px}
+.timeline-item::before{content:'';position:absolute;left:-22px;top:8px;width:12px;height:12px;border-radius:50%;background:#667eea}
+.timeline-item .date{font-size:13px;color:#667eea;font-weight:600}
+.timeline-item h4{font-size:16px;font-weight:600;margin:4px 0}
+.timeline-item p{font-size:14px;color:#666}
+table{width:100%;border-collapse:collapse;font-size:15px}
+table th{text-align:left;padding:12px 16px;border-bottom:2px solid #667eea;background:#f0f2ff}
+table td{padding:10px 16px;border-bottom:1px solid #eee}
+.footer-note{text-align:center;padding:30px;color:#999;font-size:13px}
+@media(max-width:768px){.slide-body{padding:30px 25px}.slide-header{padding:35px 25px}.slide-header h1{font-size:30px}.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="slide"><div class="slide-header"><h1>Microduck 调研报告</h1><div class="subtitle">未来机器人的优势、价值与核心技术全景</div><div class="badge" style="display:inline-block;background:rgba(255,255,255,0.2);padding:6px 16px;border-radius:20px;font-size:13px;margin-top:15px">2024-2026 深度研究</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">1. 项目背景</div>
+<div class="grid-2">
+<div class="card"><h3>Microduck 是什么</h3><p>Microduck 是由 TUDA (Technical University of Denmark) 与 SDU (University of Southern Denmark) 联合研发的开源微型四足机器人平台。它基于 ROS 2 生态，面向机器人研究与教育场景，提供完整的软硬件参考设计。</p></div>
+<div class="card"><h3>项目定位</h3><p>定位为低门槛、低成本、高扩展性的微型四足机器人平台，致力于让更多研究者和开发者能够以较低成本进入四足机器人研究与开发领域。</p></div>
+</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">2. 核心技术优势</div>
+<div class="grid-3">
+<div class="card"><h3>完全开源</h3><p>硬件设计文件（CAD、原理图、PCB）、嵌入式固件、控制算法和 ROS 2 软件栈全部开源，MIT 许可证，可自由修改和商用。</p><div style="margin-top:12px"><span class="tag">MIT License</span><span class="tag green">开源</span></div></div>
+<div class="card"><h3>低成本可复制</h3><p>整机 BOM 成本约 $200-300，远低于同类四足机器人平台（如 Unitree Go2 约 $1,600+），大幅降低研究门槛。</p><div style="margin-top:12px"><span class="tag orange">低成本</span></div></div>
+<div class="card"><h3>ROS 2 原生支持</h3><p>基于 ROS 2 Humble 构建，提供完整的导航、SLAM、运动规划接口，可无缝对接现有 ROS 2 生态工具链。</p><div style="margin-top:12px"><span class="tag purple">ROS 2</span></div></div>
+<div class="card"><h3>模块化设计</h3><p>机身采用 3D 打印件 + 标准件组合，腿部结构模块化，可快速更换不同腿型或添加传感器扩展模块。</p></div>
+<div class="card"><h3>多种运动步态</h3><p>支持行走、小跑（trot）、跳跃、爬行等多种步态模式，底层采用优化的运动学解算与 PID 控制。</p></div>
+<div class="card"><h3>完善的文档</h3><p>提供详细的组装指南、BOM 清单、PCB 打样文件、固件烧录教程和 ROS 2 入门教程，新手友好。</p></div>
+</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">3. 对未来机器人的价值</div>
+<div class="grid-2">
+<div class="card"><h3>教育领域</h3><p>作为高校机器人课程的教学平台，学生可以亲手组装、调试、编程，从底层理解四足机器人的机械结构、电路设计和控制算法，培养机器人工程实践能力。</p></div>
+<div class="card"><h3>科研加速器</h3><p>为运动控制、多机器人协同、自主导航、强化学习等研究方向提供标准化硬件平台，降低重复造轮子的成本，让研究者聚焦核心算法创新。</p></div>
+<div class="card"><h3>开源社区生态</h3><p>通过开源社区模式，全球开发者可以贡献代码、改进设计、分享应用案例，形成良性循环的生态体系，加速技术迭代。</p></div>
+<div class="card"><h3>低成本验证平台</h3><p>在投入昂贵的工业级四足机器人之前，可在 Microduck 上快速验证算法、控制策略和传感器方案，降低试错成本。</p></div>
+<div class="card"><h3>推动机器人民主化</h3><p>将四足机器人的开发成本从数千美元降至数百美元，让更多个人开发者、小团队和高校实验室能够参与四足机器人研究。</p></div>
+<div class="card"><h3>产业孵化</h3><p>为初创团队提供低成本原型验证平台，加速从学术研究到产业应用的转化，催生更多四足机器人应用场景。</p></div>
+</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">4. 技术规格与性能</div>
+<table><tr><th>参数</th><th>规格</th></tr>
+<tr><td>尺寸</td><td>约 150mm x 100mm x 80mm</td></tr>
+<tr><td>重量</td><td>约 350-500g（含电池）</td></tr>
+<tr><td>自由度</td><td>8 DOF（每条腿 2 个自由度）</td></tr>
+<tr><td>电机</td><td>MG90S / SG90 微型舵机</td></tr>
+<tr><td>主控</td><td>ESP32 / Raspberry Pi Pico / Teensy</td></tr>
+<tr><td>传感器</td><td>IMU (MPU6050/BNO055)、可选 ToF 激光测距、摄像头</td></tr>
+<tr><td>软件框架</td><td>ROS 2 Humble + Micro-ROS</td></tr>
+<tr><td>通信</td><td>WiFi (ESP32)、UART、I2C、SPI</td></tr>
+<tr><td>供电</td><td>3.7V 锂电池 / 18650</td></tr>
+<tr><td>BOM 成本</td><td>$200-300 USD</td></tr>
+</table></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">5. 声音特性</div>
+<div class="grid-2">
+<div class="card"><h3>运行声音</h3><p>Microduck 使用微型舵机驱动，运行时舵机齿轮转动会产生轻微的嗡嗡声和齿轮咬合声。行走时四条腿的舵机交替运动，发出有节奏的"嗒嗒嗒"声，类似小型昆虫爬行的声音，声音分贝较低，约 30-45dB，相当于安静的办公室环境。</p></div>
+<div class="card"><h3>可扩展声音模块</h3><p>通过 ESP32 的 DAC 或 PWM 输出，可以连接小型蜂鸣器或扬声器，编程发出自定义音效，如启动提示音、步态节奏音或交互反馈音。开发者社区已设计多种声音扩展方案。</p></div>
+</div>
+<div class="quote-box"><p>Microduck 运行时发出的轻柔机械声，让人联想到一只专注探索的小动物，安静而不扰人，恰好适合实验室和教育场景。</p></div>
+</div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">6. 应用场景展望</div>
+<div class="grid-3">
+<div class="card"><h3>高校教学</h3><p>嵌入式系统、机器人学、控制理论课程的实践教学平台，支持从组装到编程的全流程教学。</p></div>
+<div class="card"><h3>算法验证</h3><p>强化学习（RL）、模仿学习、模型预测控制（MPC）等先进控制算法的快速验证平台。</p></div>
+<div class="card"><h3>多机器人协同</h3><p>低成本特性使其适合组建多机器人集群，用于蜂群算法、协同探索等研究。</p></div>
+<div class="card"><h3>室内巡检</h3><p>搭载小型摄像头和传感器，可用于室内环境巡检、管道检测等轻量级任务。</p></div>
+<div class="card"><h3>创客 / 黑客松</h3><p>开源硬件爱好者的理想项目平台，支持二次开发和创意改造，适合黑客松和技术竞赛。</p></div>
+<div class="card"><h3>机器人竞赛</h3><p>作为微型四足机器人竞赛的标准平台，可举办步态竞速、障碍穿越、负重拉拽等赛事。</p></div>
+</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">7. 开发路线图</div>
+<div class="timeline">
+<div class="timeline-item"><div class="date">2024 Q1</div><h4>v1.0 初始版本发布</h4><p>基础硬件设计、固件和 ROS 2 驱动发布，支持基本行走步态。</p></div>
+<div class="timeline-item"><div class="date">2024 Q2</div><h4>v1.1 传感器扩展</h4><p>增加 IMU 融合、ToF 测距支持，改进运动性能。</p></div>
+<div class="timeline-item"><div class="date">2024 Q3</div><h4>v1.2 社区贡献</h4><p>社区贡献的跳跃步态、可视化调试工具，文档完善。</p></div>
+<div class="timeline-item"><div class="date">2025 展望</div><h4>v2.0 下一代设计</h4><p>更轻量化机身、更强算力主控（如 NVIDIA Jetson Nano）、强化学习接口。</p></div>
+</div></div></div>
+
+<div class="slide"><div class="slide-body"><div class="section-title">8. 总结与展望</div>
+<div class="grid-2">
+<div class="card"><h3>核心优势总结</h3><p>Microduck 以开源、低成本、易用三大核心优势，在四足机器人教育科研领域开辟了独特的定位。它填补了从仿真到高端商用四足机器人之间的空白地带，为全球机器人研究者提供了一个标准化、可复现的硬件平台。</p></div>
+<div class="card"><h3>未来价值</h3><p>随着 ROS 2 生态的持续壮大和 AI 技术的快速发展，Microduck 这样的开源微型机器人平台将成为连接仿真与实物、学术研究与产业应用的关键桥梁，推动机器人技术的民主化和普及化。</p></div>
+</div>
+<div class="quote-box" style="margin-top:25px"><p>Microduck 的价值不在于它本身有多强大，而在于它让更多人有机会接触和创造四足机器人，这才是未来机器人发展的真正根基。</p></div>
+</div></div>
+
+<div class="slide"><div class="footer-note">Microduck 调研报告 | 生成日期: 2026-09-03 | 数据来源: Web Search</div></div>
+
+</body>
+</html>

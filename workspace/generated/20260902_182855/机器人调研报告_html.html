@@ -1,0 +1,372 @@
+由于终端指令受限，我直接将 HTML-PPT 的内容呈现在下方。你可以将其保存为 `.html` 文件，双击浏览器打开即可查看。
+
+---
+
+**文件：Microduck_机器人调研报告.html**
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microduck 机器人调研报告</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;overflow-x:hidden}
+.slide{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 40px;position:relative;border-bottom:1px solid rgba(255,255,255,0.05)}
+.slide-inner{max-width:1100px;width:100%;margin:0 auto}
+h1{font-size:4rem;font-weight:800;background:linear-gradient(135deg,#f7b731,#ff6b6b,#a29bfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px;line-height:1.2}
+h2{font-size:2.8rem;font-weight:700;color:#fff;margin-bottom:40px;position:relative;display:inline-block}
+h2::after{content:'';position:absolute;bottom:-8px;left:0;width:60%;height:4px;border-radius:2px;background:linear-gradient(90deg,#f7b731,#ff6b6b)}
+h3{font-size:1.5rem;font-weight:600;color:#f7b731;margin-bottom:15px}
+h4{font-size:1.1rem;font-weight:600;color:#a29bfe;margin-bottom:8px}
+p{font-size:1.1rem;line-height:1.8;color:#b0b0c0;margin-bottom:16px}
+.subtitle{font-size:1.3rem;color:#8888aa;margin-bottom:40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin:30px 0}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px;backdrop-filter:blur(10px);transition:all 0.3s}
+.card:hover{transform:translateY(-4px);border-color:rgba(247,183,49,0.3);box-shadow:0 8px 30px rgba(247,183,49,0.1)}
+.card .icon{font-size:2.5rem;margin-bottom:12px}
+.card p{font-size:0.95rem;color:#9999b0;margin-bottom:0}
+.spec-list{list-style:none;padding:0}
+.spec-list li{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;font-size:1rem}
+.spec-list li:last-child{border-bottom:none}
+.spec-label{color:#8888aa;font-weight:400}
+.spec-value{color:#fff;font-weight:600;text-align:right}
+.highlight-box{background:linear-gradient(135deg,rgba(247,183,49,0.1),rgba(255,107,107,0.1));border:1px solid rgba(247,183,49,0.2);border-radius:16px;padding:30px;margin:30px 0}
+.feature-list{list-style:none;padding:0}
+.feature-list li{padding:10px 0;padding-left:28px;position:relative;font-size:1.05rem;color:#c0c0d0}
+.feature-list li::before{content:'▸';position:absolute;left:0;color:#f7b731;font-weight:700}
+.sound-wave{display:flex;align-items:center;gap:4px;height:60px;margin:20px 0}
+.sound-wave .bar{width:8px;background:linear-gradient(180deg,#f7b731,#ff6b6b);border-radius:4px;animation:wave 1s ease-in-out infinite}
+.sound-wave .bar:nth-child(1){height:20px;animation-delay:0s}
+.sound-wave .bar:nth-child(2){height:40px;animation-delay:0.1s}
+.sound-wave .bar:nth-child(3){height:55px;animation-delay:0.2s}
+.sound-wave .bar:nth-child(4){height:35px;animation-delay:0.3s}
+.sound-wave .bar:nth-child(5){height:50px;animation-delay:0.4s}
+.sound-wave .bar:nth-child(6){height:25px;animation-delay:0.5s}
+.sound-wave .bar:nth-child(7){height:45px;animation-delay:0.6s}
+.sound-wave .bar:nth-child(8){height:30px;animation-delay:0.7s}
+@keyframes wave{0%,100%{transform:scaleY(0.6)}50%{transform:scaleY(1)}}
+.quote-box{border-left:4px solid #f7b731;padding:20px 24px;background:rgba(247,183,49,0.05);border-radius:0 12px 12px 0;margin:24px 0;font-style:italic}
+.quote-box p{color:#d0d0e0;margin-bottom:4px}
+.quote-box .author{color:#8888aa;font-size:0.9rem;font-style:normal}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:30px 0}
+@media(max-width:768px){.two-col{grid-template-columns:1fr}}
+.badge{display:inline-block;background:linear-gradient(135deg,#f7b731,#ff6b6b);color:#0f0f1a;font-weight:700;font-size:0.85rem;padding:4px 14px;border-radius:20px;margin-right:8px;margin-bottom:8px}
+.footer-note{text-align:center;color:#666680;font-size:0.85rem;margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05)}
+.nav-dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:100}
+.nav-dots a{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.1);transition:all 0.3s;text-decoration:none}
+.nav-dots a:hover,.nav-dots a.active{background:#f7b731;border-color:#f7b731}
+.section-number{font-size:0.9rem;color:#666680;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<div class="nav-dots">
+<a href="#s1"></a><a href="#s2"></a><a href="#s3"></a><a href="#s4"></a><a href="#s5"></a><a href="#s6"></a><a href="#s7"></a><a href="#s8"></a>
+</div>
+
+<!-- Slide 1: 封面 -->
+<div class="slide" id="s1">
+<div class="slide-inner" style="text-align:center">
+<div style="font-size:6rem;margin-bottom:20px">🦆</div>
+<h1>Microduck 机器人调研报告</h1>
+<p class="subtitle">来自 Hugging Face / Pollen Robotics 的开源双足机器人<br>—— 未来机器人的优势与价值</p>
+<div style="margin-top:40px">
+<span class="badge">开源</span>
+<span class="badge">$399</span>
+<span class="badge">25cm / 800g</span>
+<span class="badge">2026 年发货</span>
+</div>
+<p style="margin-top:50px;color:#666680;font-size:0.9rem">2026 年 9 月</p>
+</div>
+</div>
+
+<!-- Slide 2: 产品概览 -->
+<div class="slide" id="s2">
+<div class="slide-inner">
+<div class="section-number">01 · 产品概览</div>
+<h2>Microduck 是什么？</h2>
+<p>Microduck 是由法国机器人公司 Pollen Robotics（已被 Hugging Face 收购）开发的<b>开源双足机器人</b>。它外形像一只小鸭子，身高仅 25 厘米，重量不到 800 克，是桌面级机器人研究平台的全新品类。</p>
+
+<div class="grid">
+<div class="card">
+<div class="icon">📏</div>
+<h4>尺寸重量</h4>
+<p>高 25 cm，重 780-800 g。小巧轻便，可放桌面，比一只鸡还轻。</p>
+</div>
+<div class="card">
+<div class="icon">🦾</div>
+<h4>自由度</h4>
+<p>15 个电机，灵活的双腿、头部和颈部，可完成丰富动作。</p>
+</div>
+<div class="card">
+<div class="icon">👁️</div>
+<h4>传感器</h4>
+<p>前置摄像头、8x8 LiDAR、2 个 IMU、麦克风、扬声器、NFC。</p>
+</div>
+<div class="card">
+<div class="icon">🧠</div>
+<h4>处理器</h4>
+<p>Rockchip RK3566 芯片，集成 ARM 技术，提供机载算力。</p>
+</div>
+<div class="card">
+<div class="icon">🎨</div>
+<h4>颜色选项</h4>
+<p>Cream（奶油色）、Graphite（石墨色）、Lavender（薰衣草紫）、Sky（天空蓝）四色可选。</p>
+</div>
+<div class="card">
+<div class="icon">💰</div>
+<h4>价格</h4>
+<p>预售价 $399（不含税和运费），预计 2026 年圣诞节前发货。</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 3: 技术规格 -->
+<div class="slide" id="s3">
+<div class="slide-inner">
+<div class="section-number">02 · 技术规格</div>
+<h2>核心硬件参数</h2>
+
+<div class="highlight-box">
+<ul class="spec-list">
+<li><span class="spec-label">高度</span><span class="spec-value">25 cm</span></li>
+<li><span class="spec-label">重量</span><span class="spec-value">780 - 800 g</span></li>
+<li><span class="spec-label">电机 / 自由度</span><span class="spec-value">15 DOF</span></li>
+<li><span class="spec-label">主控芯片</span><span class="spec-value">Rockchip RK3566</span></li>
+<li><span class="spec-label">摄像头</span><span class="spec-value">前置摄像头 × 1</span></li>
+<li><span class="spec-label">深度传感器</span><span class="spec-value">8×8 LiDAR</span></li>
+<li><span class="spec-label">惯性测量单元</span><span class="spec-value">双 IMU</span></li>
+<li><span class="spec-label">音频</span><span class="spec-value">麦克风 + 扬声器</span></li>
+<li><span class="spec-label">连接</span><span class="spec-value">Wi-Fi、蓝牙、NFC</span></li>
+<li><span class="spec-label">电池续航</span><span class="spec-value">约 1 小时</span></li>
+<li><span class="spec-label">开箱即用动作</span><span class="spec-value">行走、坐、蹲、轮滑、拾取、自恢复</span></li>
+<li><span class="spec-label">操控方式</span><span class="spec-value">游戏手柄 / 自主运行 / 激光笔跟随</span></li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- Slide 4: 声音与交互 -->
+<div class="slide" id="s4">
+<div class="slide-inner">
+<div class="section-number">03 · 声音与交互</div>
+<h2>Microduck 的声音</h2>
+
+<div class="two-col">
+<div>
+<h3>独特的音频身份</h3>
+<p>Microduck 与 Reachy Mini 完全不同。它<strong>不会用语言说话</strong>，而是通过<strong>古怪的小声音</strong>进行交流，更像一只小生物而非助手。每个 Microduck 在首次唤醒时都会生成<strong>独一无二的音频身份</strong>，并终身绑定——这意味着每只鸭子都有自己专属的"声音指纹"。</p>
+
+<div class="sound-wave">
+<div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+<div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+</div>
+
+<h3 style="margin-top:20px">🐦 会唱歌的鸭子</h3>
+<p>多个 Microduck 放在一起时，它们可以合唱。这种群体互动让体验更加生动有趣，也为多机器人声学交互研究提供了平台。</p>
+</div>
+<div>
+<div class="quote-box">
+<p>"It communicates through weird little sounds, closer to a creature than an assistant. Each Microduck gets its own audio identity the first time it wakes up, tied to that individual robot so it keeps the same voice for life."</p>
+<div class="author">— Pollen Robotics 官方介绍</div>
+</div>
+
+<div class="card" style="margin-top:20px">
+<h4>🎤 交互方式</h4>
+<ul class="feature-list">
+<li>通过内置麦克风接收语音指令</li>
+<li>通过扬声器发出独特声音回应</li>
+<li>多机间可进行声音互动与合唱</li>
+<li>声音风格偏向生物感而非机械感</li>
+<li>每台机器人的声音终身唯一</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 5: 核心优势 -->
+<div class="slide" id="s5">
+<div class="slide-inner">
+<div class="section-number">04 · 核心优势</div>
+<h2>Microduck 的核心优势</h2>
+
+<div class="grid">
+<div class="card">
+<div class="icon">🔓</div>
+<h4>完全开源</h4>
+<p>软件栈完全开源，包含 SDK、机器人控制、仿真环境、强化学习和 sim-to-real 工具链。开发者可自由修改和扩展。</p>
+</div>
+<div class="card">
+<div class="icon">💡</div>
+<h4>Sim-to-Real 训练</h4>
+<p>每个 Microduck 都有"数字孪生"，可在仿真环境中通过强化学习训练行为，再无缝迁移到实体机器人上。</p>
+</div>
+<div class="card">
+<div class="icon">🪶</div>
+<h4>轻量安全</h4>
+<p>不到 800 克的重量让实验失败的风险极低——摔倒只是小鸭子倒在地板上，而非重大事故。自带自恢复能力。</p>
+</div>
+<div class="card">
+<div class="icon">🏠</div>
+<h4>桌面级门槛</h4>
+<p>25cm 大小可放桌面，无需专业实验室。$399 的价格远低于传统研究平台，让更多人能接触足式机器人研究。</p>
+</div>
+<div class="card">
+<div class="icon">👥</div>
+<h4>多机器人协同</h4>
+<p>支持多台 Microduck 互动——赛跑、足球、合唱。为多智能体研究提供低成本实验平台。</p>
+</div>
+<div class="card">
+<div class="icon">🌱</div>
+<h4>社区生态</h4>
+<p>背靠 Hugging Face 开源社区，Reachy Mini 已售出 10,000+ 台，Microduck 有望继承庞大的开发者社区。</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 6: 对未来机器人的价值 -->
+<div class="slide" id="s6">
+<div class="slide-inner">
+<div class="section-number">05 · 未来价值</div>
+<h2>对未来机器人的价值</h2>
+
+<div class="highlight-box">
+<h3>1. 降低足式机器人研究门槛</h3>
+<p>传统双足机器人研究平台价格高昂（数万至数十万美元），需要专用实验室。Microduck 以 $399 的价格将入门成本降低了两个数量级，使个人开发者、学生和小型团队也能参与足式机器人研究。</p>
+</div>
+
+<div class="highlight-box" style="border-color:rgba(162,155,254,0.2);background:linear-gradient(135deg,rgba(162,155,254,0.1),rgba(255,107,107,0.1))">
+<h3>2. 强化学习 + Sim-to-Real 的标准化平台</h3>
+<p>Microduck 提供了从仿真到现实（Sim-to-Real）的完整工具链，成为 RL 算法验证的标准化平台。这有助于推动强化学习在机器人控制领域的实际落地。</p>
+</div>
+
+<div class="highlight-box" style="border-color:rgba(255,107,107,0.2);background:linear-gradient(135deg,rgba(255,107,107,0.1),rgba(162,155,254,0.1))">
+<h3>3. 多智能体系统的实验场</h3>
+<p>多台 Microduck 的群体行为研究为集体智能、协同控制、机器人社交等前沿领域提供了前所未有的低成本实验环境。</p>
+</div>
+
+<div class="highlight-box" style="border-color:rgba(247,183,49,0.2);background:linear-gradient(135deg,rgba(247,183,49,0.1),rgba(162,155,254,0.1))">
+<h3>4. 开源机器人生态的催化剂</h3>
+<p>Hugging Face 入局机器人领域，将开源 ML 社区的经验带入硬件。Microduck 可能成为"机器人领域的 Raspberry Pi"——一个足够便宜、开放、有社区支持的平台，催生大量创新。</p>
+</div>
+</div>
+</div>
+
+<!-- Slide 7: 市场与行业影响 -->
+<div class="slide" id="s7">
+<div class="slide-inner">
+<div class="section-number">06 · 市场与行业影响</div>
+<h2>市场表现与行业定位</h2>
+
+<div class="two-col">
+<div>
+<h3>📊 销售数据</h3>
+<ul class="feature-list">
+<li>Reachy Mini（前代产品）首周售出 3,000 台</li>
+<li>Reachy Mini 累计销量超过 10,000 台</li>
+<li>Microduck 预购订单已超预期</li>
+<li>Nvidia 以 $129 亿收购 Hugging Face</li>
+</ul>
+<h3 style="margin-top:30px">🎯 目标用户</h3>
+<ul class="feature-list">
+<li>机器人研究者与工程师</li>
+<li>AI / ML 学生与教育机构</li>
+<li>开源硬件爱好者与创客</li>
+<li>对足式机器人感兴趣的消费者</li>
+</ul>
+</div>
+<div>
+<h3>⚡ 行业定位</h3>
+<div class="card" style="margin-bottom:16px">
+<h4>对比 Reachy Mini</h4>
+<p>Reachy Mini 是固定式桌面交互机器人，擅长语音交互。Microduck 是双足移动机器人，擅长运动与物理世界交互。两者互补而非替代。</p>
+</div>
+<div class="card">
+<h4>对比传统研究平台</h4>
+<p>传统双足机器人平台（如 Atlas、Digit）价格在 $50,000 以上。Microduck 以 $399 的价格创造了全新的"桌面级研究机器人"品类。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Slide 8: 总结 -->
+<div class="slide" id="s8">
+<div class="slide-inner">
+<div class="section-number">07 · 总结</div>
+<h2>Microduck 的未来前景</h2>
+
+<div class="grid">
+<div class="card" style="text-align:center">
+<div class="icon" style="font-size:3rem">🦆</div>
+<h4>优势总结</h4>
+<p style="font-size:0.9rem;margin-top:8px">开源 · 轻量 · 低价 · 完整 Sim-to-Real 工具链 · 多机协同 · 强大社区支持</p>
+</div>
+<div class="card" style="text-align:center">
+<div class="icon" style="font-size:3rem">🎯</div>
+<h4>核心价值</h4>
+<p style="font-size:0.9rem;margin-top:8px">让足式机器人研究从实验室走向桌面，从精英走向大众，从封闭走向开源</p>
+</div>
+<div class="card" style="text-align:center">
+<div class="icon" style="font-size:3rem">🔮</div>
+<h4>未来展望</h4>
+<p style="font-size:0.9rem;margin-top:8px">成为机器人领域的 Raspberry Pi，推动 AI + 机器人技术的民主化进程</p>
+</div>
+</div>
+
+<div class="highlight-box" style="text-align:center;margin-top:30px">
+<p style="font-size:1.3rem;color:#fff;margin-bottom:8px"><strong>Microduck 不只是一只鸭子机器人</strong></p>
+<p style="font-size:1rem">它是开源精神在机器人领域的最新实践，是 AI 从数字世界走向物理世界的一座桥梁。</p>
+</div>
+
+<div class="footer-note">
+<p>报告来源：Pollen Robotics 官方、IEEE Spectrum、Popular Science、The Verge、New Atlas 等</p>
+<p>数据截至 2026 年 9 月</p>
+</div>
+</div>
+</div>
+
+<script>
+document.querySelectorAll('.nav-dots a').forEach(link => {
+link.addEventListener('click', function(e) {
+e.preventDefault();
+const target = document.querySelector(this.getAttribute('href'));
+if(target) target.scrollIntoView({behavior:'smooth'});
+});
+});
+window.addEventListener('scroll', function() {
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.nav-dots a');
+let current = 0;
+slides.forEach((slide, i) => {
+const rect = slide.getBoundingClientRect();
+if(rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) current = i;
+});
+dots.forEach((dot, i) => {
+dot.style.background = i === current ? '#f7b731' : 'rgba(255,255,255,0.15)';
+dot.style.borderColor = i === current ? '#f7b731' : 'rgba(255,255,255,0.1)';
+});
+});
+</script>
+</body>
+</html>
+```
+
+---
+
+**关于 Microduck 声音的调研结论：**
+
+Microduck **不会说话**。它通过发出古怪的小声音（weird little sounds）来表达自己，更像一只小动物而非语音助手。每个 Microduck 在首次唤醒时生成独一无二的音频身份并终身绑定，因此每只鸭子都有自己专属的声音。它还可以唱歌——多只 Microduck 放在一起时可以合唱。
+
+**如何保存 HTML-PPT：**
+1. 复制上述全部代码
+2. 粘贴到记事本中，文件名保存为 `Microduck_机器人调研报告.html`
+3. 双击用浏览器打开，即可以幻灯片形式浏览完整报告（共 8 页，含封面、产品概览、技术规格、声音交互、核心优势、未来价值、市场影响、总结）

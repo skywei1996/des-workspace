@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Palantir Ontology 建模流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0e17; font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; padding: 30px; }
+  .container { max-width: 1200px; width: 100%; }
+  h1 { text-align: center; color: #00d4ff; font-size: 28px; margin-bottom: 8px; letter-spacing: 4px; }
+  .subtitle { text-align: center; color: #8899bb; font-size: 14px; margin-bottom: 30px; }
+
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; position: relative; }
+
+  .row { display: flex; justify-content: center; gap: 20px; width: 100%; position: relative; }
+  .step { background: linear-gradient(135deg, #121a2e, #1a2640); border: 1px solid #2a3a60; border-radius: 12px; padding: 18px 16px; flex: 1; max-width: 260px; position: relative; }
+  .step:hover { border-color: #00d4ff; box-shadow: 0 0 20px rgba(0,212,255,0.15); }
+  .step-num { position: absolute; top: -10px; left: -10px; width: 28px; height: 28px; background: #00d4ff; border-radius: 50%; color: #0a0e17; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .step-icon { font-size: 28px; text-align: center; margin-bottom: 8px; }
+  .step-title { color: #00d4ff; font-size: 15px; font-weight: bold; text-align: center; margin-bottom: 6px; }
+  .step-desc { color: #ccd6ee; font-size: 12px; line-height: 1.6; }
+  .step-desc .tag { display: inline-block; background: rgba(0,212,255,0.15); color: #00d4ff; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin: 1px; }
+  .step-desc .warn { display: inline-block; background: rgba(255,200,0,0.15); color: #ffc800; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin: 1px; }
+  .step-desc .ok { display: inline-block; background: rgba(0,255,120,0.15); color: #00ff78; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin: 1px; }
+
+  .arrow-down { display: flex; justify-content: center; padding: 6px 0; color: #2a4a80; font-size: 22px; }
+
+  .merge-row { display: flex; justify-content: center; width: 100%; margin: 4px 0; }
+  .merge-box { background: linear-gradient(135deg, #0d1a2e, #162240); border: 1px dashed #3a5a80; border-radius: 10px; padding: 12px 30px; text-align: center; }
+  .merge-box .title { color: #ffc800; font-size: 14px; font-weight: bold; }
+  .merge-box .desc { color: #aabbdd; font-size: 12px; }
+
+  .output-box { background: linear-gradient(135deg, #0a1a12, #0f2a1a); border: 2px solid #00ff78; border-radius: 12px; padding: 18px 24px; text-align: center; margin-top: 8px; width: 100%; }
+  .output-box .title { color: #00ff78; font-size: 16px; font-weight: bold; }
+  .output-box .desc { color: #aaddcc; font-size: 13px; margin-top: 4px; }
+  .output-box .next { color: #88ddbb; font-size: 12px; margin-top: 8px; background: rgba(0,255,120,0.1); padding: 6px 12px; border-radius: 6px; display: inline-block; }
+
+  @media print {
+    body { background: #0a0e17; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Palantir Ontology 建模细化流程</h1>
+  <div class="subtitle">从数据源到可消费的 Ontology 对象 — 一页讲清全链路</div>
+
+  <div class="flow">
+
+    <!-- Row 1: 数据接入 -->
+    <div class="row">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-icon">📥</div>
+        <div class="step-title">数据源接入</div>
+        <div class="step-desc">
+          <span class="tag">Foundry</span> 连接数据源<br>
+          支持：S3 / JDBC / Kafka / 文件上传<br>
+          配置数据连接 <span class="warn">Pipeline</span><br>
+          增量 / 全量同步策略定义
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-icon">🧹</div>
+        <div class="step-title">数据清洗与标准化</div>
+        <div class="step-desc">
+          <span class="tag">Contour</span> 数据探查<br>
+          去重 / 空值处理 / 格式统一<br>
+          异常值检测 <span class="warn">质量门禁</span><br>
+          <span class="ok">输出：清洗后数据集</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-icon">📐</div>
+        <div class="step-title">对象建模</div>
+        <div class="step-desc">
+          定义 <span class="tag">Ontology Object</span><br>
+          对象类型 / 标识符 / 主键<br>
+          对象间关系：<span class="tag">Links</span> 1:1 / 1:N / N:N<br>
+          继承 / 复合结构设计
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- Row 2: 属性 + 映射 -->
+    <div class="row">
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-icon">🏷️</div>
+        <div class="step-title">属性定义</div>
+        <div class="step-desc">
+          属性名称 / 类型 / 约束<br>
+          必填 / 可选 / 唯一性约束<br>
+          派生属性 <span class="tag">Derived</span><br>
+          时间戳 / 状态枚举 / 数值区间
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-icon">🔗</div>
+        <div class="step-title">数据映射</div>
+        <div class="step-desc">
+          源字段 → 对象属性映射<br>
+          <span class="tag">Transforms</span> 类型转换<br>
+          值映射 / 字段拼接 / 条件逻辑<br>
+          <span class="ok">映射规则验证</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-icon">🔐</div>
+        <div class="step-title">角色权限</div>
+        <div class="step-desc">
+          <span class="tag">Role-Based Access</span><br>
+          对象级 / 属性级 / 行级权限<br>
+          角色定义：Admin / Editor / Viewer<br>
+          权限继承与覆盖规则
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- Merge: 验证 -->
+    <div class="merge-row">
+      <div class="merge-box">
+        <div class="title">✅ 质量验证与对齐</div>
+        <div class="desc">数据完整性检查 → 关系完整性验证 → 权限穿透测试 → 性能基线评估</div>
+      </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- Row 3: 发布 -->
+    <div class="row">
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-icon">🚀</div>
+        <div class="step-title">发布 Ontology</div>
+        <div class="step-desc">
+          <span class="tag">Ontology Sync</span><br>
+          发布到 <span class="ok">Foundry 生产环境</span><br>
+          版本管理 / 变更日志<br>
+          回滚预案
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-icon">📋</div>
+        <div class="step-title">文档与元数据</div>
+        <div class="step-desc">
+          对象描述 / 业务术语表<br>
+          <span class="tag">Data Dictionary</span><br>
+          数据血缘追踪<br>
+          <span class="ok">团队协作注释</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-icon">🔁</div>
+        <div class="step-title">持续迭代</div>
+        <div class="step-desc">
+          变更流程 <span class="tag">Change Request</span><br>
+          版本对比 / 影响分析<br>
+          增量发布 / 灰度验证<br>
+          <span class="warn">持续监控</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- Output -->
+    <div class="output-box">
+      <div class="title">🎯 产出：可消费的 Ontology 数据</div>
+      <div class="desc">对象完整 | 属性准确 | 关系清晰 | 权限到位 | 血缘可追溯</div>
+      <div class="next">➡ 下一步：规则梳理 · 工作流编排 · Workshop 应用 · 机器学习特征工程</div>
+    </div>
+
+    <!-- Bottom legend -->
+    <div style="display:flex; justify-content:center; gap:20px; margin-top:20px; font-size:11px; color:#667799;">
+      <span><span class="tag" style="background:rgba(0,212,255,0.15);color:#00d4ff;">Foundry 能力</span></span>
+      <span><span class="warn" style="background:rgba(255,200,0,0.15);color:#ffc800;">注意点</span></span>
+      <span><span class="ok" style="background:rgba(0,255,120,0.15);color:#00ff78;">产出物</span></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

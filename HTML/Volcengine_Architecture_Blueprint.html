@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volcengine Technical Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        base: '#050B14',
+                        surface: '#0F172A',
+                        panel: '#1E293B',
+                        primary: '#06B6D4',
+                        accent: '#3B82F6',
+                        muted: '#64748B'
+                    },
+                    fontFamily: {
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', "Segoe UI", 'Roboto', "Helvetica Neue", 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050B14; color: #E2E8F0; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .board-container { width: 96vw; height: 54vw; max-height: 96vh; max-width: 170.66vh; background: #050B14; border: 1px solid #1E293B; position: relative; display: flex; flex-direction: column; padding: 1.5rem; gap: 0.75rem; box-sizing: border-box; }
+        .hairline-grid { background: #1E293B; display: grid; gap: 1px; padding: 1px; }
+        .panel { background: #0F172A; position: relative; }
+        .corner-tl { position: absolute; top: 0; left: 0; width: 0.5rem; height: 0.5rem; border-top: 1px solid #06B6D4; border-left: 1px solid #06B6D4; }
+        .corner-br { position: absolute; bottom: 0; right: 0; width: 0.5rem; height: 0.5rem; border-bottom: 1px solid #06B6D4; border-right: 1px solid #06B6D4; }
+        .glass-panel { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body>
+    <div class="board-container">
+        <!-- Header Zone (18%) -->
+        <div class="flex items-start justify-between h-[15%] pb-2 border-b border-panel">
+            <div>
+                <div class="font-mono text-primary text-[10px] mb-1 tracking-widest">// SYS_ARCH_VOLCENGINE // V_1.0.0</div>
+                <h1 class="text-2xl font-bold text-white tracking-wider uppercase mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-primary"></i> 火山引擎技术矩阵板
+                </h1>
+                <div class="text-xs text-muted">企业级云与智能服务 (Data-Driven, AI-Native Cloud Infrastructure)</div>
+            </div>
+            <div class="flex gap-2 h-full">
+                <!-- KPI Strips -->
+                <div class="panel border-l-2 border-primary px-3 py-1.5 flex items-center gap-3">
+                    <i class="fa-solid fa-microchip text-primary text-lg"></i>
+                    <div>
+                        <div class="text-[10px] text-muted font-mono uppercase">AI Native</div>
+                        <div class="text-xs font-bold text-white">豆包大模型驱动</div>
+                    </div>
+                </div>
+                <div class="panel border-l-2 border-accent px-3 py-1.5 flex items-center gap-3">
+                    <i class="fa-solid fa-server text-accent text-lg"></i>
+                    <div>
+                        <div class="text-[10px] text-muted font-mono uppercase">Performance</div>
+                        <div class="text-xs font-bold text-white">极速云原生引擎</div>
+                    </div>
+                </div>
+                <div class="panel border-l-2 border-primary px-3 py-1.5 flex items-center gap-3">
+                    <i class="fa-solid fa-network-wired text-primary text-lg"></i>
+                    <div>
+                        <div class="text-[10px] text-muted font-mono uppercase">Data Driven</div>
+                        <div class="text-xs font-bold text-white">全链路按字节优化</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body Grid (col-12) (70%) -->
+        <div class="flex-1 grid grid-cols-12 gap-3 min-h-0 pt-2">
+            <!-- Left: Workflow col-2 -->
+            <div class="col-span-2 hairline-grid h-full glass-panel">
+                <div class="panel p-2 flex flex-col h-full">
+                    <div class="corner-tl"></div>
+                    <div class="uppercase tracking-widest text-[10px] font-bold text-white mb-3 flex items-center gap-2">
+                        <span class="font-mono text-primary bg-primary/10 px-1 py-0.5">[01]</span> 工作流 / FLOW
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between pt-2">
+                        <!-- Flow Steps -->
+                        <div class="relative pl-4 border-l border-panel ml-2 flex-1 flex flex-col justify-around py-2">
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2 h-2 bg-primary transform rotate-45 shadow-[0_0_8px_#06B6D4]"></div>
+                                <div class="font-mono text-[9px] text-primary mb-0.5">STEP_01</div>
+                                <div class="text-xs text-white font-bold">接入层 Access</div>
+                                <div class="text-[10px] text-muted leading-tight mt-0.5">多模态边缘接入与能力分发</div>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2 h-2 bg-accent transform rotate-45"></div>
+                                <div class="font-mono text-[9px] text-primary mb-0.5">STEP_02</div>
+                                <div class="text-xs text-white font-bold">治理层 Manage</div>
+                                <div class="text-[10px] text-muted leading-tight mt-0.5">云原生弹性架构资源治理</div>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2 h-2 bg-accent transform rotate-45"></div>
+                                <div class="font-mono text-[9px] text-primary mb-0.5">STEP_03</div>
+                                <div class="text-xs text-white font-bold">数据层 Process</div>
+                                <div class="text-[10px] text-muted leading-tight mt-0.5">海量数据湖仓与实时计算</div>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2 h-2 bg-accent transform rotate-45"></div>
+                                <div class="font-mono text-[9px] text-primary mb-0.5">STEP_04</div>
+                                <div class="text-xs text-white font-bold">智能层 Engine</div>
+                                <div class="text-[10px] text-muted leading-tight mt-0.5">模型训推与智能特征抽取</div>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2 h-2 bg-primary transform rotate-45 shadow-[0_0_8px_#06B6D4]"></div>
+                                <div class="font-mono text-[9px] text-primary mb-0.5">STEP_05</div>
+                                <div class="text-xs text-white font-bold">服务层 Delivery</div>
+                                <div class="text-[10px] text-muted leading-tight mt-0.5">商业化引擎落地业务创新</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Canvas: Platform Matrix col-7 -->
+            <div class="col-span-7 grid grid-rows-4 gap-2 h-full">
+                
+                <!-- Row 1: AI / Models -->
+                <div class="hairline-grid h-full glass-panel">
+                    <div class="panel p-2 flex flex-col border-l-4 border-primary">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <div class="uppercase tracking-widest text-[10px] font-bold text-white flex items-center gap-2">
+                                <span class="font-mono text-primary bg-primary/10 px-1 py-0.5">[02.A]</span> AI 与机器学习平台 (VolcanoML)
+                            </div>
+                            <div class="font-mono text-[8px] text-primary border border-primary/30 px-1 py-0.5">AI_ENGINE</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 flex-1">
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold"><i class="fa-solid fa-brain text-primary text-[8px] mr-1"></i>豆包大模型家族</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">Doubao Foundation</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold"><i class="fa-solid fa-layer-group text-primary text-[8px] mr-1"></i>机器学习平台</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">端到端模型开发</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold"><i class="fa-solid fa-robot text-primary text-[8px] mr-1"></i>智能推荐平台</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">头条抖音推荐引擎</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold"><i class="fa-solid fa-microphone text-primary text-[8px] mr-1"></i>多模态模型</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">语音交互 / 视觉推理</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Data -->
+                <div class="hairline-grid h-full glass-panel">
+                    <div class="panel p-2 flex flex-col border-l-4 border-accent">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <div class="uppercase tracking-widest text-[10px] font-bold text-white flex items-center gap-2">
+                                <span class="font-mono text-accent bg-accent/10 px-1 py-0.5">[02.B]</span> 数据与分析平台 (VeDI)
+                            </div>
+                            <div class="font-mono text-[8px] text-accent border border-accent/30 px-1 py-0.5">DATA_LAKE</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 flex-1">
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">云原生数仓架构</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">ByteHouse</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">数据研发治理</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">DataLeap 敏捷体系</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">增长分析引擎</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">Finder / A&B 测试</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">客户数据平台</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">全域 CDP 数据体系</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Media & Edge -->
+                <div class="hairline-grid h-full glass-panel">
+                    <div class="panel p-2 flex flex-col border-l-4 border-panel">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <div class="uppercase tracking-widest text-[10px] font-bold text-white flex items-center gap-2">
+                                <span class="font-mono text-muted bg-panel px-1 py-0.5">[02.C]</span> 视频与内容分发生态 (Media/CDN)
+                            </div>
+                            <div class="font-mono text-[8px] text-muted border border-panel px-1 py-0.5">NETWORK_EDGE</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 flex-1">
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">视频直播/点播</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">企业级 VOD / Live</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">实时音视频 RTC</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">超低延迟音视频通信</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">全网内容分发</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">海量 CDN 节点加速</div>
+                            </div>
+                            <div class="bg-surface border border-panel px-2 py-1 flex flex-col justify-center">
+                                <div class="text-[10px] text-white font-bold">边缘计算节点</div>
+                                <div class="font-mono text-[8px] text-muted mt-0.5">端边算力深度下沉</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4: IaaS Foundation -->
+                <div class="hairline-grid h-full glass-panel">
+                    <div class="panel p-2 border-l-4 border-panel border-dashed h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <div class="uppercase tracking-widest text-[10px] font-bold text-white flex items-center gap-2">
+                                <span class="font-mono text-muted bg-panel px-1 py-0.5">[02.D]</span> 弹性计算与云基础架构 (IaaS)
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 flex-1">
+                            <div class="flex items-center gap-2 bg-surface/50 border border-panel p-1.5">
+                                <i class="fa-solid fa-server text-muted"></i>
+                                <div>
+                                    <div class="text-[9px] text-white font-bold">计算与容器 Compute</div>
+                                    <div class="text-[8px] text-muted">ECS / 云原生引擎 VKE</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-surface/50 border border-panel p-1.5">
+                                <i class="fa-solid fa-database text-muted"></i>
+                                <div>
+                                    <div class="text-[9px] text-white font-bold">存储 Storage</div>
+                                    <div class="text-[8px] text-muted">多模 Database / 对象 TOS</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-surface/50 border border-panel p-1.5">
+                                <i class="fa-solid fa-network-wired text-muted"></i>
+                                <div>
+                                    <div class="text-[9px] text-white font-bold">网络与安全 Network</div>
+                                    <div class="text-[8px] text-muted">企业级 VPC / 多态防御墙</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right: Scenarios col-3 -->
+            <div class="col-span-3 h-full flex flex-col gap-2">
+                <div class="hairline-grid glass-panel flex-1">
+                    <div class="panel p-2 flex flex-col h-full border-t flex-1 border-primary">
+                        <div class="corner-br"></div>
+                        <div class="uppercase tracking-widest text-[10px] font-bold text-white mb-2 flex items-center gap-2">
+                            <span class="font-mono text-primary bg-primary/10 px-1 py-0.5">[03]</span> 场景输出 / SCENARIOS
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 flex-1">
+                            <!-- Scenario Image Slot 1 -->
+                            <div class="relative bg-surface border border-panel flex flex-col">
+                                <div class="bg-black/60 h-10 w-full flex items-center justify-center relative overflow-hidden">
+                                    <i class="fa-solid fa-car text-primary/40 text-xl absolute -right-1 -bottom-1"></i>
+                                    <span class="font-mono text-[8px] text-primary relative z-10 z-10 border border-primary/30 bg-black/50 px-1">IMG_SLOT_01</span>
+                                </div>
+                                <div class="p-1 flex-1">
+                                    <div class="text-[9px] text-white font-bold mb-0.5">汽车出行</div>
+                                    <div class="text-[8px] text-muted">自动驾驶模型训练架构</div>
+                                </div>
+                            </div>
+                            <!-- Scenario Image Slot 2 -->
+                            <div class="relative bg-surface border border-panel flex flex-col">
+                                <div class="bg-black/60 h-10 w-full flex items-center justify-center relative overflow-hidden">
+                                    <i class="fa-solid fa-gamepad text-primary/40 text-xl absolute -right-1 -bottom-1"></i>
+                                    <span class="font-mono text-[8px] text-primary relative z-10 border border-primary/30 bg-black/50 px-1">IMG_SLOT_02</span>
+                                </div>
+                                <div class="p-1 flex-1">
+                                    <div class="text-[9px] text-white font-bold mb-0.5">泛互联网</div>
+                                    <div class="text-[8px] text-muted">全链路增长引擎基座</div>
+                                </div>
+                            </div>
+                            <!-- Scenario Image Slot 3 -->
+                            <div class="relative bg-surface border border-panel flex flex-col">
+                                <div class="bg-black/60 h-10 w-full flex items-center justify-center relative overflow-hidden">
+                                    <i class="fa-solid fa-shopping-cart text-accent/40 text-xl absolute -right-1 -bottom-1"></i>
+                                    <span class="font-mono text-[8px] text-accent relative z-10 border border-accent/30 bg-black/50 px-1">IMG_SLOT_03</span>
+                                </div>
+                                <div class="p-1 flex-1">
+                                    <div class="text-[9px] text-white font-bold mb-0.5">大消费门店</div>
+                                    <div class="text-[8px] text-muted">全域私域营销体系数据分析</div>
+                                </div>
+                            </div>
+                            <!-- Scenario Image Slot 4 -->
+                            <div class="relative bg-surface border border-panel flex flex-col">
+                                <div class="bg-black/60 h-10 w-full flex items-center justify-center relative overflow-hidden">
+                                    <i class="fa-solid fa-building-columns text-accent/40 text-xl absolute -right-1 -bottom-1"></i>
+                                    <span class="font-mono text-[8px] text-accent relative z-10 border border-accent/30 bg-black/50 px-1">IMG_SLOT_04</span>
+                                </div>
+                                <div class="p-1 flex-1">
+                                    <div class="text-[9px] text-white font-bold mb-0.5">泛金融系统</div>
+                                    <div class="text-[8px] text-muted">高保障云基础与风控计算</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Ecosystem Base col-12 (15%) -->
+        <div class="h-[15%] hairline-grid glass-panel mt-1">
+            <div class="panel p-2 flex border-t-2 border-panel h-full relative">
+                <!-- Base Layer decorative border -->
+                <div class="absolute left-0 bottom-0 w-full h-[1px] bg-gradient-to-r from-primary to-transparent opacity-50"></div>
+
+                <div class="flex items-center w-48 pr-4 border-r border-dashed border-panel">
+                    <div class="uppercase tracking-widest text-[10px] font-bold text-white flex items-center gap-1 flex-col items-start">
+                        <span class="font-mono text-muted bg-panel px-1 py-0.5 mb-1">[04] BASE_LAYER</span> 
+                        <span>基础设施与战略生态</span>
+                    </div>
+                </div>
+                
+                <div class="flex-1 flex px-4 gap-6 items-center">
+                    <div class="flex-1 flex gap-2">
+                       <div class="flex-1 bg-surface border border-panel p-1.5 px-3 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-muted"></i>
+                            <div>
+                               <div class="text-[9px] text-white font-bold">合规与网络安全安全</div>
+                               <div class="font-mono text-[8px] text-muted mt-0.5">Zero Trust / DdoS / IAM</div>
+                            </div>
+                       </div>
+                       <div class="flex-1 bg-surface border border-panel p-1.5 px-3 flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-muted"></i>
+                            <div>
+                               <div class="text-[9px] text-white font-bold">全球化高速网络部署</div>
+                               <div class="font-mono text-[8px] text-muted mt-0.5">跨网极速互联基础设施</div>
+                            </div>
+                       </div>
+                       <div class="flex-1 bg-surface border border-panel p-1.5 px-3 flex items-center gap-2">
+                            <i class="fa-solid fa-code text-muted"></i>
+                            <div>
+                               <div class="text-[9px] text-white font-bold">开发者统一接口体系</div>
+                               <div class="font-mono text-[8px] text-muted mt-0.5">SDK / CLI / Terraform</div>
+                            </div>
+                       </div>
+                       <div class="flex-1 bg-surface border border-panel p-1.5 px-3 flex items-center gap-2">
+                            <i class="fa-solid fa-handshake text-muted"></i>
+                            <div>
+                               <div class="text-[9px] text-white font-bold">万象计划与云生态</div>
+                               <div class="font-mono text-[8px] text-muted mt-0.5">战略伙伴深度技术共赢</div>
+                            </div>
+                       </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

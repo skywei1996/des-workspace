@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkMate 2026 H2 产品路线图</title>
+  <style>
+    :root {
+      --ink: #172235;
+      --muted: #627087;
+      --line: #d7dfeb;
+      --paper: #ffffff;
+      --canvas: #eef2f7;
+      --red: #d9253f;
+      --red-soft: #fff0f2;
+      --blue: #2f67b1;
+      --blue-soft: #edf4ff;
+      --teal: #16877d;
+      --teal-soft: #eaf8f5;
+      --gold: #d79318;
+      --gold-soft: #fff7e7;
+      --green: #5a9f21;
+      --green-soft: #f1f9e9;
+      --shadow: 0 18px 45px rgba(42, 61, 89, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(47, 103, 177, 0.04) 25%, transparent 25%) 0 0 / 28px 28px,
+        var(--canvas);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+
+    .page { width: min(100% - 32px, 1580px); margin: 0 auto; padding: 28px 0 36px; }
+
+    .board {
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid #cdd7e5;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 30px 36px 25px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow { margin: 0 0 7px; color: var(--red); font-size: 13px; font-weight: 900; letter-spacing: 1.4px; }
+    h1 { margin: 0; font-size: clamp(27px, 3vw, 42px); line-height: 1.12; letter-spacing: 0; }
+    .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 15px; font-weight: 600; }
+    .deadline { min-width: 250px; align-self: center; padding: 14px 18px; border-left: 4px solid var(--red); background: var(--red-soft); }
+    .deadline strong { display: block; color: var(--red); font-size: 19px; }
+    .deadline span { display: block; margin-top: 4px; color: #7a3943; font-size: 12px; font-weight: 700; }
+
+    .thesis { padding: 18px 36px; background: #18263a; color: #fff; }
+    .thesis strong { color: #fff; font-size: 17px; }
+    .thesis span { margin-left: 16px; color: #c6d5e8; font-size: 14px; }
+
+    .north-star { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid var(--line); }
+    .north-star article { min-height: 112px; padding: 18px 22px; border-right: 1px solid var(--line); }
+    .north-star article:last-child { border-right: 0; }
+    .north-star .now { background: #f6f8fb; }
+    .north-star .next { background: #eef8f6; }
+    .north-star .goal { background: #fff4f5; }
+    .north-star small { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: 1px; }
+    .north-star strong { display: block; font-size: 18px; line-height: 1.25; }
+    .north-star p { margin: 6px 0 0; color: #56657a; font-size: 12px; line-height: 1.45; }
+
+    .section { padding: 25px 36px 0; }
+    .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+    .section-title h2 { margin: 0; font-size: 20px; }
+    .section-title p { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; }
+
+    .timeline-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .roadbar { position: relative; min-width: 1060px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1fr); gap: 8px; margin-bottom: 10px; padding: 0 0 15px; }
+    .roadbar::before { content: ""; position: absolute; left: 8px; right: 8px; bottom: 7px; height: 4px; background: #cbd5e2; }
+    .roadbar-item { position: relative; z-index: 1; text-align: center; color: var(--muted); font-size: 12px; font-weight: 900; }
+    .roadbar-item::after { content: ""; display: block; width: 16px; height: 16px; margin: 7px auto -8px; border: 4px solid #fff; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 2px var(--blue); }
+    .roadbar-item.current::after { background: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+    .roadbar-item.flow::after { background: var(--teal); box-shadow: 0 0 0 2px var(--teal); }
+    .roadbar-item.govern::after { background: var(--red); box-shadow: 0 0 0 2px var(--red); }
+    .roadbar-item.freeze { color: var(--red); }
+    .roadbar-item.freeze::after { background: var(--red); box-shadow: 0 0 0 2px var(--red); }
+    .roadbar-item.test::after { background: #7a8799; box-shadow: 0 0 0 2px #7a8799; }
+    .timeline { position: relative; min-width: 1060px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 1fr); gap: 8px; }
+    .month { position: relative; min-height: 235px; padding: 16px 15px 14px; border-top: 5px solid var(--blue); background: var(--blue-soft); transition: transform .2s ease, box-shadow .2s ease; }
+    .month:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(42, 61, 89, 0.12); }
+    .month::after { content: ""; position: absolute; top: 91px; right: -8px; z-index: 2; width: 14px; height: 14px; transform: rotate(45deg); background: inherit; border-top: 1px solid var(--line); border-right: 1px solid var(--line); }
+    .month:last-child::after { display: none; }
+    .month.current { border-color: var(--gold); background: var(--gold-soft); }
+    .month.flow { border-color: var(--teal); background: var(--teal-soft); }
+    .month.govern { border-color: var(--red); background: var(--red-soft); }
+    .month.freeze { border-color: var(--green); background: var(--green-soft); }
+    .month.test { border-color: #7a8799; background: #f3f5f8; }
+    .month.freeze { box-shadow: inset -4px 0 0 var(--red); }
+    .month-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+    .month time { color: var(--muted); font-size: 12px; font-weight: 900; }
+    .month h3 { margin: 5px 0 10px; font-size: 19px; line-height: 1.18; }
+    .status { padding: 3px 6px; border: 1px solid currentColor; color: var(--blue); font-size: 10px; font-weight: 900; white-space: nowrap; }
+    .current .status { color: var(--gold); }
+    .flow .status { color: var(--teal); }
+    .govern .status { color: var(--red); }
+    .freeze .status { color: var(--green); }
+    .test .status { color: #6d7888; }
+    .month ul { display: grid; gap: 7px; margin: 0; padding-left: 17px; color: #45556b; font-size: 12px; line-height: 1.4; }
+    .month li::marker { color: var(--blue); }
+    .flow li::marker { color: var(--teal); }
+    .govern li::marker { color: var(--red); }
+    .freeze li::marker { color: var(--green); }
+    .result { margin-top: 13px; padding-top: 11px; border-top: 1px solid rgba(86, 105, 130, 0.18); }
+    .result b { display: block; margin-bottom: 4px; color: var(--ink); font-size: 11px; }
+    .result span { display: block; color: #405169; font-size: 11px; line-height: 1.45; }
+    .scene { margin-top: 7px; padding: 6px 8px; background: rgba(255, 255, 255, 0.72); color: #24354c; font-size: 10px; font-weight: 900; line-height: 1.35; }
+
+    .lanes { display: grid; gap: 8px; min-width: 1060px; }
+    .lane { display: grid; grid-template-columns: 190px repeat(5, minmax(0, 1fr)); min-height: 83px; border: 1px solid var(--line); }
+    .lane-label { display: flex; flex-direction: column; justify-content: center; padding: 12px 15px; background: #f6f8fb; border-right: 1px solid var(--line); }
+    .lane-label strong { font-size: 14px; }
+    .lane-label span { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .lane-cell { padding: 12px 11px; border-right: 1px solid var(--line); color: #41516a; font-size: 11px; line-height: 1.45; }
+    .lane-cell:last-child { border-right: 0; }
+    .lane-cell.active { background: #fbfcfe; color: var(--ink); font-weight: 700; }
+    .lane-cell.key { background: #fff7f8; color: #7f2b39; font-weight: 800; }
+    .dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--blue); }
+    .dot.red { background: var(--red); }
+    .dot.teal { background: var(--teal); }
+    .dot.gold { background: var(--gold); }
+    .dot.green { background: var(--green); }
+
+    .outcomes { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 12px; }
+    .outcome { padding: 17px 18px; border: 1px solid var(--line); border-top: 4px solid var(--teal); background: #fff; }
+    .outcome.analysis { border-top-color: var(--blue); }
+    .outcome.commercial { border-top-color: var(--green); }
+    .outcome h3 { margin: 0 0 10px; font-size: 16px; }
+    .outcome p { margin: 0; color: #506078; font-size: 12px; line-height: 1.55; }
+    .flowline { margin-top: 12px; color: var(--ink); font-size: 12px; font-weight: 900; line-height: 1.6; }
+    .flowline b { color: var(--teal); }
+    .analysis .flowline b { color: var(--blue); }
+    .commercial .flowline b { color: var(--green); }
+
+    .bottom-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; }
+    .metrics, .risks { border: 1px solid var(--line); padding: 17px 18px; }
+    .metrics h3, .risks h3 { margin: 0 0 12px; font-size: 16px; }
+    .metric-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .metric { padding: 11px 10px; background: #f6f8fb; }
+    .metric strong { display: block; color: var(--red); font-size: 21px; }
+    .metric span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .risk-list { display: grid; gap: 8px; margin: 0; padding-left: 17px; color: #53627a; font-size: 12px; line-height: 1.45; }
+    .risk-list li::marker { color: var(--red); }
+
+    .footer { display: flex; justify-content: space-between; gap: 22px; margin-top: 25px; padding: 17px 36px; border-top: 1px solid var(--line); background: #f7f9fb; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .footer strong { color: var(--ink); }
+
+    @media (max-width: 760px) {
+      .page { width: 100%; padding: 0; }
+      .board { border-right: 0; border-left: 0; }
+      .header, .section { padding-left: 20px; padding-right: 20px; }
+      .header { display: block; }
+      .deadline { margin-top: 18px; }
+      .thesis { padding: 16px 20px; }
+      .thesis span { display: block; margin: 6px 0 0; line-height: 1.5; }
+      .north-star { grid-template-columns: 1fr; }
+      .north-star article { border-right: 0; border-bottom: 1px solid var(--line); }
+      .section-title { display: block; }
+      .section-title p { margin-top: 5px; }
+      .outcomes, .bottom-grid { grid-template-columns: 1fr; }
+      .metric-list { grid-template-columns: repeat(2, 1fr); }
+      .footer { display: block; padding-left: 20px; padding-right: 20px; }
+      .footer span { display: block; margin-top: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="board">
+      <header class="header">
+        <div>
+          <p class="eyebrow">WORKMATE PRODUCT ROADMAP · 2026 H2</p>
+          <h1>从基础 Agent 到可复制的企业级数字员工平台</h1>
+          <p class="subtitle">4 名开发 · 1 名产品 · 1 名测试｜AI 辅助研发提效</p>
+        </div>
+        <div class="deadline"><strong>12/15 研发完成线</strong><span>12/16 起进入集中测试、验收与缺陷修复</span></div>
+      </header>
+
+      <div class="thesis"><strong>一条主线</strong><span>从“能查、能生成”升级到“能跨系统执行、受控写回、正式交付并跨客户复制”。</span></div>
+
+      <section class="section">
+        <div class="section-title"><h2>产品演进时间线</h2><p>8 月打底 → 9 月编排 → 10 月可控运行 → 11 月治理交付 → 12/15 可交付</p></div>
+        <div class="timeline-wrap">
+          <div class="roadbar" aria-label="2026年8月至12月交付时间轴"><div class="roadbar-item current">8 月<br>打底</div><div class="roadbar-item flow">9 月<br>编排</div><div class="roadbar-item govern">10 月<br>可控运行</div><div class="roadbar-item govern">11 月<br>治理交付</div><div class="roadbar-item freeze">12/1 - 12/15<br>研发完成</div><div class="roadbar-item test">12/16 - 12/31<br>测试验收</div></div>
+          <div class="timeline">
+            <div class="month current"><div class="month-head"><time>8 月</time><span class="status">打基础</span></div><h3>Agent 可独立运行</h3><ul><li>完成容器化执行</li><li>隔离环境、依赖与资源</li></ul><div class="result"><b>阶段成果</b><span>为复杂任务和多 Agent 并行提供稳定执行环境。</span></div><div class="scene">可支撑：隔离执行、后台任务</div></div>
+            <div class="month flow"><div class="month-head"><time>9 月</time><span class="status">跑通流程</span></div><h3>基础流程可运行</h3><ul><li>Codex Harness + 客户端</li><li>图编排 + A2A 基础闭环</li></ul><div class="result"><b>阶段成果</b><span>Agent 能规划、协作并完成基础流程执行。</span></div><div class="scene">可支撑：基础流程验证</div></div>
+            <div class="month govern"><div class="month-head"><time>10 月</time><span class="status">做可控</span></div><h3>流程可控运行</h3><ul><li>分支、并行、循环、子流程</li><li>暂停、恢复、重试、幂等</li><li>人工审批、接管、异常转人工</li></ul><div class="result"><b>阶段成果</b><span>长流程可持续执行，高风险动作先审批，失败可恢复。</span></div><div class="scene">可支撑：完整售后、经营分析试运行</div></div>
+            <div class="month govern"><div class="month-head"><time>11 月</time><span class="status">做治理</span></div><h3>平台达到交付标准</h3><ul><li>规则引擎与确定性校验</li><li>组织权限、数据隔离与审计</li><li>标杆场景联调</li></ul><div class="result"><b>阶段成果</b><span>流程具备可验证、可审计、可交付的企业级治理能力。</span></div><div class="scene">可支撑：正式业务流程交付验收</div></div>
+            <div class="month freeze"><div class="month-head"><time>12/1 - 12/15</time><span class="status">可交付</span></div><h3>标准产品可交付</h3><ul><li>售前售后形成复制模板</li><li>经营分析达到交付标准</li><li>连接器、流程、规则资产化</li></ul><div class="result"><b>阶段成果</b><span>完成首客验证，具备第二客户快速复制条件。</span></div><div class="scene">商业结果：正式交付 + 跨客户复制</div></div>
+            <div class="month test"><div class="month-head"><time>12/16 - 12/31</time><span class="status">验收</span></div><h3>集中测试与发布</h3><ul><li>集成、稳定、安全测试</li><li>客户验收与缺陷修复</li></ul><div class="result"><b>阶段成果</b><span>不再新增核心功能，完成上线准备。</span></div><div class="scene">输出：验收版本</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title"><h2>两条标杆流程</h2><p>验证产品是否真正进入企业业务</p></div>
+        <div class="outcomes">
+          <div class="outcome"><h3>售前售后流程｜复制型标杆</h3><p>验证跨系统、多步骤、多 Agent 协同，以及标准组件在第二客户或同类场景中的复用。</p><div class="flowline">受理 <b>→</b> 知识检索 <b>→</b> 数据库查询 <b>→</b> 处理建议 <b>→</b> 工单更新 <b>→</b> 结果通知</div></div>
+          <div class="outcome analysis"><h3>经营分析流程｜正式交付</h3><p>验证数据库访问、确定性计算、报告生成、结果确认和业务回写能力，满足标准化交付要求。</p><div class="flowline">查询数据库 <b>→</b> 计算指标 <b>→</b> 生成报告 <b>→</b> 提交 / 回写</div></div>
+          <div class="outcome commercial"><h3>商业化结果｜12 月正式交付</h3><p>首个客户验证业务闭环，沉淀连接器、Workflow、Skill、规则和模板，形成第二客户复制基线。</p><div class="flowline">首个客户 <b>→</b> 标准组件 <b>→</b> 第二客户 <b>→</b> 可复制交付</div></div>
+        </div>
+      </section>
+
+      <footer class="footer"><strong>WorkMate 2026 H2｜管理层路线图</strong></footer>
+    </article>
+  </main>
+</body>
+</html>

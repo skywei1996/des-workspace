@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WorkMate 产品方案 - 软通动力</title>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .slide-container { max-width: 1200px; margin: 0 auto; }
+        .slide { background: white; width: 1000px; height: 562.5px; margin: 0 auto 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 40px; position: relative; overflow: hidden; page-break-after: always; }
+        .slide-header { border-bottom: 2px solid #E60012; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .slide-title { font-size: 28px; font-weight: bold; color: #E60012; margin: 0; }
+        .slide-subtitle { font-size: 14px; color: #666; }
+        
+        .content-layout { display: flex; gap: 30px; height: 85%; }
+        .col-left { flex: 1; }
+        .col-right { flex: 1.2; display: flex; flex-direction: column; justify-content: center; }
+        .full-width { width: 100%; height: 100%; }
+        
+        .placeholder-box { background: #f8f9fa; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #666; font-weight: bold; height: 100%; min-height: 200px; position: relative; border-radius: 8px; }
+        .placeholder-text { text-align: center; }
+        
+        .feature-list { list-style: none; padding: 0; }
+        .feature-item { margin-bottom: 15px; padding: 15px; background: #fff5f5; border-left: 4px solid #E60012; border-radius: 0 8px 8px 0; }
+        .feature-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #333; }
+        .feature-desc { font-size: 13px; color: #666; line-height: 1.4; }
+        
+        .value-card { background: white; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .value-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .value-icon { width: 24px; height: 24px; background: #E60012; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        
+        .control-panel { position: fixed; top: 20px; right: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; }
+        .btn { background: #E60012; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #b8000e; }
+        
+        h3 { color: #E60012; border-left: 4px solid #E60012; padding-left: 10px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="control-panel">
+    <button class="btn" onclick="exportPPT()">📥 导出 PPTX 文件</button>
+</div>
+
+<div class="slide-container">
+
+    <!-- P1: 核心理念 -->
+    <div class="slide" id="slide1">
+        <div class="slide-header">
+            <h1 class="slide-title">核心理念：碳基与硅基的双链路共生</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left" style="flex: 1.2;">
+                <!-- 业务执行链路卡片 -->
+                <div class="value-card" style="border-top: 5px solid #E60012; margin-bottom: 25px;">
+                    <h3>⚡ 业务执行链路 (The Execution Loop)</h3>
+                    <div class="feature-desc" style="font-size: 14px; margin-top: 10px;">
+                        <p style="margin: 5px 0;"><b>传统模式 vs AI WorkMate：</b></p>
+                        <p style="margin: 5px 0 15px 0;">从“人操作软件”转变为“人指挥，AI 行动”。</p>
+                        <ul style="padding-left: 20px; margin: 0;">
+                            <li><b>复杂推理：</b>AI 自动拆解模糊指令（如“分析竞品”→“搜索-总结-对比-生成报告”）。</li>
+                            <li><b>工具调用：</b>通过 <b>MCP 标准</b> 实时连接 ERP/CRM，打破数据孤岛。</li>
+                            <li><b>人机协作：</b>关键节点（审批/资金）自动请求人工确认，确保结果安全可控。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 业务进化链路卡片 -->
+                <div class="value-card" style="border-top: 5px solid #0066CC;">
+                    <h3>🧬 业务进化链路 (The Evolution Loop)</h3>
+                    <div class="feature-desc" style="font-size: 14px; margin-top: 10px;">
+                        <p style="margin: 5px 0;"><b>让系统越用越懂业务：</b></p>
+                        <p style="margin: 5px 0 15px 0;">每一次人工修正，都是一次低成本的模型训练。</p>
+                        <ul style="padding-left: 20px; margin: 0;">
+                            <li><b>记忆增强：</b>利用 <b>Mem0</b> 捕获用户偏好与业务纠错，下次不再犯错。</li>
+                            <li><b>知识图谱：</b>从非结构化文档中自动提取实体关系，动态更新企业知识。</li>
+                            <li><b>模型微调：</b>基于高质量执行数据反向优化私有模型 (Fine-tuning)。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right" style="flex: 0.8; display: flex; flex-direction: column; justify-content: center;">
+                <div class="feature-item" style="border-left-color: #76B900; background: #f6ffed;">
+                    <div class="feature-title">🎯 核心价值主张</div>
+                    <div class="feature-desc" style="font-size: 15px;">
+                        我们交付的不是一套静止的软件工具，而是一个<b>“会思考、能行动、可成长”</b>的数字员工团队。
+                    </div>
+                </div>
+                
+                <div class="placeholder-box" style="height: 200px; margin-top: 20px; border-color: #ddd;">
+                    <div class="placeholder-text">
+                        <p>[建议插入：双链路概念图]</p>
+                        <p style="font-size: 12px; color: #999;">(无需流程图，可放一张此概念的抽象示意图或 Logo 组合)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P2: 技术底座 -->
+    <div class="slide" id="slide2">
+        <div class="slide-header">
+            <h1 class="slide-title">技术底座：全栈适配与安全架构</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left" style="flex: 1.5;">
+                <div class="placeholder-box">
+                    <div class="placeholder-text">
+                        <p>[在此处插入：AI WorkMate 技术架构图]</p>
+                        <p style="font-size: 12px; color: #999;">请引用附件中的架构图，重点展示：Agent生命周期、资源配置中心、安全围栏</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right" style="flex: 0.8;">
+                <div class="value-card">
+                    <div class="value-header">
+                        <div class="value-icon">1</div>
+                        <span style="font-weight: bold;">灵活模型适配</span>
+                    </div>
+                    <div class="feature-desc">● <b>私有化</b>：支持 NVIDIA NIM 部署，数据不出域。<br>● <b>公有云</b>：兼容 GPT-4o, 豆包, 通义千问，平衡成本。</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-header">
+                        <div class="value-icon">2</div>
+                        <span style="font-weight: bold;">Agent 核心引擎</span>
+                    </div>
+                    <div class="feature-desc">● <b>记忆增强</b>：集成 Mem0，记住用户偏好与业务上下文。<br>● <b>RAG 增强</b>：GraphRAG 技术，深度理解复杂文档。</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-header">
+                        <div class="value-icon">3</div>
+                        <span style="font-weight: bold;">安全围栏 (Guardrails)</span>
+                    </div>
+                    <div class="feature-desc">● <b>输入输出过滤</b>：防止敏感与违规内容。<br>● <b>权限管控</b>：严格遵循企业 RBAC 权限体系。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P3: 落地场景 -->
+    <div class="slide" id="slide3">
+        <div class="slide-header">
+            <h1 class="slide-title">落地场景：“想”与“做”的双模驱动</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left">
+                <div class="placeholder-box">
+                    <div class="placeholder-text">
+                        <p>[截图占位：Nora 任务执行界面]</p>
+                        <p style="font-size: 12px; color: #999;">请截取 Agent 正在进行多步任务规划的过程<br>(显示 To-do List 和 Thinking Process)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="feature-item" style="border-left: 4px solid #E60012; background: #FFF5F5; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                    <div class="feature-title" style="font-size: 20px; color: #E60012; margin-bottom: 15px;">⚡ 场景一：多步复杂任务拆解执行</div>
+                    
+                    <div class="feature-desc" style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px;">
+                        不再是一问一答的“聊天机器”，而是具备深度思考能力 (Reasoning) 的智能员工。
+                    </div>
+                    
+                    <ul style="padding-left: 20px; margin: 0; color: #666; font-size: 14px; line-height: 1.8;">
+                        <li style="margin-bottom: 15px;"><b>自主规划</b>：针对模糊指令（如“分析热门Skill”），自动拆解为搜索、查询、分析、报告整理 4 个步骤</li>
+                        <li style="margin-bottom: 15px;"><b>过程可视</b>：实时展示 To-dos 执行进度，不仅给结果，更展示过程，建立信任</li>
+                        <li style="margin-bottom: 15px;"><b>动态调整</b>：执行过程中遇到新信息，Agent 会自动修正后续计划，无需人工干预</li>
+                    </ul>
+
+                    <div style="margin-top: 30px; padding: 15px; background: #F8F9FA; border: 1px solid #ddd; border-radius: 4px;">
+                        <span style="font-size: 13px; color: #555;">💡 <b>价值点</b>：让 AI 完成从“信息查询”到“问题解决”的跃迁，处理真正有价值的长链条业务。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P3.5: 落地场景二 -->
+    <div class="slide" id="slide3_5">
+        <div class="slide-header">
+            <h1 class="slide-title">落地场景二：打破孤岛的“工具连接者”</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left">
+                <div class="placeholder-box">
+                    <div class="placeholder-text">
+                        <p>[截图占位：钉钉群消息 & MCP分析结果]</p>
+                        <p style="font-size: 12px; color: #999;">请截取 Agent 自动读取钉钉报警日志<br>并输出结构化风险评估的界面</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="feature-item" style="border-left: 4px solid #0066CC; background: #F0F7FF; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                    <div class="feature-title" style="font-size: 20px; color: #0066CC; margin-bottom: 15px;">🔌 场景二：自主感知与工具调用 (Tool Acting)</div>
+                    
+                    <div class="feature-desc" style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px;">
+                        不是被动等待指令，而是像人类员工一样，主动“倾听”并作出反应。
+                    </div>
+                    
+                    <ul style="padding-left: 20px; margin: 0; color: #666; font-size: 14px; line-height: 1.8;">
+                        <li style="margin-bottom: 15px;"><b>即插即用 (MCP)</b>：通过标准 Model Context Protocol，安全连接钉钉、Jira、邮件等业务系统，无需重复开发。</li>
+                        <li style="margin-bottom: 15px;"><b>智能研判</b>：Agent 实时监听钉钉运维群日志，结合上下文判断风险等级 (P0/P1)，过滤无效噪音。</li>
+                        <li style="margin-bottom: 15px;"><b>闭环处置</b>：高优报警自动拉群/电话通知；普通异常自动归档日报，实现 7x24h 值守。</li>
+                    </ul>
+
+                    <div style="margin-top: 30px; padding: 15px; background: #FFF; border: 1px solid #ddd; border-radius: 4px;">
+                        <span style="font-size: 13px; color: #555;">💡 <b>价值点</b>：将非结构化信息（聊天记录/日志）转化为结构化行动，极大降低运维与协同成本。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P3.8: 知识库场景 -->
+    <div class="slide" id="slide3_8">
+        <div class="slide-header">
+            <h1 class="slide-title">落地场景三：沉淀企业资产的“知识大脑”</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left">
+                <div class="placeholder-box">
+                    <div class="placeholder-text">
+                        <p>[截图占位：RAG 混合检索 / 知识问答界面]</p>
+                        <p style="font-size: 12px; color: #999;">请截取 Agent 回答问题并给出引用来源 (Citations) 的界面<br>展示 PDF/Wiki 多源数据融合</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="feature-item" style="border-left: 4px solid #FF9900; background: #FFF9F0; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                    <div class="feature-title" style="font-size: 20px; color: #FF9900; margin-bottom: 15px;">🧠 场景三：企业级知识大脑 (Knowledge Brain)</div>
+                    
+                    <div class="feature-desc" style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px;">
+                        解决文档“找不到、搜不准、用不好”的难题，让静默资产“活”起来。
+                    </div>
+                    
+                    <ul style="padding-left: 20px; margin: 0; color: #666; font-size: 14px; line-height: 1.8;">
+                        <li style="margin-bottom: 15px;"><b>混合检索 (Hybrid Search)</b>：结合向量检索 (语义) 与关键词检索 (精确)，精准定位 Wiki、SharePoint、代码库中的碎片信息。</li>
+                        <li style="margin-bottom: 15px;"><b>知识溯源 (Citations)</b>：每一句回答都带有原文引用链接，彻底杜绝 AI 幻觉，满足法务/合规严苛要求。</li>
+                        <li style="margin-bottom: 15px;"><b>动态同步 (Live Sync)</b>：自动监听 Confluence/飞书文档更新，保持知识库与业务实时同步，无需人工维护。</li>
+                    </ul>
+
+                    <div style="margin-top: 30px; padding: 15px; background: #FFF; border: 1px solid #ddd; border-radius: 4px;">
+                        <span style="font-size: 13px; color: #555;">💡 <b>价值点</b>：将非结构化文档转化为即问即答的“专家系统”，新员工入职培训效率提升 70%。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P4: 规模化管理 (New based on Website) -->
+    <div class="slide" id="slide4">
+        <div class="slide-header">
+            <h1 class="slide-title">规模化管理：像管理员工一样管理 AI</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout">
+            <div class="col-left">
+                <div class="feature-item" style="border-left: 4px solid #76B900; background: #F6FFED; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+                    <div class="feature-title" style="font-size: 20px; color: #76B900; margin-bottom: 20px;">🛡️ 企业级数字员工管理平台</div>
+                    
+                    <ul style="padding-left: 20px; margin: 0; color: #666; font-size: 14px; line-height: 2.0;">
+                        <li style="margin-bottom: 15px;">
+                            <b>角色定义与入职 (Onboarding)</b><br>
+                            像定义岗位JD一样配置 Agent 的职责、权限与技能图谱 (Talent Graph)。
+                        </li>
+                        <li style="margin-bottom: 15px;">
+                            <b>任务编排与监控 (Orchestration)</b><br>
+                            可视化查看 Agent 团队的任务负载、执行状态与成功率。
+                        </li>
+                        <li style="margin-bottom: 15px;">
+                            <b>异常接管机制 (Human Takeover)</b><br>
+                            <span style="background: #fff; padding: 2px 5px; border-radius: 4px; border: 1px solid #ddd;">关键特性</span> 当置信度低于阈值或涉及高危操作时，自动挂起并呼叫人工介入，确保业务零风险。
+                        </li>
+                    </ul>
+
+                    <div style="margin-top: 30px; font-size: 13px; color: #555; border-top: 1px dashed #ccc; padding-top: 15px;">
+                        <i>"Upgrading AI from a Copilot to a Digital Employee."</i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="placeholder-box">
+                    <div class="placeholder-text">
+                        <p>[截图占位：数字员工管理中心 / 任务编排大屏]</p>
+                        <p style="font-size: 12px; color: #999;">建议展示：<br>Merak 平台的 Agent 列表管理界面<br>或 任务执行监控仪表盘</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P5: 中邮案例 -->
+    <div class="slide" id="slide5">
+        <div class="slide-header">
+            <h1 class="slide-title">客户案例：中邮用人部门智能招聘助手</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout" style="gap: 22px;">
+            <div class="col-left" style="flex: 0.95; display: flex; flex-direction: column; gap: 14px;">
+                <div class="value-card" style="border-top: 5px solid #E60012; margin-bottom: 0;">
+                    <h3>业务目标</h3>
+                    <div class="feature-desc" style="font-size: 14px; line-height: 1.7;">
+                        面向中邮各用人部门，构建一组专业招聘智能体，辅助部门从岗位定义、候选人筛选、面试评估到录用建议形成闭环，提升选人效率与评估一致性。
+                    </div>
+                </div>
+
+                <div class="value-card" style="border-top: 5px solid #0066CC; margin-bottom: 0;">
+                    <h3>智能体矩阵</h3>
+                    <div class="feature-desc" style="font-size: 13px; line-height: 1.7;">
+                        <b>JD 生成智能体</b>：结合岗位职责、任职要求与组织画像生成标准 JD。<br>
+                        <b>简历筛选智能体</b>：按岗位胜任力模型解析简历并输出匹配度。<br>
+                        <b>面试题生成智能体</b>：围绕专业能力、项目经历、行为素质生成题库。
+                    </div>
+                </div>
+
+                <div class="value-card" style="border-top: 5px solid #76B900; margin-bottom: 0;">
+                    <h3>平台增强</h3>
+                    <div class="feature-desc" style="font-size: 13px; line-height: 1.7;">
+                        在 Skill 能力基础上扩展数据读取、数据存储等 API 接口，打通候选人资料、岗位库、面试记录与评分结果，为后续复盘和模型优化沉淀结构化数据。
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right" style="flex: 1.35;">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: stretch; height: 170px; margin-bottom: 18px;">
+                    <div class="value-card" style="margin: 0; padding: 12px; border-top: 4px solid #E60012; text-align: center;">
+                        <div class="feature-title" style="font-size: 14px; color: #E60012;">岗位输入</div>
+                        <div class="feature-desc" style="font-size: 12px; margin-top: 8px;">部门需求<br>岗位画像</div>
+                    </div>
+                    <div class="value-card" style="margin: 0; padding: 12px; border-top: 4px solid #0066CC; text-align: center;">
+                        <div class="feature-title" style="font-size: 14px; color: #0066CC;">JD 生成</div>
+                        <div class="feature-desc" style="font-size: 12px; margin-top: 8px;">职责拆解<br>要求校准</div>
+                    </div>
+                    <div class="value-card" style="margin: 0; padding: 12px; border-top: 4px solid #FF9900; text-align: center;">
+                        <div class="feature-title" style="font-size: 14px; color: #FF9900;">简历筛选</div>
+                        <div class="feature-desc" style="font-size: 12px; margin-top: 8px;">能力抽取<br>匹配排序</div>
+                    </div>
+                    <div class="value-card" style="margin: 0; padding: 12px; border-top: 4px solid #76B900; text-align: center;">
+                        <div class="feature-title" style="font-size: 14px; color: #76B900;">AI 面试</div>
+                        <div class="feature-desc" style="font-size: 12px; margin-top: 8px;">自动追问<br>过程记录</div>
+                    </div>
+                    <div class="value-card" style="margin: 0; padding: 12px; border-top: 4px solid #333333; text-align: center;">
+                        <div class="feature-title" style="font-size: 14px; color: #333333;">评分建议</div>
+                        <div class="feature-desc" style="font-size: 12px; margin-top: 8px;">综合评分<br>录用参考</div>
+                    </div>
+                </div>
+
+                <div class="feature-item" style="border-left: 4px solid #E60012; background: #FFF5F5; padding: 22px; margin-bottom: 18px;">
+                    <div class="feature-title" style="font-size: 18px; color: #E60012; margin-bottom: 12px;">端到端流程：从“招什么人”到“选谁更合适”</div>
+                    <ul style="padding-left: 18px; margin: 0; color: #555; font-size: 13px; line-height: 1.8;">
+                        <li><b>需求标准化</b>：将用人部门的模糊岗位需求沉淀为可执行 JD 与胜任力标准。</li>
+                        <li><b>筛选可解释</b>：按经验、技能、项目、稳定性等维度输出候选人匹配依据。</li>
+                        <li><b>面试自动化</b>：基于候选人简历与岗位要求自动生成问题、追问并记录回答。</li>
+                        <li><b>评分结构化</b>：形成统一评分表、风险提示与推荐结论，支持人工最终决策。</li>
+                    </ul>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <div class="value-card" style="flex: 1; margin: 0; background: #F8F9FA;">
+                        <div class="feature-title" style="font-size: 15px;">交付形态</div>
+                        <div class="feature-desc" style="font-size: 12px; line-height: 1.6; margin-top: 6px;">招聘 Skill + 专业 Agent + 数据 API + 评分看板</div>
+                    </div>
+                    <div class="value-card" style="flex: 1; margin: 0; background: #F8F9FA;">
+                        <div class="feature-title" style="font-size: 15px;">核心收益</div>
+                        <div class="feature-desc" style="font-size: 12px; line-height: 1.6; margin-top: 6px;">缩短筛选周期，统一面试标准，沉淀可复用人才评估资产</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- P5: 价值与路线图 -->
+    <div class="slide" id="slide6">
+        <div class="slide-header">
+            <h1 class="slide-title">实施价值：分阶段演进路径</h1>
+            <span class="slide-subtitle">AI WorkMate 产品方案</span>
+        </div>
+        <div class="content-layout" style="flex-direction: column; gap: 20px;">
+            <div style="display: flex; gap: 20px; height: 50%;">
+                <div class="value-card" style="flex: 1; border-top: 5px solid #E60012;">
+                    <h3>🚀 阶段一：开箱即用</h3>
+                    <div style="font-size: 12px; color: #999; margin-bottom: 10px;">Day 1 (Ready to Use)</div>
+                    <div class="feature-desc">
+                        <b>动作</b>：部署平台，预置通用 Agent（办公、IT、HR助手）。<br>
+                        <b>价值</b>：立刻感知效率提升，低门槛上手。<br>
+                        <br>
+                        <i>[建议配图：预置 Agent 列表界面]</i>
+                    </div>
+                </div>
+                <div class="value-card" style="flex: 1; border-top: 5px solid #0066CC;">
+                    <h3>🌱 阶段二：共创生长</h3>
+                    <div style="font-size: 12px; color: #999; margin-bottom: 10px;">Month 1 (Co-Creation)</div>
+                    <div class="feature-desc">
+                        <b>动作</b>：开放 <b>Agent 工厂</b>（低代码），鼓励业务人员创建自己的 Agent。<br>
+                        <b>价值</b>：激发创新，让懂业务的人用 AI 解决痛点。<br>
+                        <br>
+                        <i>[建议配图：表单式创建 Agent 界面]</i>
+                    </div>
+                </div>
+                <div class="value-card" style="flex: 1; border-top: 5px solid #76B900;">
+                    <h3>🌳 阶段三：生态沉淀</h3>
+                    <div style="font-size: 12px; color: #999; margin-bottom: 10px;">Year 1 (Ecosystem)</div>
+                    <div class="feature-desc">
+                        <b>动作</b>：形成企业专属 <b>Agent Store</b>，推广优秀 Agent。<br>
+                        <b>价值</b>：能力复用，双链路闭环形成，资产数字化。<br>
+                        <br>
+                        <i>[建议配图：企业应用市场界面]</i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="placeholder-box" style="height: 45%; background: white; border: 1px solid #eee;">
+                <div class="placeholder-text">
+                    <p style="font-size: 18px; color: #333;">[在此处插入：Agent Store 或 整体路线图 宽幅截图]</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true });
+
+    function exportPPT() {
+        let pptx = new PptxGenJS();
+        pptx.layout = 'LAYOUT_16x9';
+        
+        // P1
+        let slide1 = pptx.addSlide();
+        slide1.addText("核心理念：碳基与硅基的双链路共生", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide1.addText("AI WorkMate 产品方案", { x: 6.5, y: 0.5, fontSize: 12, color: "666666" });
+        slide1.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // 业务执行链路卡片
+        slide1.addShape(pptx.ShapeType.rect, { x: 0.5, y: 1.2, w: 6.5, h: 2.3, fill: { color: "FFFFFF" }, line: { color: "E60012", width: 2, type: "solid" } }); // border top simulation
+        slide1.addText("⚡ 业务执行链路 (The Execution Loop)", { x: 0.7, y: 1.4, fontSize: 16, bold: true, color: "E60012" });
+        slide1.addText("传统模式 vs AI WorkMate：从“人操作软件”转变为“人指挥，AI 行动”。", { x: 0.7, y: 1.8, w: 6, fontSize: 12, bold: true, color: "333333" });
+        slide1.addText("● 复杂推理：AI 自动拆解模糊指令（如“分析竞品”→“搜索-总结-对比-生成报告”）\n● 工具调用：通过 MCP 标准 实时连接 ERP/CRM，打破数据孤岛\n● 人机协作：关键节点（审批/资金）自动请求人工确认，确保结果安全可控", { x: 0.7, y: 2.2, w: 6, fontSize: 11, color: "666666", bullet: true });
+
+        // 业务进化链路卡片
+        slide1.addShape(pptx.ShapeType.rect, { x: 0.5, y: 3.7, w: 6.5, h: 2.3, fill: { color: "FFFFFF" }, line: { color: "0066CC", width: 2, type: "solid" } });
+        slide1.addText("🧬 业务进化链路 (The Evolution Loop)", { x: 0.7, y: 3.9, fontSize: 16, bold: true, color: "0066CC" });
+        slide1.addText("让系统越用越懂业务：每一次人工修正，都是一次低成本的模型训练。", { x: 0.7, y: 4.3, w: 6, fontSize: 12, bold: true, color: "333333" });
+        slide1.addText("● 记忆增强：利用 Mem0 捕获用户偏好与业务纠错，下次不再犯错\n● 知识图谱：从非结构化文档中自动提取实体关系，动态更新企业知识\n● 模型微调：基于高质量执行数据反向优化私有模型 (Fine-tuning)", { x: 0.7, y: 4.7, w: 6, fontSize: 11, color: "666666", bullet: true });
+
+        // 右侧价值
+        slide1.addShape(pptx.ShapeType.rect, { x: 7.5, y: 1.2, w: 5, h: 1.5, fill: { color: "F6FFED" }, line: { color: "76B900", width: 0 } });
+        slide1.addText("🎯 核心价值主张", { x: 7.7, y: 1.5, fontSize: 16, bold: true, color: "76B900" });
+        slide1.addText("我们交付的不是一套静止的软件工具，而是一个“会思考、能行动、可成长”的数字员工团队。", { x: 7.7, y: 2.0, w: 4.5, fontSize: 12, color: "333333" });
+
+        slide1.addText("[截图占位：双链路概念图]", { x: 7.5, y: 3.0, w: 5, h: 3.0, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+
+        // P2
+        let slide2 = pptx.addSlide();
+        slide2.addText("技术底座：全栈适配与安全架构", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide2.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        slide2.addText("[截图占位：请在此处插入技术架构图]", { x: 0.5, y: 1.5, w: 7, h: 4.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+        
+        slide2.addText("1. 灵活模型适配", { x: 8.0, y: 1.5, fontSize: 14, bold: true });
+        slide2.addText("● 私有化：支持 NVIDIA NIM，数据不出域\n● 公有云：兼容 GPT-4o, 豆包等", { x: 8.0, y: 1.9, w: 4.5, fontSize: 11, color: "666666" });
+        
+        slide2.addText("2. Agent 核心引擎", { x: 8.0, y: 3.0, fontSize: 14, bold: true });
+        slide2.addText("● 记忆增强：集成 Mem0\n● RAG 增强：GraphRAG 技术", { x: 8.0, y: 3.4, w: 4.5, fontSize: 11, color: "666666" });
+        
+        slide2.addText("3. 安全围栏 (Guardrails)", { x: 8.0, y: 4.5, fontSize: 14, bold: true });
+        slide2.addText("● 输入输出过滤：防止违规内容\n● 权限管控：遵循 RBAC 体系", { x: 8.0, y: 4.9, w: 4.5, fontSize: 11, color: "666666" });
+
+        // P3
+        let slide3 = pptx.addSlide();
+        slide3.addText("落地场景：“想”与“做”的双模驱动", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide3.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // 调整左侧图片占位符比例，适应完整对话截图
+        slide3.addText("[截图占位：Nora 任务执行界面]", { x: 0.5, y: 1.5, w: 7, h: 4.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+        
+        // 右侧文案 - 场景一 (重点放大)
+        slide3.addShape(pptx.ShapeType.rect, { x: 7.8, y: 1.5, w: 4.8, h: 3.5, fill: { color: "FFF5F5" }, line: { color: "E60012", width: 4, type: "solid" } }); // 左侧红边模拟
+        slide3.addText("⚡ 场景一：多步复杂任务拆解执行", { x: 8.0, y: 1.8, fontSize: 18, bold: true, color: "E60012" });
+        
+        slide3.addText("不再是一问一答的“聊天机器”，而是具备深度思考能力 (Reasoning) 的智能员工。", { x: 8.0, y: 2.3, w: 4.4, fontSize: 12, color: "333333", bold: true });
+        
+        slide3.addText("● 自主规划：针对模糊指令（如“分析热门Skill”），自动拆解为搜索、查询、分析、报告整理 4 个步骤\n● 过程可视：实时展示 To-dos 执行进度，不仅给结果，更展示过程，建立信任\n● 动态调整：执行过程中遇到新信息，Agent 会自动修正后续计划，无需人工干预", { x: 8.0, y: 2.8, w: 4.4, fontSize: 11, color: "666666", lineSpacing: 18, bullet: true });
+
+        // 价值点小贴士
+        slide3.addShape(pptx.ShapeType.rect, { x: 7.8, y: 5.2, w: 4.8, h: 0.8, fill: { color: "F8F9FA" }, line: { color: "CCCCCC", width: 1 } });
+        slide3.addText("💡 价值点：让 AI 完成从“信息查询”到“问题解决”的跃迁，处理真正有价值的长链条业务。", { x: 8.0, y: 5.3, w: 4.4, fontSize: 11, color: "555555" });
+
+        // P3.5 (Scene 2)
+        let slide3b = pptx.addSlide();
+        slide3b.addText("落地场景：打破孤岛的“工具连接者”", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide3b.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // Left details
+        slide3b.addText("[截图占位：钉钉 MCP 风险分析过程]", { x: 0.5, y: 1.5, w: 7, h: 4.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+
+        // Right Content
+        slide3b.addShape(pptx.ShapeType.rect, { x: 7.8, y: 1.5, w: 4.8, h: 3.5, fill: { color: "F0F7FF" }, line: { color: "0066CC", width: 4, type: "solid" } });
+        slide3b.addText("🔌 场景二：自主感知与工具调用", { x: 8.0, y: 1.8, fontSize: 18, bold: true, color: "0066CC" });
+        
+        slide3b.addText("不是被动等待指令，而是像人类员工一样，主动“倾听”并作出反应。", { x: 8.0, y: 2.3, w: 4.4, fontSize: 12, color: "333333", bold: true });
+        
+        slide3b.addText("● 即插即用 (MCP)：通过标准 Model Context Protocol，安全连接钉钉、Jira、邮件等业务系统\n● 智能研判：Agent 实时监听钉钉运维群日志，结合上下文判断风险等级 (P0/P1)，过滤噪音\n● 闭环处置：高优报警自动拉群/电话通知；普通异常自动归档日报，实现 7x24h 值守", { x: 8.0, y: 2.8, w: 4.4, fontSize: 11, color: "666666", lineSpacing: 18, bullet: true });
+
+        // Value Point
+        slide3b.addShape(pptx.ShapeType.rect, { x: 7.8, y: 5.2, w: 4.8, h: 0.8, fill: { color: "FFFFFF" }, line: { color: "CCCCCC", width: 1 } });
+        slide3b.addText("💡 价值点：将非结构化信息（聊天记录/日志）转化为结构化行动，极大降低运维与协同成本。", { x: 8.0, y: 5.3, w: 4.4, fontSize: 11, color: "555555" });
+
+        // P3.8 (Scene 3 - Knowledge)
+        let slide3c = pptx.addSlide();
+        slide3c.addText("落地场景：沉淀企业资产的“知识大脑”", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide3c.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // Left Image Placeholder
+        slide3c.addText("[截图占位：RAG 知识检索与引用]", { x: 0.5, y: 1.5, w: 7, h: 4.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+
+        // Right Content
+        slide3c.addShape(pptx.ShapeType.rect, { x: 7.8, y: 1.5, w: 4.8, h: 3.5, fill: { color: "FFF9F0" }, line: { color: "FF9900", width: 4, type: "solid" } });
+        slide3c.addText("🧠 场景三：企业级知识大脑", { x: 8.0, y: 1.8, fontSize: 18, bold: true, color: "FF9900" });
+        
+        slide3c.addText("解决文档“找不到、搜不准、用不好”的难题，让静默资产“活”起来。", { x: 8.0, y: 2.3, w: 4.4, fontSize: 12, color: "333333", bold: true });
+        
+        slide3c.addText("● 混合检索 (Hybrid Search)：结合向量检索 (语义) 与关键词检索 (精确)，精准定位片段\n● 知识溯源 (Citations)：每一句回答都带有原文引用链接，杜绝幻觉，满足合规要求\n● 动态同步 (Live Sync)：自动监听文档更新，保持知识库实时同步，零维护成本", { x: 8.0, y: 2.8, w: 4.4, fontSize: 11, color: "666666", lineSpacing: 18, bullet: true });
+
+        // Value Point
+        slide3c.addShape(pptx.ShapeType.rect, { x: 7.8, y: 5.2, w: 4.8, h: 0.8, fill: { color: "FFFFFF" }, line: { color: "CCCCCC", width: 1 } });
+        slide3c.addText("💡 价值点：将非结构化文档转化为即问即答的“专家系统”，新员工培训效率提升 70%。", { x: 8.0, y: 5.3, w: 4.4, fontSize: 11, color: "555555" });
+
+        // P4 (Management) - NEW
+        let slide4 = pptx.addSlide();
+        slide4.addText("规模化管理：像管理员工一样管理 AI", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide4.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // Left Content (Text)
+        slide4.addShape(pptx.ShapeType.rect, { x: 0.5, y: 1.5, w: 5.5, h: 4.5, fill: { color: "F6FFED" }, line: { color: "76B900", width: 4, type: "solid" } });
+        slide4.addText("🛡️ 企业级数字员工管理平台", { x: 0.7, y: 1.8, fontSize: 18, bold: true, color: "76B900" });
+        
+        slide4.addText("● 角色定义与入职 (Onboarding)：\n像定义岗位JD一样配置 Agent 的职责、权限与技能图谱 (Talent Graph)\n\n● 任务编排与监控 (Orchestration)：\n可视化查看 Agent 团队的任务负载、执行状态与成功率\n\n● 异常接管机制 (Human Takeover)：\n[关键特性] 当置信度低于阈值或涉及高危操作时，自动挂起并呼叫人工介入，确保业务零风险", { x: 0.7, y: 2.3, w: 5.1, fontSize: 12, color: "333333", lineSpacing: 18 });
+        
+        // Right Image Placeholder
+        slide4.addText("[截图占位：数字员工管理中心 / 监控大屏]", { x: 6.5, y: 1.5, w: 6.3, h: 4.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+
+        // P5 (China Post Case)
+        let slide5 = pptx.addSlide();
+        slide5.addText("客户案例：中邮用人部门智能招聘助手", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide5.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 0.5, y: 1.2, w: 4.3, h: 1.35, fill: { color: "FFFFFF" }, line: { color: "E60012", width: 2 } });
+        slide5.addText("业务目标", { x: 0.7, y: 1.35, fontSize: 15, bold: true, color: "E60012" });
+        slide5.addText("面向中邮各用人部门，构建专业招聘智能体团队，辅助岗位定义、候选人筛选、面试评估与录用建议形成闭环。", { x: 0.7, y: 1.75, w: 3.9, fontSize: 10.5, color: "555555" });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 0.5, y: 2.75, w: 4.3, h: 1.55, fill: { color: "FFFFFF" }, line: { color: "0066CC", width: 2 } });
+        slide5.addText("智能体矩阵", { x: 0.7, y: 2.9, fontSize: 15, bold: true, color: "0066CC" });
+        slide5.addText("● JD生成智能体：生成标准岗位说明\n● 简历筛选智能体：解析简历并输出匹配度\n● 面试题生成智能体：生成专业与行为题库", { x: 0.7, y: 3.3, w: 3.9, fontSize: 10.2, color: "555555", bullet: true });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 0.5, y: 4.5, w: 4.3, h: 1.45, fill: { color: "FFFFFF" }, line: { color: "76B900", width: 2 } });
+        slide5.addText("平台增强", { x: 0.7, y: 4.65, fontSize: 15, bold: true, color: "76B900" });
+        slide5.addText("基于 Skill 扩展数据读取、数据存储等 API 接口，打通岗位库、候选人资料、面试记录与评分结果。", { x: 0.7, y: 5.05, w: 3.9, fontSize: 10.5, color: "555555" });
+
+        const caseSteps = [
+            ["岗位输入", "部门需求\n岗位画像", "E60012"],
+            ["JD 生成", "职责拆解\n要求校准", "0066CC"],
+            ["简历筛选", "能力抽取\n匹配排序", "FF9900"],
+            ["AI 面试", "自动追问\n过程记录", "76B900"],
+            ["评分建议", "综合评分\n录用参考", "333333"]
+        ];
+        caseSteps.forEach((step, index) => {
+            const x = 5.2 + index * 1.47;
+            slide5.addShape(pptx.ShapeType.rect, { x, y: 1.2, w: 1.28, h: 1.25, fill: { color: "F8F9FA" }, line: { color: step[2], width: 2 } });
+            slide5.addText(step[0], { x: x + 0.08, y: 1.35, w: 1.12, fontSize: 10.5, bold: true, color: step[2], align: "center" });
+            slide5.addText(step[1], { x: x + 0.08, y: 1.75, w: 1.12, fontSize: 8.8, color: "666666", align: "center" });
+        });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 5.2, y: 2.75, w: 7.5, h: 2.05, fill: { color: "FFF5F5" }, line: { color: "E60012", width: 3 } });
+        slide5.addText("端到端流程：从“招什么人”到“选谁更合适”", { x: 5.45, y: 2.95, fontSize: 16, bold: true, color: "E60012" });
+        slide5.addText("● 需求标准化：将模糊岗位需求沉淀为可执行 JD 与胜任力标准\n● 筛选可解释：按经验、技能、项目、稳定性等维度输出匹配依据\n● 面试自动化：自动生成问题、追问并记录回答\n● 评分结构化：形成统一评分表、风险提示与推荐结论", { x: 5.45, y: 3.45, w: 6.95, fontSize: 10.5, color: "555555", lineSpacing: 15, bullet: true });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 5.2, y: 5.05, w: 3.55, h: 0.9, fill: { color: "F8F9FA" }, line: { color: "DDDDDD", width: 1 } });
+        slide5.addText("交付形态", { x: 5.4, y: 5.18, fontSize: 12.5, bold: true, color: "333333" });
+        slide5.addText("招聘 Skill + 专业 Agent + 数据 API + 评分看板", { x: 5.4, y: 5.52, w: 3.15, fontSize: 9.5, color: "666666" });
+
+        slide5.addShape(pptx.ShapeType.rect, { x: 9.0, y: 5.05, w: 3.7, h: 0.9, fill: { color: "F8F9FA" }, line: { color: "DDDDDD", width: 1 } });
+        slide5.addText("核心收益", { x: 9.2, y: 5.18, fontSize: 12.5, bold: true, color: "333333" });
+        slide5.addText("缩短筛选周期，统一面试标准，沉淀可复用人才评估资产", { x: 9.2, y: 5.52, w: 3.3, fontSize: 9.5, color: "666666" });
+
+        // P6 (Roadmap)
+        let slide6 = pptx.addSlide();
+        slide6.addText("实施价值：分阶段演进路径", { x: 0.5, y: 0.5, fontSize: 24, fontFace: "Microsoft YaHei", color: "E60012", bold: true });
+        slide6.addShape(pptx.ShapeType.line, { x: 0.5, y: 0.9, w: 12.3, h: 0, line: { color: "E60012", width: 2 } });
+        
+        // Timeline cards (Updated slide reference to slide5)
+        slide6.addText("🚀 阶段一：开箱即用", { x: 0.5, y: 1.5, w: 3.8, h: 0.5, fontSize: 14, bold: true, fill: { color: "FFF5F5" }, border: { pt: 3, color: "E60012" }, align: "center" });
+        slide6.addText("Day 1 (Ready to Use)\n动作：部署平台，预置通用 Agent\n价值：立刻感知效率提升", { x: 0.5, y: 2.0, w: 3.8, h: 1.2, fontSize: 10, color: "666666", align: "center" });
+        
+        slide6.addText("🌱 阶段二：共创生长", { x: 4.6, y: 1.5, w: 3.8, h: 0.5, fontSize: 14, bold: true, fill: { color: "F0F7FF" }, border: { pt: 3, color: "0066CC" }, align: "center" });
+        slide6.addText("Month 1 (Co-Creation)\n动作：开放 Agent 工厂，业务人员创建\n价值：激发创新，解决痛点", { x: 4.6, y: 2.0, w: 3.8, h: 1.2, fontSize: 10, color: "666666", align: "center" });
+        
+        slide6.addText("🌳 阶段三：生态沉淀", { x: 8.7, y: 1.5, w: 3.8, h: 0.5, fontSize: 14, bold: true, fill: { color: "F6FFED" }, border: { pt: 3, color: "76B900" }, align: "center" });
+        slide6.addText("Year 1 (Ecosystem)\n动作：形成 Agent Store，推广优秀应用\n价值：能力复用，双链路闭环", { x: 8.7, y: 2.0, w: 3.8, h: 1.2, fontSize: 10, color: "666666", align: "center" });
+        
+        slide6.addText("[截图占位：Agent Store 或 路线图]", { x: 0.5, y: 3.5, w: 12, h: 2.5, fill: { color: "F1F1F1" }, align: "center", color: "999999" });
+
+        pptx.writeFile({ fileName: "AI_WorkMate_Product_Plan.pptx" });
+    }
+</script>
+
+</body>
+</html>

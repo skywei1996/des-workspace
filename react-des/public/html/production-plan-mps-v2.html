@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>生产计划安排 - 重排后计划</title>
+    <style>
+      :root {
+        --bg: #f3f5f7;
+        --panel: #ffffff;
+        --line: #dfe3e8;
+        --text: #1f2a37;
+        --muted: #6b7280;
+        --green: #dff4ea;
+        --green-strong: #2f7d5f;
+        --blue: #dfeffc;
+        --blue-strong: #2c5dbb;
+        --orange: #fde7d5;
+        --orange-strong: #bf5a18;
+        --purple: #efe3ff;
+        --purple-strong: #6a4bbd;
+        --pink: #fce2ec;
+        --pink-strong: #b03a67;
+        --dark: #1e2430;
+        --warning: #f8e7b5;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", "PingFang SC", sans-serif;
+      }
+
+      .page {
+        max-width: 1400px;
+        margin: 24px auto;
+        padding: 0 20px 40px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--dark);
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        background: #eef9f3;
+        color: var(--green-strong);
+        border: 1px solid #cfe9dc;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .summary {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px 20px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 18px;
+        margin-bottom: 16px;
+      }
+
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin: 18px 0 18px;
+      }
+
+      .compare-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 16px 10px;
+      }
+
+      .compare-box h3 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: var(--dark);
+      }
+
+      .mini-timeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(90px, 1fr));
+        gap: 8px;
+      }
+
+      .mini-task {
+        position: relative;
+        border-radius: 8px;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 8px 10px;
+        text-align: center;
+      }
+
+      .mini-task.before {
+        background: #ebedf0;
+        color: #7d8590;
+        opacity: 0.8;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+      }
+
+      .mini-task.after {
+        background: #dff4ea;
+        color: #1a6f4d;
+        border: 1px solid #bfe4d0;
+      }
+
+      .compare-box.before .mini-task {
+        background: #edf0f2;
+        color: #7d8590;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+      }
+
+      .compare-box.after .mini-task {
+        background: #dff4ea;
+        color: #1a6f4d;
+        border: 1px solid #bfe4d0;
+      }
+
+      .summary-item {
+        border-right: 1px solid var(--line);
+        padding-right: 10px;
+      }
+
+      .summary-item:last-child { border-right: none; }
+
+      .label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .value {
+        margin-top: 10px;
+        font-size: 21px;
+        font-weight: 700;
+      }
+
+      .dashboard {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .schedule-head {
+        display: grid;
+        grid-template-columns: 160px repeat(8, minmax(100px, 1fr));
+        border-bottom: 1px solid var(--line);
+        background: #f8f9fa;
+      }
+
+      .head-cell {
+        padding: 12px 10px;
+        border-right: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .head-cell:first-child {
+        text-align: left;
+        padding-left: 18px;
+      }
+
+      .schedule-row {
+        display: grid;
+        grid-template-columns: 160px repeat(8, minmax(100px, 1fr));
+        border-bottom: 1px solid var(--line);
+        min-height: 110px;
+      }
+
+      .schedule-row:last-child { border-bottom: none; }
+
+      .row-label {
+        display: flex;
+        align-items: center;
+        padding: 16px 18px;
+        border-right: 1px solid var(--line);
+        background: #fafbfc;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .slots {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(8, minmax(100px, 1fr));
+      }
+
+      .slot {
+        position: relative;
+        border-right: 1px solid var(--line);
+        background: linear-gradient(to right, rgba(148,163,184,0.08), rgba(148,163,184,0.02));
+        min-height: 110px;
+      }
+
+      .task {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 12px;
+        min-height: 44px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 8px 10px;
+        text-align: center;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+
+      .task.small { min-height: 38px; }
+      .task.orange { background: #f9d9b4; color: #8a4a0a; }
+      .task.green { background: #cfeee1; color: #117047; }
+      .task.blue { background: #dfeafc; color: #234a93; }
+      .task.purple { background: #eae2fd; color: #563d9a; }
+      .task.pink { background: #f7dfe8; color: #9b2e5d; }
+      .task.gray { background: #e7eaef; color: #536070; }
+
+      .legend {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .legend-item { display: inline-flex; align-items: center; gap: 8px; }
+      .legend-dot {
+        width: 12px; height: 12px; border-radius: 4px; display: inline-block;
+      }
+
+      .note {
+        margin-top: 18px;
+        background: #fff9ee;
+        border: 1px solid #f3e0aa;
+        color: #7b5d20;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1100px) {
+        .summary { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+        .schedule-head, .schedule-row { grid-template-columns: 140px repeat(8, minmax(80px, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div class="title">重排后生产计划安排</div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-item">
+          <div class="label">变更事项</div>
+          <div class="value">一号生产线故障重排</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">变更事件</div>
+          <div class="value">EVT-EQUIP-20260813-001</div>
+        </div>
+        <div class="summary-item" style="border-right: none; padding-right: 0;">
+          <div class="label">产能恢复</div>
+          <div class="value" style="color: var(--green-strong);">60 件</div>
+        </div>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-box before">
+          <h3>重排前：原计划安排</h3>
+          <div class="mini-timeline">
+            <div class="mini-task before">SO-260813-018</div>
+            <div class="mini-task before">SO-260813-021</div>
+            <div class="mini-task before">一号线停机</div>
+            <div class="mini-task before">产能受限</div>
+          </div>
+        </div>
+        <div class="compare-box after">
+          <h3>重排后：调整后安排</h3>
+          <div class="mini-timeline">
+            <div class="mini-task after">SO-260813-018 转二号线</div>
+            <div class="mini-task after">SO-260813-021 顺延 1 班</div>
+            <div class="mini-task after">二号线加班</div>
+            <div class="mini-task after">产能缺口 60 件</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard">
+        <div class="schedule-head">
+          <div class="head-cell">资源 / 时间</div>
+          <div class="head-cell">08:00</div>
+          <div class="head-cell">10:00</div>
+          <div class="head-cell">12:00</div>
+          <div class="head-cell">14:00</div>
+          <div class="head-cell">16:00</div>
+          <div class="head-cell">18:00</div>
+          <div class="head-cell">20:00</div>
+          <div class="head-cell">22:00</div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="row-label">一号生产线</div>
+          <div class="slots">
+            <div class="slot"></div>
+            <div class="slot"><div class="task gray small">设备维修</div></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="row-label">二号生产线</div>
+          <div class="slots">
+            <div class="slot"><div class="task blue">SO-260813-018</div></div>
+            <div class="slot"><div class="task blue">SO-260813-018</div></div>
+            <div class="slot"><div class="task orange">SO-260813-021</div></div>
+            <div class="slot"><div class="task orange">SO-260813-021</div></div>
+            <div class="slot"><div class="task green">加班产能</div></div>
+            <div class="slot"><div class="task green">加班产能</div></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="row-label">三号生产线</div>
+          <div class="slots">
+            <div class="slot"></div>
+            <div class="slot"><div class="task purple small">装配 A</div></div>
+            <div class="slot"><div class="task purple small">装配 A</div></div>
+            <div class="slot"><div class="task pink small">装配 B</div></div>
+            <div class="slot"><div class="task pink small">装配 B</div></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="row-label">四号生产线</div>
+          <div class="slots">
+            <div class="slot"><div class="task green small">出库检查</div></div>
+            <div class="slot"></div>
+            <div class="slot"></div>
+            <div class="slot"><div class="task blue small">成品入库</div></div>
+            <div class="slot"><div class="task blue small">成品入库</div></div>
+            <div class="slot"></div>
+            <div class="slot"><div class="task orange small">临检</div></div>
+            <div class="slot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#dfeafc"></span> 紧急订单</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#cfeee1"></span> 产能补偿</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f9d9b4"></span> 普通订单顺延</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#eae2fd"></span> 装配工位</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#e7eaef"></span> 设备停机 / 维修</span>
+      </div>
+
+      <div class="note">
+        说明：本页面为重排后生产计划安排的演示示例，重点展示故障恢复后紧急订单优先、普通订单顺延、二号生产线加班补充产能的执行安排。
+      </div>
+    </div>
+  </body>
+</html>

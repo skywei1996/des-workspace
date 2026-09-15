@@ -1,0 +1,1 @@
+This directory contains files related to the SWOT analysis for 豆包手机, evaluating strengths, weaknesses, opportunities, and threats.

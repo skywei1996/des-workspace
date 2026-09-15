@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palantir Ontology 与属性建模深度解析</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0d0b1a;overflow:hidden}
+.slide-container{position:relative;width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;margin:auto;overflow:hidden}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:none;padding:40px 60px}
+.slide.active{display:flex;flex-direction:column}
+.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;z-index:1000}
+.nav button{background:rgba(139,92,246,0.3);border:1px solid rgba(139,92,246,0.5);color:#c4b5fd;padding:8px 20px;border-radius:20px;cursor:pointer;font-size:14px;transition:all 0.3s}
+.nav button:hover{background:rgba(139,92,246,0.6);transform:scale(1.05)}
+.nav .page-indicator{color:#a78bfa;font-size:14px;min-width:60px;text-align:center}
+.progress-bar{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,#7c3aed,#a78bfa,#c4b5fd);z-index:1001;transition:width 0.5s}
+
+/* Slide 1 - Title */
+.slide-1{background:linear-gradient(135deg,#0d0b1a 0%,#1a0e2e 30%,#2d1b69 60%,#1a0e2e 100%);justify-content:center;align-items:center;text-align:center}
+.slide-1 .title{font-size:52px;font-weight:800;background:linear-gradient(135deg,#c4b5fd,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px;animation:fadeInDown 1s}
+.slide-1 .subtitle{font-size:22px;color:#a78bfa;font-weight:300;margin-bottom:40px;animation:fadeInUp 1s 0.3s both}
+.slide-1 .meta{font-size:14px;color:#6d5a9e;animation:fadeInUp 1s 0.6s both}
+.slide-1 .deco-circle{position:absolute;border-radius:50%;border:1px solid rgba(139,92,246,0.15)}
+.slide-1 .deco-circle:nth-child(1){width:400px;height:400px;top:-100px;right:-50px;animation:float 6s ease-in-out infinite}
+.slide-1 .deco-circle:nth-child(2){width:300px;height:300px;bottom:-80px;left:-80px;animation:float 8s ease-in-out infinite 1s}
+.slide-1 .deco-circle:nth-child(3){width:200px;height:200px;top:50%;left:60%;animation:float 7s ease-in-out infinite 0.5s}
+
+.slide-bg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0}
+.slide-2{background:linear-gradient(160deg,#0d0b1a,#1a0e2e,#2a1a4a)}
+.slide-3{background:linear-gradient(160deg,#0d0b1a,#1e1040,#2a1a4a)}
+.slide-4{background:linear-gradient(160deg,#0d0b1a,#180e30,#2a1a4a)}
+.slide-5{background:linear-gradient(160deg,#0d0b1a,#1a0e2e,#2d1b69)}
+.slide-6{background:linear-gradient(160deg,#0d0b1a,#1e1040,#2a1a4a)}
+.slide-7{background:linear-gradient(160deg,#0d0b1a,#180e30,#2d1b69)}
+.slide-8{background:linear-gradient(160deg,#0d0b1a,#1a0e2e,#2a1a4a)}
+
+.content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+.section-title{font-size:36px;font-weight:700;color:#c4b5fd;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.section-title .num{font-size:18px;background:rgba(139,92,246,0.3);padding:4px 14px;border-radius:20px;color:#a78bfa}
+.section-divider{width:80px;height:3px;background:linear-gradient(90deg,#8b5cf6,#a78bfa);border-radius:2px;margin-bottom:24px}
+.two-col{display:flex;gap:30px;flex:1}
+.col{flex:1}
+
+.card{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:20px;backdrop-filter:blur(10px);transition:all 0.3s}
+.card:hover{transform:translateY(-4px);border-color:rgba(139,92,246,0.5);box-shadow:0 8px 32px rgba(139,92,246,0.15)}
+.card h3{color:#a78bfa;font-size:16px;margin-bottom:10px}
+.card p,.card li{color:#d4c4f0;font-size:13px;line-height:1.6}
+.card ul{list-style:none}
+.card ul li::before{content:'▸ ';color:#8b5cf6}
+.card ul li{margin-bottom:6px;padding-left:4px}
+
+.highlight{color:#c4b5fd;font-weight:600}
+.tag{display:inline-block;background:rgba(139,92,246,0.2);color:#a78bfa;padding:2px 10px;border-radius:10px;font-size:11px;margin:2px}
+
+.flow-diagram{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:20px 0}
+.flow-node{background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:12px;padding:12px 18px;text-align:center;color:#c4b5fd;font-size:13px;font-weight:500;transition:all 0.3s;min-width:100px}
+.flow-node:hover{background:rgba(139,92,246,0.3);transform:scale(1.05);box-shadow:0 0 20px rgba(139,92,246,0.3)}
+.flow-arrow{color:#6d5a9e;font-size:20px}
+
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:rgba(139,92,246,0.2);color:#c4b5fd;padding:8px 12px;text-align:left;font-weight:600;border-bottom:2px solid rgba(139,92,246,0.3)}
+.data-table td{padding:7px 12px;color:#d4c4f0;border-bottom:1px solid rgba(139,92,246,0.1)}
+.data-table tr:hover td{background:rgba(139,92,246,0.05)}
+
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#8b5cf6,transparent)}
+.timeline-item{position:relative;margin-bottom:18px}
+.timeline-item::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:#8b5cf6;border:2px solid #1a0e2e}
+.timeline-item h4{color:#c4b5fd;font-size:14px;margin-bottom:4px}
+.timeline-item p{color:#a088c0;font-size:12px;line-height:1.5}
+
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tech-item{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:12px 16px;transition:all 0.3s}
+.tech-item:hover{background:rgba(139,92,246,0.15);transform:translateX(4px)}
+.tech-item h4{color:#a78bfa;font-size:13px;margin-bottom:4px}
+.tech-item p{color:#a088c0;font-size:11px;line-height:1.5}
+
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:rgba(139,92,246,0.2);color:#c4b5fd;padding:8px 10px;text-align:center;font-weight:600;border-bottom:2px solid rgba(139,92,246,0.3)}
+.comp-table th:first-child{text-align:left}
+.comp-table td{padding:7px 10px;color:#d4c4f0;text-align:center;border-bottom:1px solid rgba(139,92,246,0.1)}
+.comp-table td:first-child{text-align:left;color:#a78bfa}
+
+.metric-row{display:flex;gap:16px;margin-bottom:16px}
+.metric-card{flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:16px;text-align:center}
+.metric-card .num{font-size:28px;font-weight:700;color:#c4b5fd}
+.metric-card .label{font-size:11px;color:#a088c0;margin-top:4px}
+
+.bottom-nav{position:absolute;bottom:20px;right:40px;z-index:10;display:flex;gap:8px}
+.bottom-nav button{background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;padding:6px 16px;border-radius:14px;cursor:pointer;font-size:12px;transition:all 0.3s}
+.bottom-nav button:hover{background:rgba(139,92,246,0.4)}
+
+.ending{justify-content:center;align-items:center;text-align:center}
+.ending .big-text{font-size:42px;font-weight:700;background:linear-gradient(135deg,#c4b5fd,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
+.ending .small-text{color:#a088c0;font-size:18px}
+
+.arch{display:flex;flex-direction:column;align-items:center;gap:6px}
+.arch-layer{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.arch-box{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:8px;padding:8px 14px;color:#d4c4f0;font-size:11px;text-align:center;transition:all 0.3s}
+.arch-box:hover{background:rgba(139,92,246,0.25);transform:scale(1.05)}
+.arch-box.label{background:transparent;border:none;color:#8b5cf6;font-weight:600;font-size:12px;min-width:80px}
+.arch-connector{color:#4a3a7a;font-size:10px}
+
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+@media(max-width:768px){
+.slide{padding:20px 24px}
+.section-title{font-size:24px}
+.two-col{flex-direction:column;gap:16px}
+.slide-1 .title{font-size:30px}
+.flow-diagram{flex-direction:column}
+.flow-arrow{transform:rotate(90deg)}
+.tech-grid{grid-template-columns:1fr}
+.metric-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-container" id="slideContainer">
+
+<!-- SLIDE 1: Title -->
+<div class="slide slide-1 active" data-index="0">
+  <div class="deco-circle"></div>
+  <div class="deco-circle"></div>
+  <div class="deco-circle"></div>
+  <div class="content" style="justify-content:center;align-items:center;text-align:center;">
+    <div class="title">Palantir Ontology 与属性建模深度解析</div>
+    <div class="subtitle">从数据源到业务本体的完整构建流程 · 技术选型 · 最佳实践</div>
+    <div class="meta">2025 技术白皮书 · 企业级知识图谱与数据建模</div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(1)">开始探索 →</button></div>
+</div>
+
+<!-- SLIDE 2: What is Ontology -->
+<div class="slide slide-2" data-index="1">
+  <div class="content">
+    <div class="section-title"><span class="num">01</span>什么是 Palantir Ontology？</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col">
+        <div class="card" style="height:100%;">
+          <h3>核心定义</h3>
+          <p style="font-size:14px;line-height:1.8;margin-bottom:12px;">Palantir Ontology 是 <span class="highlight">语义层（Semantic Layer）</span>，将底层杂乱的原始数据表映射为业务人员可理解的 <span class="highlight">业务对象</span>（Object Types）及其 <span class="highlight">属性</span>（Properties）与 <span class="highlight">关联</span>（Links）。</p>
+          <p style="font-size:14px;line-height:1.8;margin-bottom:12px;">它位于数据管道（Pipeline）之上，应用层之下，是 Palantir Foundry 与 AIP 平台的 <span class="highlight">核心抽象层</span>。</p>
+          <ul style="margin-top:8px;">
+            <li>Object Type — 业务对象类型（如：客户、订单、设备）</li>
+            <li>Property — 对象的属性字段（如：客户姓名、订单金额）</li>
+            <li>Link — 对象间的关系（如：客户→订单）</li>
+            <li>Action — 对象上的业务操作（如：审批、更新状态）</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="height:100%;">
+          <h3>为什么需要 Ontology？</h3>
+          <div class="metric-row" style="gap:8px;margin-bottom:8px;">
+            <div class="metric-card" style="padding:12px;"><div class="num" style="font-size:20px;">10x</div><div class="label">开发效率提升</div></div>
+            <div class="metric-card" style="padding:12px;"><div class="num" style="font-size:20px;">80%</div><div class="label">数据理解成本降低</div></div>
+            <div class="metric-card" style="padding:12px;"><div class="num" style="font-size:20px;">99.9%</div><div class="label">数据一致性保障</div></div>
+          </div>
+          <ul style="margin-top:8px;">
+            <li>屏蔽底层数据源异构性（PostgreSQL、Spark、S3 等）</li>
+            <li>提供统一业务语义层，业务与研发共用同一语言</li>
+            <li>支持实时/批量数据融合，无需关心 ETL 细节</li>
+            <li>内置权限、审计、血缘追踪</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(0)">← 上页</button><button onclick="goSlide(2)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 3: Property Definition Deep Dive -->
+<div class="slide slide-3" data-index="2">
+  <div class="content">
+    <div class="section-title"><span class="num">02</span>属性定义全流程详解</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col" style="flex:0.6;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>属性定义 6 步法</h3>
+          <div class="timeline">
+            <div class="timeline-item"><h4>Step 1 — 业务语义建模</h4><p>与业务方确认属性的业务含义、取值范围、业务规则</p></div>
+            <div class="timeline-item"><h4>Step 2 — 数据源映射</h4><p>识别属性来自哪些数据源表、哪些字段</p></div>
+            <div class="timeline-item"><h4>Step 3 — 属性类型选择</h4><p>STRING / INTEGER / DECIMAL / BOOLEAN / TIMESTAMP / GEO / ARRAY / ONTOLOGY_OBJECT</p></div>
+            <div class="timeline-item"><h4>Step 4 — 派生逻辑配置</h4><p>配置属性计算逻辑（SQL / Python / Transform / 聚合）</p></div>
+            <div class="timeline-item"><h4>Step 5 — 约束与校验</h4><p>唯一性、非空、值域、格式校验规则</p></div>
+            <div class="timeline-item"><h4>Step 6 — 发布与版本管理</h4><p>发布到生产环境，启用版本控制与变更追踪</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="flex:0.4;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>属性类型一览</h3>
+          <table class="data-table">
+            <tr><th>类型</th><th>说明</th><th>示例</th></tr>
+            <tr><td>STRING</td><td>字符串</td><td>客户名称</td></tr>
+            <tr><td>INTEGER</td><td>整数</td><td>年龄</td></tr>
+            <tr><td>DECIMAL</td><td>小数</td><td>订单金额</td></tr>
+            <tr><td>BOOLEAN</td><td>布尔</td><td>是否激活</td></tr>
+            <tr><td>TIMESTAMP</td><td>时间戳</td><td>创建时间</td></tr>
+            <tr><td>GEO</td><td>地理信息</td><td>设备位置</td></tr>
+            <tr><td>ARRAY</td><td>数组</td><td>标签列表</td></tr>
+            <tr><td>ONTOLOGY_OBJECT</td><td>对象引用</td><td>所属部门</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>属性定义示例 (YAML)</h3>
+          <p style="font-family:monospace;font-size:11px;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;color:#a78bfa;">
+property_definitions:<br>
+&nbsp;&nbsp;customer_name:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type: STRING<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source: "customers.name"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;required: true<br>
+&nbsp;&nbsp;total_orders:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type: DECIMAL<br>
+&nbsp;&nbsp;&nbsp;&nbsp;derived: "SUM(orders.amount)"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;aggregation: SUM
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(1)">← 上页</button><button onclick="goSlide(3)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 4: Multi-DB Mapping -->
+<div class="slide slide-4" data-index="3">
+  <div class="content">
+    <div class="section-title"><span class="num">03</span>多数据库表关联到同一属性</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col" style="flex:0.5;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>场景：多源汇聚 "客户总消费金额"</h3>
+          <p style="margin-bottom:8px;">同一属性可能来自多个异构数据源，Palantir 通过 <span class="highlight">Ontology Mapping Pipeline</span> 实现融合。</p>
+          <div class="flow-diagram" style="gap:4px;">
+            <div class="flow-node" style="font-size:11px;padding:8px 12px;">PostgreSQL<br>orders.total</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="font-size:11px;padding:8px 12px;">Spark<br>transactions.amt</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="font-size:11px;padding:8px 12px;">API<br>third_party</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="font-size:11px;padding:8px 12px;background:rgba(139,92,246,0.3);">Ontology<br>融合属性</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <h3>核心映射机制</h3>
+          <table class="data-table" style="font-size:11px;">
+            <tr><th>数据源</th><th>表名</th><th>字段</th><th>映射规则</th></tr>
+            <tr><td>PostgreSQL CRM</td><td>orders</td><td>total_amount</td><td>直接映射</td></tr>
+            <tr><td>MySQL 交易库</td><td>txn</td><td>amount</td><td>单位转换 * 100</td></tr>
+            <tr><td>MongoDB 日志</td><td>payments</td><td>value</td><td>JSON 解析</td></tr>
+            <tr><td>CSV 历史导入</td><td>legacy_orders</td><td>total</td><td>类型转换</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="col" style="flex:0.5;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>属性融合策略（Fusion Strategy）</h3>
+          <ul>
+            <li><span class="highlight">优先级覆盖</span> — 按数据源优先级取最高优先级值</li>
+            <li><span class="highlight">时间戳取最新</span> — 按事件时间戳取最新数据</li>
+            <li><span class="highlight">合并聚合</span> — 多个来源的值求和/平均后作为属性值</li>
+            <li><span class="highlight">置信度加权</span> — 按数据源置信度权重计算加权值</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <h3>多表→同一属性 示意图</h3>
+          <div style="text-align:center;padding:10px;">
+            <svg viewBox="0 0 320 180" style="width:100%;max-width:320px;height:auto;">
+              <rect x="10" y="10" width="90" height="30" rx="6" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="55" y="30" fill="#c4b5fd" font-size="10" text-anchor="middle">orders.total</text>
+              <rect x="10" y="50" width="90" height="30" rx="6" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="55" y="70" fill="#c4b5fd" font-size="10" text-anchor="middle">txn.amount</text>
+              <rect x="10" y="90" width="90" height="30" rx="6" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="55" y="110" fill="#c4b5fd" font-size="10" text-anchor="middle">payment.value</text>
+              <rect x="10" y="130" width="90" height="30" rx="6" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="55" y="150" fill="#c4b5fd" font-size="10" text-anchor="middle">legacy.total</text>
+              <line x1="100" y1="25" x2="200" y2="85" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <line x1="100" y1="65" x2="200" y2="95" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <line x1="100" y1="105" x2="200" y2="95" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <line x1="100" y1="145" x2="200" y2="105" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              <rect x="200" y="70" width="100" height="40" rx="10" fill="rgba(139,92,246,0.3)" stroke="rgba(139,92,246,0.6)" stroke-width="2"/>
+              <text x="250" y="95" fill="#e0d4ff" font-size="12" text-anchor="middle" font-weight="bold">total_spent</text>
+            </svg>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Palantir 关键技术</h3>
+          <p><span class="tag">Object Storage</span> <span class="tag">Phonograph</span> <span class="tag">Ontology Mapping</span> <span class="tag">Pipeline Builder</span> <span class="tag">Contour</span></p>
+          <p style="margin-top:6px;color:#a088c0;font-size:11px;">Phonograph 是 Palantir 的实时对象存储引擎，支持毫秒级属性更新与多源融合。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(2)">← 上页</button><button onclick="goSlide(4)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 5: Object Types & Links -->
+<div class="slide slide-5" data-index="4">
+  <div class="content">
+    <div class="section-title"><span class="num">04</span>Object Type 与 Link 关系建模</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>Object Type 定义</h3>
+          <p style="font-size:13px;line-height:1.7;margin-bottom:8px;">Object Type 是 Ontology 中的 <span class="highlight">一级业务实体</span>，每个 Object Type 包含一组 Properties 和 Links。</p>
+          <ul>
+            <li>每个 Object Type 有唯一的主键（Primary Key）</li>
+            <li>支持继承与组合（Extends / Contains）</li>
+            <li>支持版本化发布（Draft / Published）</li>
+            <li>可配置搜索索引与全文检索</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Link 类型</h3>
+          <table class="data-table">
+            <tr><th>类型</th><th>说明</th><th>基数</th></tr>
+            <tr><td>ONE_TO_ONE</td><td>一对一</td><td>1:1</td></tr>
+            <tr><td>ONE_TO_MANY</td><td>一对多</td><td>1:N</td></tr>
+            <tr><td>MANY_TO_MANY</td><td>多对多</td><td>M:N</td></tr>
+            <tr><td>HIERARCHICAL</td><td>层级关系</td><td>父-子</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>典型业务模型示例</h3>
+          <div style="text-align:center;padding:8px;">
+            <svg viewBox="0 0 300 170" style="width:100%;max-width:300px;height:auto;">
+              <rect x="100" y="5" width="100" height="36" rx="8" fill="rgba(139,92,246,0.2)" stroke="rgba(139,92,246,0.5)"/>
+              <text x="150" y="28" fill="#c4b5fd" font-size="12" text-anchor="middle" font-weight="bold">Customer</text>
+              <rect x="5" y="65" width="100" height="36" rx="8" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="55" y="88" fill="#c4b5fd" font-size="11" text-anchor="middle">Order</text>
+              <rect x="195" y="65" width="100" height="36" rx="8" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="245" y="88" fill="#c4b5fd" font-size="11" text-anchor="middle">Product</text>
+              <rect x="100" y="125" width="100" height="36" rx="8" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)"/>
+              <text x="150" y="148" fill="#c4b5fd" font-size="11" text-anchor="middle">Supplier</text>
+              <line x1="150" y1="41" x2="55" y2="65" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+              <text x="70" y="58" fill="#8b5cf6" font-size="9" text-anchor="middle">1:N</text>
+              <line x1="150" y1="41" x2="245" y2="65" stroke="rgba(139,92,246,0.4)" stroke-width="1.5"/>
+              <text x="210" y="58" fill="#8b5cf6" font-size="9" text-anchor="middle">M:N</text>
+              <line x1="55" y1="101" x2="150" y2="125" stroke="rgba(139,92,246,0.4)" stroke-width="1.5"/>
+              <text x="85" y="118" fill="#8b5cf6" font-size="9" text-anchor="middle">M:N</text>
+              <line x1="245" y1="101" x2="150" y2="125" stroke="rgba(139,92,246,0.4)" stroke-width="1.5"/>
+              <text x="210" y="118" fill="#8b5cf6" font-size="9" text-anchor="middle">N:1</text>
+              <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="rgba(139,92,246,0.4)"/></marker></defs>
+            </svg>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Link 定义示例</h3>
+          <p style="font-family:monospace;font-size:11px;line-height:1.6;background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;color:#a78bfa;">
+link_definitions:<br>
+&nbsp;&nbsp;customer_orders:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source: Customer<br>
+&nbsp;&nbsp;&nbsp;&nbsp;target: Order<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type: ONE_TO_MANY<br>
+&nbsp;&nbsp;&nbsp;&nbsp;foreign_key: "orders.customer_id"<br>
+&nbsp;&nbsp;order_products:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;source: Order<br>
+&nbsp;&nbsp;&nbsp;&nbsp;target: Product<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type: MANY_TO_MANY<br>
+&nbsp;&nbsp;&nbsp;&nbsp;through: "order_items"
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(3)">← 上页</button><button onclick="goSlide(5)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 6: Technical Architecture -->
+<div class="slide slide-6" data-index="5">
+  <div class="content">
+    <div class="section-title"><span class="num">05</span>技术选型与架构全景</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col" style="flex:0.5;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>Palantir 平台技术栈</h3>
+          <div class="arch">
+            <div class="arch-layer"><div class="arch-box label">应用层</div><div class="arch-box">Workshop</div><div class="arch-box">Contour</div><div class="arch-box">Quiver</div><div class="arch-box">Slate</div><div class="arch-box">AIP</div></div>
+            <div class="arch-connector">▼</div>
+            <div class="arch-layer"><div class="arch-box label">Ontology层</div><div class="arch-box" style="background:rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.5);">Object Types</div><div class="arch-box" style="background:rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.5);">Properties</div><div class="arch-box" style="background:rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.5);">Links</div><div class="arch-box" style="background:rgba(139,92,246,0.25);border-color:rgba(139,92,246,0.5);">Actions</div></div>
+            <div class="arch-connector">▼</div>
+            <div class="arch-layer"><div class="arch-box label">计算层</div><div class="arch-box">Phonograph</div><div class="arch-box">Spark</div><div class="arch-box">Flink</div><div class="arch-box">Pipeline</div></div>
+            <div class="arch-connector">▼</div>
+            <div class="arch-layer"><div class="arch-box label">存储层</div><div class="arch-box">PostgreSQL</div><div class="arch-box">HDFS</div><div class="arch-box">S3</div><div class="arch-box">Elasticsearch</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="flex:0.5;">
+        <div class="tech-grid">
+          <div class="tech-item"><h4>Phonograph</h4><p>实时对象存储，支持毫秒级属性读写，多源融合引擎</p></div>
+          <div class="tech-item"><h4>Pipeline Builder</h4><p>可视化数据管道构建器，支持 SQL/Python/Spark 转换</p></div>
+          <div class="tech-item"><h4>Ontology SDK</h4><p>Java/Python SDK，支持编程式 Ontology 定义与操作</p></div>
+          <div class="tech-item"><h4>Object Storage Service</h4><p>Palantir 分布式对象存储，支持 ACID 事务</p></div>
+          <div class="tech-item"><h4>Contour</h4><p>可视化分析工具，直接基于 Ontology 查询</p></div>
+          <div class="tech-item"><h4>Workshop</h4><p>应用构建器，基于 Ontology 快速搭建业务应用</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(4)">← 上页</button><button onclick="goSlide(6)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 7: Best Practices & Metrics -->
+<div class="slide slide-7" data-index="6">
+  <div class="content">
+    <div class="section-title"><span class="num">06</span>最佳实践与性能指标</div>
+    <div class="section-divider"></div>
+    <div class="two-col">
+      <div class="col">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>最佳实践</h3>
+          <ul>
+            <li><span class="highlight">面向业务建模</span> — 不要将数据库表直接映射为 Object Type，应从业务概念出发</li>
+            <li><span class="highlight">单一数据源优先</span> — 同一属性的多个来源应明确优先级和融合策略</li>
+            <li><span class="highlight">属性粒度适中</span> — 避免过细（拆成数百个属性）或过粗（JSON 大字段）</li>
+            <li><span class="highlight">合理使用派生属性</span> — 计算密集型属性用 Pipeline 预计算，简单逻辑用表达式</li>
+            <li><span class="highlight">版本控制</span> — 所有 Ontology 变更通过 Draft→Review→Publish 流程</li>
+            <li><span class="highlight">权限最小化</span> — 属性级权限控制，敏感字段加密</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>常见陷阱</h3>
+          <ul>
+            <li>将数据库外键直接暴露为属性，应为 Link</li>
+            <li>忽略时区问题导致时间属性混乱</li>
+            <li>不同类型的数据源直接拼接未做归一化</li>
+            <li>未设置属性缓存策略导致性能瓶颈</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>性能指标对比</h3>
+          <table class="comp-table">
+            <tr><th>场景</th><th>传统方式</th><th>Palantir Ontology</th></tr>
+            <tr><td>新属性上线</td><td>2-3 天</td><td>30 分钟</td></tr>
+            <tr><td>多源数据融合</td><td>1-2 周</td><td>2-4 小时</td></tr>
+            <tr><td>查询响应时间</td><td>5-10 秒</td><td>&lt;200ms</td></tr>
+            <tr><td>跨系统交互</td><td>API 开发</td><td>Ontology 原生</td></tr>
+            <tr><td>模型变更影响</td><td>全链路修改</td><td>局部热更新</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>推荐技术选型总结</h3>
+          <table class="data-table">
+            <tr><th>组件</th><th>推荐方案</th></tr>
+            <tr><td>Ontology 定义</td><td>Ontology SDK (Python) + YAML</td></tr>
+            <tr><td>数据管道</td><td>Pipeline Builder / Spark Transforms</td></tr>
+            <tr><td>实时引擎</td><td>Phonograph + Flink</td></tr>
+            <tr><td>存储层</td><td>Object Storage + PostgreSQL</td></tr>
+            <tr><td>搜索索引</td><td>Elasticsearch 集成</td></tr>
+            <tr><td>应用构建</td><td>Workshop / Slate / AIP Agents</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(5)">← 上页</button><button onclick="goSlide(7)">下一页 →</button></div>
+</div>
+
+<!-- SLIDE 8: Ending -->
+<div class="slide slide-8" data-index="7">
+  <div class="content ending">
+    <div class="big-text">Thank You</div>
+    <div class="small-text">Palantir Ontology — 让数据成为真正的业务资产</div>
+    <div style="margin-top:30px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap;">
+      <div class="card" style="max-width:200px;padding:16px;">
+        <h3>核心价值</h3>
+        <p style="font-size:13px;color:#c4b5fd;">统一语义层 · 实时融合 · 业务驱动</p>
+      </div>
+      <div class="card" style="max-width:200px;padding:16px;">
+        <h3>关键能力</h3>
+        <p style="font-size:13px;color:#c4b5fd;">多源映射 · 属性建模 · 关系推理</p>
+      </div>
+      <div class="card" style="max-width:200px;padding:16px;">
+        <h3>适用场景</h3>
+        <p style="font-size:13px;color:#c4b5fd;">企业数据中台 · 知识图谱 · AI 应用</p>
+      </div>
+    </div>
+    <div style="margin-top:30px;font-size:12px;color:#4a3a7a;">Palantir Foundry & AIP · Ontology-Driven Development</div>
+  </div>
+  <div class="bottom-nav"><button onclick="goSlide(6)">← 上页</button></div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button onclick="prevSlide()">◀</button>
+  <span class="page-indicator" id="pageInd">1 / 8</span>
+  <button onclick="nextSlide()">▶</button>
+</div>
+
+<script>
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+const progressBar = document.getElementById('progressBar');
+const pageInd = document.getElementById('pageInd');
+
+function updateSlide() {
+  slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+  progressBar.style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+  pageInd.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+}
+
+function goSlide(n) { currentSlide = Math.min(Math.max(n, 0), totalSlides - 1); updateSlide(); }
+function nextSlide() { goSlide(currentSlide + 1); }
+function prevSlide() { goSlide(currentSlide - 1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+document.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+});
+
+updateSlide();
+</script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Technical Architecture Blueprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hairline: '#27312c',
+                        canvas: '#070908',
+                        panel: '#141916',
+                        inset: '#0f1311',
+                        primary: '#78b900',
+                        accent: '#34d399',
+                        ink: '#f3f5ef',
+                        muted: '#a2ada4',
+                        warning: '#fbbf24'
+                    },
+                    boxShadow: {
+                        poster: '0 32px 88px rgba(0,0,0,0.48)'
+                    },
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(120, 185, 0, 0.14), transparent 24%),
+                radial-gradient(circle at bottom right, rgba(52, 211, 153, 0.08), transparent 18%),
+                #070908;
+            font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+        }
+
+        .poster {
+            width: min(96vw, calc(96vh * 16 / 9), 1600px);
+            height: min(96vh, calc(96vw * 9 / 16), 900px);
+        }
+
+        .frame {
+            background: #27312c;
+            gap: 1px;
+            padding: 1px;
+        }
+
+        .panel {
+            background: #141916;
+        }
+
+        .inset {
+            background: #0f1311;
+        }
+
+        .band {
+            border-top: 2px solid #78b900;
+            background: linear-gradient(90deg, rgba(120, 185, 0, 0.12), rgba(255, 255, 255, 0.018));
+        }
+
+        .kpi {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+        }
+
+        .icon-box {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: rgba(120, 185, 0, 0.12);
+            color: #78b900;
+            flex: 0 0 auto;
+        }
+
+        .tag {
+            border: 1px solid rgba(120, 185, 0, 0.28);
+            background: rgba(120, 185, 0, 0.08);
+            color: #9fdd3d;
+        }
+
+        .tag-muted {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            color: #cdd6cf;
+        }
+
+        .micro-grid {
+            display: grid;
+            gap: 1px;
+            background: #27312c;
+            padding: 1px;
+        }
+
+        .flow-line {
+            width: 1px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(120, 185, 0, 0.08), rgba(120, 185, 0, 0.95), rgba(120, 185, 0, 0.08));
+        }
+
+        .signal-line {
+            height: 1px;
+            background: linear-gradient(90deg, rgba(120, 185, 0, 0.08), rgba(120, 185, 0, 0.85), rgba(52, 211, 153, 0.32), rgba(120, 185, 0, 0.08));
+        }
+
+        .small-caps {
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .poster > section:first-child {
+            flex: 0 0 20%;
+            min-height: 0;
+        }
+
+        .poster > section:last-child {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .poster > section:first-child h1 {
+            font-size: 18px !important;
+            line-height: 1.02 !important;
+        }
+
+        .poster > section:first-child p {
+            font-size: 9.5px !important;
+            line-height: 1.14 !important;
+        }
+
+        .poster > section:first-child .kpi {
+            padding: 0.45rem 0.65rem !important;
+        }
+
+        .poster > section:first-child .text-\[15px\] {
+            font-size: 12px !important;
+            line-height: 1.14 !important;
+        }
+
+        .poster > section:first-child .text-\[12px\] {
+            font-size: 9px !important;
+            line-height: 1.15 !important;
+        }
+
+        .poster > section:first-child .text-\[11px\],
+        .poster > section:first-child .text-xs {
+            font-size: 8px !important;
+            line-height: 1.12 !important;
+        }
+
+        .panel .px-3 {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+
+        .panel .py-3 {
+            padding-top: 0.375rem !important;
+            padding-bottom: 0.375rem !important;
+        }
+
+        .panel .py-2 {
+            padding-top: 0.25rem !important;
+            padding-bottom: 0.25rem !important;
+        }
+
+        .panel .mt-3 {
+            margin-top: 0.5rem !important;
+        }
+
+        .panel .mt-2 {
+            margin-top: 0.375rem !important;
+        }
+
+        .panel .mt-1 {
+            margin-top: 0.125rem !important;
+        }
+
+        .panel .gap-3 {
+            gap: 0.375rem !important;
+        }
+
+        .panel .text-sm {
+            font-size: 11px !important;
+            line-height: 1.14 !important;
+        }
+
+        .panel .text-xs {
+            font-size: 9px !important;
+            line-height: 1.18 !important;
+        }
+
+        .panel .text-\[13px\] {
+            font-size: 11px !important;
+            line-height: 1.14 !important;
+        }
+
+        .panel .text-\[12px\] {
+            font-size: 10px !important;
+            line-height: 1.14 !important;
+        }
+
+        .panel .text-\[11px\] {
+            font-size: 9px !important;
+            line-height: 1.18 !important;
+        }
+
+        .panel .text-\[10px\] {
+            font-size: 8px !important;
+            line-height: 1.12 !important;
+        }
+
+        .panel .leading-relaxed {
+            line-height: 1.16 !important;
+        }
+
+        .panel .rounded-sm {
+            border-radius: 0.125rem !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-2 overflow-hidden text-ink">
+    <main class="poster border border-hairline bg-hairline shadow-poster overflow-hidden flex flex-col">
+        <section class="frame grid grid-cols-[1.35fr_2.15fr]">
+            <div class="panel band px-4 py-2 flex flex-col justify-between min-w-0">
+                <div class="flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-primary">
+                    <span class="inline-flex items-center gap-2"><i class="fa-solid fa-code"></i> Claude Code</span>
+                    <span class="text-muted">Technical Architecture Blueprint</span>
+                </div>
+                <div>
+                    <h1 class="text-[24px] font-bold leading-[1.02]">Claude Code Agentic Engineering Stack</h1>
+                    <p class="mt-1 text-[12px] text-muted max-w-[620px]">围绕交互、编排、记忆、工具运行时与安全分发构建的编码智能体蓝图，解释 Claude Code 如何演进为可执行的软件工程平台。</p>
+                </div>
+                <div class="text-[11px] text-primary font-semibold">Agentic Coding · Control Over Generation · Persistent Context · Tool Runtime · Safe Distribution</div>
+            </div>
+            <div class="frame grid grid-cols-5">
+                <div class="kpi px-3 py-2 flex flex-col justify-between">
+                    <div class="text-[10px] small-caps text-muted">Architecture</div>
+                    <div class="text-[15px] leading-tight font-semibold">Five-Layer Model</div>
+                    <div class="text-xs text-muted">interaction to secure delivery</div>
+                </div>
+                <div class="kpi px-3 py-2 flex flex-col justify-between">
+                    <div class="text-[10px] small-caps text-muted">Loop</div>
+                    <div class="text-[15px] leading-tight font-semibold">TAOR Control Cycle</div>
+                    <div class="text-xs text-muted">think, act, observe, repeat</div>
+                </div>
+                <div class="kpi px-3 py-2 flex flex-col justify-between">
+                    <div class="text-[10px] small-caps text-muted">Context</div>
+                    <div class="text-[15px] leading-tight font-semibold">Prompt Cache + Memory</div>
+                    <div class="text-xs text-muted">working, episodic, semantic</div>
+                </div>
+                <div class="kpi px-3 py-2 flex flex-col justify-between">
+                    <div class="text-[10px] small-caps text-muted">Tool Surface</div>
+                    <div class="text-[15px] leading-tight font-semibold">40+ Modules / Runtime</div>
+                    <div class="text-xs text-muted">sandboxed execution fabric</div>
+                </div>
+                <div class="kpi px-3 py-2 flex flex-col justify-between">
+                    <div class="text-[10px] small-caps text-muted">Governance</div>
+                    <div class="text-[15px] leading-tight font-semibold">Flags, Sandbox, Anti-Debug</div>
+                    <div class="text-xs text-muted">bounded release and defense</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="frame flex-1 grid grid-rows-[1.44fr_1.06fr] overflow-hidden">
+            <div class="frame grid grid-cols-[0.94fr_2.5fr_1.06fr] overflow-hidden">
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-route text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Agentic Coding Workflow</div>
+                                <div class="text-[11px] text-muted">从请求到补丁交付的执行闭环</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">WORKFLOW</span>
+                    </div>
+                    <div class="mt-3 flex-1 grid grid-rows-[1fr_10px_1fr_10px_1fr_10px_1fr_10px_1fr_10px_1fr] min-h-0">
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">1</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Request Intake</div>
+                                <div class="text-xs text-muted mt-1">统一接收 CLI、IDE 与仓库上下文，识别目标与边界。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">2</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Plan & Task Control</div>
+                                <div class="text-xs text-muted mt-1">拆分任务、规划工具序列，并决定是否分派子代理。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">3</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Context Assembly</div>
+                                <div class="text-xs text-muted mt-1">拼装仓库、记忆与缓存片段，形成执行上下文。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">4</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Tool Runtime Loop</div>
+                                <div class="text-xs text-muted mt-1">调用搜索、编辑、shell、测试与 MCP，执行 TAOR 循环。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">5</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Review & Patch</div>
+                                <div class="text-xs text-muted mt-1">输出 diff、解释变更并跑局部验证。</div>
+                            </div>
+                        </div>
+                        <div class="flow-line h-full"></div>
+                        <div class="micro-grid grid-cols-[26px_1fr] rounded-sm overflow-hidden">
+                            <div class="inset bg-primary text-black font-bold text-[11px] flex items-center justify-center">6</div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-sm font-semibold">Deliver & Learn</div>
+                                <div class="text-xs text-muted mt-1">答复落盘并回写经验，为后续任务缩短路径。</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0 overflow-hidden">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-layer-group text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Claude Code Core Platform</div>
+                                <div class="text-[11px] text-muted">五层架构、控制协议、记忆系统、工具执行与安全治理</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">CENTER PLATFORM</span>
+                    </div>
+
+                    <div class="mt-2 micro-grid grid-cols-5 rounded-sm overflow-hidden">
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Interaction</div>
+                            <div class="text-xs text-muted mt-1">CLI, IDE, terminal bridge</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Orchestration</div>
+                            <div class="text-xs text-muted mt-1">planner, controller, subagents</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Context</div>
+                            <div class="text-xs text-muted mt-1">memory, repo state, prompt cache</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Tools</div>
+                            <div class="text-xs text-muted mt-1">search, edit, shell, MCP</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="text-sm font-semibold">Security</div>
+                            <div class="text-xs text-muted mt-1">sandbox, policy, release gates</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 frame grid grid-cols-[1.02fr_1.34fr_1.04fr] flex-1 overflow-hidden">
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2"><div class="text-[13px] font-semibold">Control & Protocol Plane</div></div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-diagram-project text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Task Planner</div>
+                                    <div class="text-xs text-muted mt-1">输出 step graph、tool sequence 与 fallback path。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-repeat text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">TAOR Loop Controller</div>
+                                    <div class="text-xs text-muted mt-1">形成可中断、可恢复、可重试的执行节拍。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-sitemap text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Subagent Coordination</div>
+                                    <div class="text-xs text-muted mt-1">通过角色分工与并行执行切分复杂任务。</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex items-start gap-3">
+                                <span class="icon-box"><i class="fa-solid fa-sliders text-xs"></i></span>
+                                <div>
+                                    <div class="text-sm font-semibold">Feature Flag Envelope</div>
+                                    <div class="text-xs text-muted mt-1">实验能力通过 flag 做灰度封装与边界控制。</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2 flex items-center justify-between">
+                                <div class="text-[13px] font-semibold">Execution Spine & Capability Matrix</div>
+                                <span class="tag-muted text-[10px] px-2 py-1 rounded-sm">DENSE CORE</span>
+                            </div>
+                            <div class="inset px-3 py-2">
+                                <div class="micro-grid grid-cols-2 rounded-sm overflow-hidden">
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-[12px] font-semibold">Input Normalization</div>
+                                        <div class="text-[11px] text-muted mt-1">prompt parse, repo scan, command intent</div>
+                                    </div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-[12px] font-semibold">Context Composer</div>
+                                        <div class="text-[11px] text-muted mt-1">file shards, memory slices, cached prompt segments</div>
+                                    </div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-[12px] font-semibold">Async Tool Orchestrator</div>
+                                        <div class="text-[11px] text-muted mt-1">streaming, interrupt / resume, observation merge</div>
+                                    </div>
+                                    <div class="inset px-3 py-2">
+                                        <div class="text-[12px] font-semibold">Patch Generator</div>
+                                        <div class="text-[11px] text-muted mt-1">edit plan, diff, explanation, validation hook</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-[12px] small-caps text-muted">Capability Taxonomy</div>
+                                <div class="mt-2 micro-grid grid-cols-3 rounded-sm overflow-hidden text-[11px]">
+                                    <div class="inset px-2 py-2">Repo Search<br><span class="text-muted">symbol, grep, semantic</span></div>
+                                    <div class="inset px-2 py-2">File Mutation<br><span class="text-muted">patch, create, notebook edit</span></div>
+                                    <div class="inset px-2 py-2">Execution<br><span class="text-muted">shell, task, python snippet</span></div>
+                                    <div class="inset px-2 py-2">Grounding<br><span class="text-muted">workspace, browser, fetch, db</span></div>
+                                    <div class="inset px-2 py-2">State & Memory<br><span class="text-muted">session, repo notes, artifacts</span></div>
+                                    <div class="inset px-2 py-2">Review & Verify<br><span class="text-muted">tests, diagnostics, diff checks</span></div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex-1 min-h-0 flex flex-col">
+                                <div class="flex items-center justify-between text-[12px]">
+                                    <span class="font-semibold">Execution Signal Flow</span>
+                                    <span class="text-muted">control > action > observation > memory</span>
+                                </div>
+                                <div class="mt-2 micro-grid grid-cols-[1fr_20px_1fr_20px_1fr_20px_1fr] rounded-sm overflow-hidden flex-1 min-h-0 text-[11px] items-stretch">
+                                    <div class="inset px-2 py-2 flex flex-col justify-center">
+                                        <div class="font-semibold">Intent</div>
+                                        <div class="text-muted mt-1">task request</div>
+                                    </div>
+                                    <div class="inset flex items-center justify-center text-primary"><i class="fa-solid fa-arrow-right"></i></div>
+                                    <div class="inset px-2 py-2 flex flex-col justify-center">
+                                        <div class="font-semibold">Plan</div>
+                                        <div class="text-muted mt-1">controller output</div>
+                                    </div>
+                                    <div class="inset flex items-center justify-center text-primary"><i class="fa-solid fa-arrow-right"></i></div>
+                                    <div class="inset px-2 py-2 flex flex-col justify-center">
+                                        <div class="font-semibold">Tool Run</div>
+                                        <div class="text-muted mt-1">sandboxed action</div>
+                                    </div>
+                                    <div class="inset flex items-center justify-center text-primary"><i class="fa-solid fa-arrow-right"></i></div>
+                                    <div class="inset px-2 py-2 flex flex-col justify-center">
+                                        <div class="font-semibold">Patch / Reply</div>
+                                        <div class="text-muted mt-1">verified delivery</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel p-[1px] bg-hairline flex flex-col gap-[1px] min-h-0">
+                            <div class="inset band px-3 py-2"><div class="text-[13px] font-semibold">Context, Memory & Security</div></div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-[12px] font-semibold">Memory Stack</div>
+                                <div class="mt-2 micro-grid grid-cols-1 rounded-sm overflow-hidden text-[11px]">
+                                    <div class="inset px-3 py-2 flex items-center justify-between"><span>Working Memory</span><span class="text-muted">active files / active goals</span></div>
+                                    <div class="inset px-3 py-2 flex items-center justify-between"><span>Episodic Memory</span><span class="text-muted">recent attempts / outcomes</span></div>
+                                    <div class="inset px-3 py-2 flex items-center justify-between"><span>Semantic Memory</span><span class="text-muted">learned patterns / repo notes</span></div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2">
+                                <div class="text-[12px] font-semibold">Security Controls</div>
+                                <div class="mt-2 micro-grid grid-cols-2 rounded-sm overflow-hidden text-[11px]">
+                                    <div class="inset px-2 py-2">Permission Sandbox</div>
+                                    <div class="inset px-2 py-2">Anti-Debug Signals</div>
+                                    <div class="inset px-2 py-2">Hardware Auth</div>
+                                    <div class="inset px-2 py-2">Undercover Mode</div>
+                                </div>
+                            </div>
+                            <div class="inset px-3 py-2 flex-1 min-h-0 flex flex-col">
+                                <div class="text-[12px] font-semibold">Prompt Cache Segmentation</div>
+                                <div class="signal-line mt-2"></div>
+                                <div class="mt-2 grid grid-cols-3 gap-[1px] bg-hairline p-[1px] rounded-sm overflow-hidden text-[11px]">
+                                    <div class="inset px-2 py-2"><span class="font-semibold">Static</span><br><span class="text-muted">policy + persona</span></div>
+                                    <div class="inset px-2 py-2"><span class="font-semibold">Dynamic</span><br><span class="text-muted">repo + task evidence</span></div>
+                                    <div class="inset px-2 py-2"><span class="font-semibold">Volatile</span><br><span class="text-muted">latest tool observations</span></div>
+                                </div>
+                                <div class="mt-2 text-[11px] text-muted leading-relaxed">通过分段缓存与多层记忆降低 token 浪费，保持修改面聚焦。</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-briefcase text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Delivery Scenarios</div>
+                                <div class="text-[11px] text-muted">Claude Code 的落地面与业务结果</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">SCENARIOS</span>
+                    </div>
+                    <div class="mt-3 micro-grid grid-cols-1 rounded-sm overflow-hidden text-[11px]">
+                        <div class="inset px-3 py-3 flex items-start gap-3">
+                            <span class="icon-box"><i class="fa-solid fa-wrench text-xs"></i></span>
+                            <div>
+                                <div class="text-sm font-semibold">Codebase Refactoring</div>
+                                <div class="text-xs text-muted mt-1">跨文件搜索、精准改名、批量 patch 与局部测试闭环。</div>
+                            </div>
+                        </div>
+                        <div class="inset px-3 py-3 flex items-start gap-3">
+                            <span class="icon-box"><i class="fa-solid fa-bug text-xs"></i></span>
+                            <div>
+                                <div class="text-sm font-semibold">Failure Diagnosis</div>
+                                <div class="text-xs text-muted mt-1">沿调用链定位错误，并回跳到直接控制切面修复。</div>
+                            </div>
+                        </div>
+                        <div class="inset px-3 py-3 flex items-start gap-3">
+                            <span class="icon-box"><i class="fa-solid fa-robot text-xs"></i></span>
+                            <div>
+                                <div class="text-sm font-semibold">Autonomous Coding Tasks</div>
+                                <div class="text-xs text-muted mt-1">适合多步交付、工具联动与环境验证场景。</div>
+                            </div>
+                        </div>
+                        <div class="inset px-3 py-3 flex items-start gap-3">
+                            <span class="icon-box"><i class="fa-solid fa-shield-halved text-xs"></i></span>
+                            <div>
+                                <div class="text-sm font-semibold">Guarded Enterprise Use</div>
+                                <div class="text-xs text-muted mt-1">通过权限边界、可审计轨迹与灰度开关支撑企业开发流程。</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 micro-grid grid-cols-2 rounded-sm overflow-hidden text-[11px]">
+                        <div class="inset px-3 py-2">
+                            <div class="font-semibold">Primary Users</div>
+                            <div class="text-muted mt-1">platform teams, AI IDE teams, repo maintainers</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="font-semibold">Result Shape</div>
+                            <div class="text-muted mt-1">patches, explanations, logs, validated runs</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="frame grid grid-cols-[1.5fr_1.05fr_1.05fr] overflow-hidden">
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-server text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Foundation & Runtime Base</div>
+                                <div class="text-[11px] text-muted">真正支撑上层智能体行为的底座</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">FOUNDATION</span>
+                    </div>
+                    <div class="mt-2 micro-grid grid-cols-5 rounded-sm overflow-hidden text-[11px]">
+                        <div class="inset px-3 py-2"><span class="font-semibold">Runtime</span><br><span class="text-muted">TS CLI, agent loop, async streams</span></div>
+                        <div class="inset px-3 py-2"><span class="font-semibold">State</span><br><span class="text-muted">workspace, session, cache shards</span></div>
+                        <div class="inset px-3 py-2"><span class="font-semibold">Tooling</span><br><span class="text-muted">search, patch, shell, diagnostics</span></div>
+                        <div class="inset px-3 py-2"><span class="font-semibold">Knowledge</span><br><span class="text-muted">repo context, memory, prompts</span></div>
+                        <div class="inset px-3 py-2"><span class="font-semibold">Governance</span><br><span class="text-muted">release gates, audit, permissions</span></div>
+                    </div>
+                    <div class="mt-2 micro-grid grid-cols-[1.2fr_0.8fr_1fr] rounded-sm overflow-hidden text-[11px]">
+                        <div class="inset px-3 py-2">
+                            <div class="font-semibold">Deployment Modes</div>
+                            <div class="text-muted mt-1">local CLI, IDE embed, daemon mode</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="font-semibold">Integration Fabric</div>
+                            <div class="text-muted mt-1">terminal, repo FS, toolchain, external APIs</div>
+                        </div>
+                        <div class="inset px-3 py-2">
+                            <div class="font-semibold">Engineering Principle</div>
+                            <div class="text-muted mt-1">优势来自执行架构与系统工程，而不只是 prompt。</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-table text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Use Case / Benefit Matrix</div>
+                                <div class="text-[11px] text-muted">高密度收益对照表</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">TABLE</span>
+                    </div>
+                    <div class="mt-2 micro-grid grid-cols-3 rounded-sm overflow-hidden text-[10px] leading-relaxed">
+                        <div class="inset px-2 py-2 font-semibold">Use Case</div>
+                        <div class="inset px-2 py-2 font-semibold">Core Mechanism</div>
+                        <div class="inset px-2 py-2 font-semibold">Gain</div>
+                        <div class="inset px-2 py-2">Bug fix</div>
+                        <div class="inset px-2 py-2">nearest-slice validation</div>
+                        <div class="inset px-2 py-2">lower rework loops</div>
+                        <div class="inset px-2 py-2">Refactor</div>
+                        <div class="inset px-2 py-2">symbol-aware edit + repo scan</div>
+                        <div class="inset px-2 py-2">safer large changes</div>
+                        <div class="inset px-2 py-2">Review assist</div>
+                        <div class="inset px-2 py-2">control-path reasoning</div>
+                        <div class="inset px-2 py-2">faster isolation</div>
+                    </div>
+                </section>
+
+                <section class="panel px-3 py-3 flex flex-col min-h-0">
+                    <div class="band px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="icon-box"><i class="fa-solid fa-rotate text-xs"></i></span>
+                            <div>
+                                <div class="text-[13px] font-semibold">Roadmap & Closed Loop</div>
+                                <div class="text-[11px] text-muted">从执行平台到更主动的软件代理</div>
+                            </div>
+                        </div>
+                        <span class="tag text-[10px] px-2 py-1 rounded-sm">LOOP</span>
+                    </div>
+                    <div class="mt-2 micro-grid grid-cols-1 rounded-sm overflow-hidden text-[11px]">
+                        <div class="inset px-3 py-2 flex items-center justify-between"><span>Today</span><span class="text-muted">interactive coding copilot</span></div>
+                        <div class="inset px-3 py-2 flex items-center justify-between"><span>Next</span><span class="text-muted">daemonized long-running task support</span></div>
+                        <div class="inset px-3 py-2 flex items-center justify-between"><span>Emerging</span><span class="text-muted">Kairos proactive execution</span></div>
+                        <div class="inset px-3 py-2 flex items-center justify-between"><span>Memory Future</span><span class="text-muted">auto-dream consolidation</span></div>
+                    </div>
+                    <div class="mt-2 grid grid-cols-[1fr_18px_1fr_18px_1fr] gap-[1px] bg-hairline p-[1px] rounded-sm overflow-hidden text-[10px]">
+                        <div class="inset px-2 py-3 text-center"><span class="font-semibold">Observe</span><br><span class="text-muted">repo + user intent</span></div>
+                        <div class="inset flex items-center justify-center text-primary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="inset px-2 py-3 text-center"><span class="font-semibold">Execute</span><br><span class="text-muted">tool loop + review</span></div>
+                        <div class="inset flex items-center justify-center text-primary"><i class="fa-solid fa-arrow-right"></i></div>
+                        <div class="inset px-2 py-3 text-center"><span class="font-semibold">Consolidate</span><br><span class="text-muted">memory + policies</span></div>
+                    </div>
+                    <div class="mt-2 text-[10px] text-warning">Note: 本图基于公开二手分析归纳的工程模式，用于技术解构展示，不代表 Anthropic 官方架构文档。</div>
+                </section>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

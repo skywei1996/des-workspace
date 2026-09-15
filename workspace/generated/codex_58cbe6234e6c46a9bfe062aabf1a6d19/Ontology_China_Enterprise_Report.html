@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ontology（本体网络）中国企业落地调研报告</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; padding: 0; }
+        .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 48px 24px; text-align: center; }
+        .header h1 { font-size: 2.2rem; margin-bottom: 12px; font-weight: 700; }
+        .header .subtitle { font-size: 1.1rem; opacity: 0.85; }
+        .header .date { font-size: 0.9rem; opacity: 0.6; margin-top: 8px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+        .summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: 0 8px 32px rgba(102,126,234,0.3); }
+        .summary-card h2 { font-size: 1.4rem; margin-bottom: 16px; }
+        .summary-card p { line-height: 1.8; font-size: 1rem; opacity: 0.95; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-item { background: white; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .stat-item .num { font-size: 2rem; font-weight: 700; color: #667eea; }
+        .stat-item .label { font-size: 0.85rem; color: #666; margin-top: 4px; }
+        .section { background: white; border-radius: 16px; padding: 28px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .section h2 { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid #667eea; display: inline-block; }
+        .section h3 { font-size: 1.15rem; color: #0f3460; margin: 20px 0 10px 0; }
+        .section p { line-height: 1.8; color: #333; margin-bottom: 12px; }
+        .partner-item { background: #f8f9ff; border-left: 4px solid #667eea; border-radius: 0 10px 10px 0; padding: 20px; margin-bottom: 16px; }
+        .partner-item h4 { font-size: 1.1rem; color: #1a1a2e; margin-bottom: 6px; }
+        .partner-item .tag { display: inline-block; background: #667eea; color: white; font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; margin-bottom: 8px; }
+        .partner-item .tag-green { background: #2ecc71; }
+        .partner-item .tag-orange { background: #e67e22; }
+        .partner-item .tag-purple { background: #9b59b6; }
+        .partner-item p { color: #555; font-size: 0.95rem; line-height: 1.7; }
+        .timeline { position: relative; padding-left: 30px; margin: 20px 0; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 3px; background: #667eea; border-radius: 2px; }
+        .timeline-item { position: relative; margin-bottom: 20px; padding-left: 20px; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 6px; width: 14px; height: 14px; background: #667eea; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #667eea; }
+        .timeline-item .time { font-size: 0.8rem; color: #667eea; font-weight: 600; }
+        .timeline-item .title { font-weight: 600; color: #1a1a2e; }
+        .timeline-item .desc { font-size: 0.9rem; color: #555; margin-top: 4px; }
+        .footer { text-align: center; padding: 32px 20px; color: #999; font-size: 0.85rem; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: #667eea; color: white; padding: 12px 16px; text-align: left; font-weight: 600; }
+        td { padding: 12px 16px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background: #f8f9ff; }
+        tr:hover { background: #eef0ff; }
+        .highlight { color: #667eea; font-weight: 600; }
+        .note { background: #fff8e1; border-radius: 10px; padding: 16px; margin: 16px 0; border-left: 4px solid #ffc107; font-size: 0.9rem; color: #666; }
+        .badge { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 0.75rem; padding: 2px 10px; border-radius: 12px; }
+        @media (max-width: 768px) { .header h1 { font-size: 1.6rem; } .container { padding: 16px; } .section { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Ontology（本体网络）中国企业落地调研报告</h1>
+    <div class="subtitle">Ontology Blockchain Enterprise Adoption in China — Research Report</div>
+    <div class="date">调研时间：2026年9月11日 | 数据来源：公开网络信息</div>
+</div>
+
+<div class="container">
+
+    <div class="summary-card">
+        <h2>报告摘要</h2>
+        <p>
+            Ontology（本体网络）是一个高性能、开源的企业级区块链平台，专注于去中心化数字身份（DID）和数据管理。自2017年由分布科技（OnChain）在上海创立以来，Ontology 在中国及全球范围内与多家头部企业、政府机构和高校建立了深度合作关系，涵盖汽车制造、政务、金融、教育、供应链、医疗健康等多个行业领域。截至2026年，Ontology 主网已安全运行8年以上，ONT ID 创建量超过 <strong>100万</strong>，质押 ONT 总量超过 <strong>2亿</strong>，网络节点超过 <strong>800个</strong>。
+        </p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-item"><div class="num">100万+</div><div class="label">ONT ID 创建量</div></div>
+        <div class="stat-item"><div class="num">2亿+</div><div class="label">ONT 质押总量</div></div>
+        <div class="stat-item"><div class="num">800+</div><div class="label">网络节点数</div></div>
+        <div class="stat-item"><div class="num">8年+</div><div class="label">主网安全运行</div></div>
+        <div class="stat-item"><div class="num">100+</div><div class="label">生态 DApp 应用</div></div>
+    </div>
+
+    <div class="section">
+        <h2>中国企业合作落地全景</h2>
+        <p>以下为 Ontology 在中国的主要企业合作、政府项目及行业落地案例。按合作类型分为战略投资、技术合作、行业解决方案和学术研究四大类。</p>
+
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>合作方</th>
+                    <th>合作类型</th>
+                    <th>项目/合作内容</th>
+                    <th>时间</th>
+                    <th>行业</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>红杉中国 (Sequoia China)</strong></td>
+                    <td><span class="badge">战略投资</span></td>
+                    <td>Co-Builder 计划，共同搭建新一代公链基础设施与分布式信任生态</td>
+                    <td>2018</td>
+                    <td>投资/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>丹华资本 (DHVC)</strong></td>
+                    <td><span class="badge">战略投资</span></td>
+                    <td>Co-Builder 计划，支持 Ontology 技术研发与生态建设</td>
+                    <td>2018</td>
+                    <td>投资/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>经纬中国 (Matrix Partners China)</strong></td>
+                    <td><span class="badge">战略投资</span></td>
+                    <td>Co-Builder 计划，助力 Ontology 全球数字身份基础设施建设</td>
+                    <td>2018</td>
+                    <td>投资/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>真格基金 (ZhenFund)</strong></td>
+                    <td><span class="badge">战略投资</span></td>
+                    <td>Co-Builder 计划，探索区块链应用开发与孵化</td>
+                    <td>2018</td>
+                    <td>投资/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>万达网络</strong></td>
+                    <td><span class="badge">政府/企业</span></td>
+                    <td>发起 Ontology Zero 入驻工信部 DAppLedger 开源社区孵化</td>
+                    <td>2017-2018</td>
+                    <td>商业/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>分布科技 (OnChain)</strong></td>
+                    <td><span class="badge">母公司/技术</span></td>
+                    <td>Ontology 的创始母公司，提供区块链底层技术框架 DNA</td>
+                    <td>2017至今</td>
+                    <td>区块链技术</td>
+                </tr>
+                <tr>
+                    <td><strong>复星金服</strong></td>
+                    <td><span class="badge">政府/企业</span></td>
+                    <td>发起 Ontology Zero 入驻工信部 DAppLedger，推动产业区块链</td>
+                    <td>2017-2018</td>
+                    <td>金融/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>工信部中国电子技术标准化研究院</strong></td>
+                    <td><span class="badge">政府部门</span></td>
+                    <td>Ontology Zero 入选工信部区块链开源项目计划，作为首批标准验证区块链框架</td>
+                    <td>2017-2018</td>
+                    <td>政务/标准</td>
+                </tr>
+                <tr>
+                    <td><strong>NEO（小蚁）</strong></td>
+                    <td><span class="badge">技术合作</span></td>
+                    <td>共建开放跨链平台与下一代互联网基础设施</td>
+                    <td>2019-2020</td>
+                    <td>区块链/跨链</td>
+                </tr>
+                <tr>
+                    <td><strong>微软 Azure / 世纪互联</strong></td>
+                    <td><span class="badge">技术合作</span></td>
+                    <td>Ontology 搭建在微软 Azure 云平台，世纪互联提供区块链协议支持</td>
+                    <td>2018</td>
+                    <td>云服务/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>中央财经大学</strong></td>
+                    <td><span class="badge">学术/教育</span></td>
+                    <td>联合世纪互联、微软发布校园区块链项目（校园链），实现学生证书链上存证</td>
+                    <td>2018</td>
+                    <td>教育/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>链安科技</strong></td>
+                    <td><span class="badge">安全合作</span></td>
+                    <td>区块链安全深度战略合作，智能合约审计与安全防护</td>
+                    <td>2018-2019</td>
+                    <td>区块链安全</td>
+                </tr>
+                <tr>
+                    <td><strong>Cocos 游戏引擎</strong></td>
+                    <td><span class="badge">技术合作</span></td>
+                    <td>共建游戏领域分布式信任生态</td>
+                    <td>2018</td>
+                    <td>游戏/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>ALLIVE 大健康公链</strong></td>
+                    <td><span class="badge">技术合作</span></td>
+                    <td>医疗领域智能生态，打造医疗数据共享平台</td>
+                    <td>2018</td>
+                    <td>医疗/区块链</td>
+                </tr>
+                <tr>
+                    <td><strong>优必达 (Ubitus)</strong></td>
+                    <td><span class="badge">技术合作</span></td>
+                    <td>云游戏及 GaaS 企业共赢去中心化 AI 生态</td>
+                    <td>2018</td>
+                    <td>云游戏/AI</td>
+                </tr>
+                <tr>
+                    <td><strong>戴姆勒 (Daimler/Mercedes-Benz)</strong></td>
+                    <td><span class="badge">国际企业合作</span></td>
+                    <td>Welcome Home 车载身份验证 + MoveX 出行平台，基于 ONT ID 的去中心化身份方案</td>
+                    <td>2020</td>
+                    <td>汽车/出行</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>重点落地项目详解</h2>
+
+        <div class="partner-item">
+            <h4>1. 工信部区块链开源项目 — Ontology Zero</h4>
+            <span class="tag tag-green">政府项目</span>
+            <p>Ontology Zero 作为国产自主可控的许可链开源项目，入选国家工信部"分布式应用账本"（DAppLedger）孵化计划。由万达网络、分布科技、复星金服等四家成员单位发起入驻。项目代码与国外开源项目重合度低于5%，自主可控程度名列前茅，拥有超过50名社区成员贡献了700多次代码提交，申请了近20项国内外区块链底层及应用发明专利。该框架可广泛应用于供应链、贸易金融、股权登记、交易结算、物联网、医疗制造、征信等领域。</p>
+        </div>
+
+        <div class="partner-item">
+            <h4>2. 中央财经大学校园链</h4>
+            <span class="tag tag-green">教育项目</span>
+            <p>由中央财经大学、世纪互联及微软共同研发的校园区块链项目，基于 Ontology 技术搭建在微软 Azure 云平台之上。该校园链实现学生获奖及资质证书的链上存证和查询，解决了纸质证书损毁、丢失、验证繁琐等问题。任何人都可以通过链接查看证书资质，且数据存在链上几十年甚至上百年不受媒介变更影响。</p>
+        </div>
+
+        <div class="partner-item">
+            <h4>3. 戴姆勒（Daimler）Welcome Home + MoveX 平台</h4>
+            <span class="tag tag-orange">国际企业合作</span>
+            <p>Ontology 与 Daimler Mobility AG 区块链工厂深度合作，联合开发了 Welcome Home——一个基于区块链的车载个性化和身份管理解决方案，以及 MoveX——首个区块链出行平台。该项目利用 Ontology 的 ONT ID（去中心化身份框架），实现用户在不同车辆间的个性化设置无缝迁移，同时保护用户数据隐私。该合作还涉及 51nodes、Spherity、Riddle&Code 等多家技术伙伴，实现了端到端的智能出行生态。</p>
+        </div>
+
+        <div class="partner-item">
+            <h4>4. NEO 跨链战略合作</h4>
+            <span class="tag tag-purple">技术合作</span>
+            <p>NEO 与 Ontology 作为中国两大领先公链项目，宣布战略合作共建下一代互联网基础——开放跨链平台。双方致力于打造高效、包容的跨链互操作协议，支持跨链智能合约交互，扩展 DApp 生态范围，同时不发行代币，采用环保方式支持成员链。这次合作被视为中国区块链行业发展的重要里程碑。</p>
+        </div>
+
+        <div class="partner-item">
+            <h4>5. Co-Builder 计划（红杉中国、丹华资本、经纬中国、真格基金）</h4>
+            <span class="tag">战略生态</span>
+            <p>Ontology 与四家一线投资机构共同发起 Co-Builder 计划，致力于探索区块链应用开发、推广与孵化，共同建设新一代公链基础设施和分布式信任生态。红杉中国表示："Ontology 团队致力于构建关键区块链基础设施以支持商业采用，将区块链技术带到实际商业应用"。该生态共分配了28%的 ONT 代币用于机构合作伙伴和投资者。</p>
+        </div>
+
+        <div class="partner-item">
+            <h4>6. ONT ID 去中心化身份 — 1000万美元 DID 基金</h4>
+            <span class="tag tag-green">核心产品</span>
+            <p>ONT ID 是 Ontology 的核心产品，一个去中心化数字身份解决方案，截至2026年已创建超过100万个。2024年，Ontology 启动了1000万美元的去中心化身份基金（DID Fund），用于推动 DID 教育、技术教程、ONT ID 采用和创新项目。该基金支持开发者在 Ontology 上构建创新的数字身份应用，并推动 ONT ID 在各行业的集成。</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>行业分布与业务领域</h2>
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>行业领域</th>
+                    <th>代表合作方</th>
+                    <th>应用场景</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>汽车/出行</td><td>戴姆勒 (Daimler/Mercedes-Benz)</td><td>车载身份验证、出行平台、用户数据主权</td></tr>
+                <tr><td>政务/标准</td><td>工信部、国家信息中心</td><td>区块链标准制定、开源项目孵化</td></tr>
+                <tr><td>教育</td><td>中央财经大学</td><td>校园链、学历证书链上存证</td></tr>
+                <tr><td>云计算</td><td>微软 Azure、世纪互联</td><td>区块链 BaaS 平台、云基础设施</td></tr>
+                <tr><td>金融</td><td>复星金服</td><td>供应链金融、贸易金融</td></tr>
+                <tr><td>医疗健康</td><td>ALLIVE 大健康公链</td><td>医疗数据共享、隐私保护</td></tr>
+                <tr><td>商业地产</td><td>万达网络</td><td>区块链底层框架、产业数字</td></tr>
+                <tr><td>游戏</td><td>Cocos、优必达</td><td>游戏分布式信任、云游戏+AI</td></tr>
+                <tr><td>区块链跨链</td><td>NEO、Poly Network</td><td>跨链互操作、多链协议</td></tr>
+                <tr><td>安全</td><td>链安科技</td><td>智能合约审计、链上安全</td></tr>
+                <tr><td>学术研究</td><td>德国 HTW 大学</td><td>区块链教育与研究</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>发展时间线</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="time">2017</div>
+                <div class="title">Ontology 项目创立</div>
+                <div class="desc">由分布科技（OnChain）在上海创立，创始人李俊（Jun Li），基于 DNA 分布式账本体系</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2017</div>
+                <div class="title">入选工信部首批标准验证区块链框架</div>
+                <div class="desc">Ontology 被工信部认定为首批标准验证区块链框架，Ontology Zero 加入 DAppLedger 孵化</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2018.04</div>
+                <div class="title">Co-Builder 计划启动</div>
+                <div class="desc">与红杉中国、丹华资本、经纬中国、真格基金共同发起生态共建计划</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2018.06</div>
+                <div class="title">主网上线</div>
+                <div class="desc">Ontology 主网正式上线，采用 VBFT 共识算法，双通证经济模型（ONT + ONG）</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2018</div>
+                <div class="title">微软 Azure + 世纪互联 + 中央财经大学校园链</div>
+                <div class="desc">联合发布校园区块链项目，实现学生证书链上存证查询</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2019</div>
+                <div class="title">NEO 战略合作</div>
+                <div class="desc">与 NEO 共建开放跨链平台，推动下一代互联网基础设施</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2020.09</div>
+                <div class="title">戴姆勒（Daimler）合作</div>
+                <div class="desc">Welcome Home 和 MoveX 平台发布，ONT ID 赋能车载数字身份</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2024</div>
+                <div class="title">1000万美元 DID 基金启动</div>
+                <div class="desc">推动去中心化身份技术教育、采用和创新，扩大 ONT ID 生态</div>
+            </div>
+            <div class="timeline-item">
+                <div class="time">2024-2026</div>
+                <div class="title">持续发展</div>
+                <div class="desc">ONT ID 突破100万，多 VM 支持（EVM/NeoVM/WASM），深化企业级 DID 和数据解决方案</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>生态产品矩阵</h2>
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>产品</th>
+                    <th>说明</th>
+                    <th>落地数据</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>ONT ID</strong></td>
+                    <td>去中心化数字身份解决方案，用户掌控个人数据和隐私</td>
+                    <td>创建量超过 100万</td>
+                </tr>
+                <tr>
+                    <td><strong>ONTO 钱包</strong></td>
+                    <td>管理数字资产、身份和连接的 Web3 自托管钱包</td>
+                    <td>全球广泛使用</td>
+                </tr>
+                <tr>
+                    <td><strong>DDXF</strong></td>
+                    <td>分布式数据交换和协作框架，安全透明传输交换数据</td>
+                    <td>企业级商用</td>
+                </tr>
+                <tr>
+                    <td><strong>Wing Finance</strong></td>
+                    <td>基于 Ontology 的跨链 DeFi 借贷平台</td>
+                    <td>Ontology 主网头部 DApp</td>
+                </tr>
+                <tr>
+                    <td><strong>OScore</strong></td>
+                    <td>信用评分系统，基于链上数据的去中心化信用评估</td>
+                    <td>生态内应用</td>
+                </tr>
+                <tr>
+                    <td><strong>Ontology EVM</strong></td>
+                    <td>兼容以太坊 EVM，支持 Solidity 智能合约部署</td>
+                    <td>多 VM 支持</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>说明：</strong> 本报告数据来源于公开网络搜索信息，包括项目官网（ont.io）、新闻稿、行业报告及第三方分析。Ontology 作为中国最早的企业级公链项目之一，在去中心化身份（DID）和数据管理领域持续深耕。近年来，随着 AI 和大模型技术的融合，"本体（Ontology）"概念也在企业数据治理和 AI 语义层领域获得广泛关注，如 Palantir Foundry/AIP 的 Ontology 模式、Datablau AI 原生本体建模平台、亚信科技数智本体平台等，这代表了另一种"企业本体"的技术路线，与本报告聚焦的区块链项目 Ontology（ONT）是不同的概念。
+    </div>
+
+    <div class="section">
+        <h2>总结</h2>
+        <p>
+            Ontology（本体网络）自2017年创立以来，在中国市场取得了多维度、多行业的企业落地成果：
+        </p>
+        <p>
+            <strong>政府层面：</strong> 入选工信部区块链开源项目计划，参与国家区块链标准制定；<br>
+            <strong>企业层面：</strong> 与万达网络、复星金服、世纪互联等企业合作，推动产业区块链落地；<br>
+            <strong>国际层面：</strong> 与戴姆勒（奔驰）等跨国企业合作开发基于 DID 的出行解决方案；<br>
+            <strong>教育层面：</strong> 与中央财经大学共建校园链，探索学历证书链上存证；<br>
+            <strong>技术生态：</strong> 获得红杉中国等一线 VC 支持，ONT ID 创建量超百万，主网稳定运行8年+。
+        </p>
+        <p>
+            未来，随着去中心化身份（DID）、跨链互操作和 AI Agent 等技术的发展，Ontology 在中国企业级区块链和数字身份市场有望进一步扩大落地规模。
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>本报告由 AI 调研助手基于公开信息生成 | 数据截止日期：2026年9月</p>
+        <p>信息来源：ont.io | Gemini | CoinDesk | Medium | PRNewswire | 腾讯云 | 新华网 | CryptoSlate 等</p>
+    </div>
+
+</div>
+
+</body>
+</html>

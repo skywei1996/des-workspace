@@ -1,0 +1,3107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRD｜0107 / 0317 / 0326 / 0327 / 0626 需求梳理</title>
+    <style>
+        :root {
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+            --accent: #6266ea;
+            --accent-soft: #eef0ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .layout {
+            max-width: 1520px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .toc {
+            position: sticky;
+            top: 24px;
+            padding: 24px 20px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .toc-title {
+            margin: 0 0 14px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4f46e5;
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .toc-list a {
+            width: 100%;
+            display: block;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #e7eaf3;
+            background: #ffffff;
+            color: #111827;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--accent-soft);
+            color: #3730a3;
+            border-color: #cfd7ff;
+            transform: translateX(2px);
+        }
+
+        .toc-list a.is-active {
+            background: linear-gradient(135deg, #eef2ff 0%, #f8faff 100%);
+            color: #3730a3;
+            border-color: #c7d2fe;
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.08);
+        }
+
+        .page {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 40px 48px 28px;
+            border-bottom: 1px solid var(--line);
+            background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+        }
+
+        .hero h1 {
+            margin: 0 0 16px;
+            font-size: 32px;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .meta-item {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #3d43bf;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 32px 48px 40px;
+        }
+
+        .section[id] {
+            scroll-margin-top: 24px;
+        }
+
+        .section + .section {
+            margin-top: 36px;
+        }
+
+        .section h2 {
+            margin: 0 0 16px;
+            font-size: 22px;
+            line-height: 1.3;
+        }
+
+        .numbered-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .numbered-item {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            gap: 12px;
+            padding: 6px 0;
+            align-items: start;
+        }
+
+        .numbered-item.sub-item {
+            margin-left: 28px;
+            grid-template-columns: 64px minmax(0, 1fr);
+        }
+
+        .numbered-item.module-item .numbered-index,
+        .numbered-item.module-item .numbered-content {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.6;
+        }
+
+        .numbered-item.module-item .numbered-content {
+            color: #111827;
+        }
+
+        .numbered-item.sub-item .numbered-index,
+        .numbered-item.sub-item .numbered-content {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.7;
+        }
+
+        .numbered-index {
+            color: var(--accent);
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.8;
+        }
+
+        .numbered-content {
+            font-size: 15px;
+            line-height: 1.9;
+            color: var(--text);
+        }
+
+        .nested-block {
+            margin-left: 104px;
+        }
+
+        .nested-block + .nested-block {
+            margin-top: 16px;
+        }
+
+        .nested-table {
+            margin-top: 8px;
+            margin-left: 104px;
+        }
+
+        .compact th,
+        .compact td {
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fc;
+        }
+
+        th,
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        th {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .module {
+            font-weight: 700;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        .note {
+            color: var(--muted);
+        }
+
+        .version-divider {
+            margin: 8px 0 36px;
+            padding: 24px 28px;
+            border: 1px solid #dbe3ff;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8faff 100%);
+        }
+
+        .version-divider h2 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            line-height: 1.3;
+        }
+
+        .version-divider p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.9;
+            color: #475467;
+        }
+
+        .version-panel {
+            display: none;
+        }
+
+        .version-panel.is-active {
+            display: block;
+        }
+
+        .hero-panel {
+            display: none;
+        }
+
+        .hero-panel.is-active {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 16px;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .toc {
+                position: static;
+            }
+
+            .hero,
+            .content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .hero h1 {
+                font-size: 26px;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            .numbered-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .nested-block,
+            .nested-table {
+                margin-left: 0;
+            }
+
+            table {
+                min-width: 920px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="toc">
+            <div class="toc-title">本期功能点</div>
+            <ul class="toc-list">
+                <li><a href="#" data-version="0107">1.0版本chat & mcp tool & account</a></li>
+                <li><a href="#" data-version="0317">0317 ：知识库 / Skill / MCP / 模型配置</a></li>
+                <li><a href="#" data-version="0326">0326 ：单聊 / 群聊对话逻辑</a></li>
+                <li><a href="#" data-version="0327">0327 ：单人 Plan / 多人协作边界</a></li>
+                <li><a href="#" data-version="0626" class="is-active">0626 ：合同审查智能体</a></li>
+            </ul>
+        </aside>
+
+        <div class="page">
+            <div class="hero">
+                <div class="hero-panel" data-hero-version="0107">
+                    <h1>PRD｜1.0版本chat & mcp tool & account</h1>
+                    <div class="meta">
+                        <div class="meta-item">1.0版本chat & mcp tool & account</div>
+                        <div class="meta-item">版本：v1.0</div>
+                        <div class="meta-item">日期：2026-01-07</div>
+                        <div class="meta-item">负责人：待补充</div>
+                    </div>
+                </div>
+                <div class="hero-panel" data-hero-version="0317">
+                    <h1>PRD｜0317 本期需求梳理</h1>
+                    <div class="meta">
+                        <div class="meta-item">0317 版本：知识库 / Skill / MCP / 模型配置</div>
+                        <div class="meta-item">版本：v0.1</div>
+                        <div class="meta-item">日期：2026-03-17</div>
+                        <div class="meta-item">负责人：待补充</div>
+                    </div>
+                </div>
+                <div class="hero-panel" data-hero-version="0326">
+                    <h1>PRD｜0326 对话逻辑需求梳理</h1>
+                    <div class="meta">
+                        <div class="meta-item">0326 版本：单聊与群聊对话逻辑</div>
+                        <div class="meta-item">版本：v0.1</div>
+                        <div class="meta-item">日期：2026-03-26</div>
+                        <div class="meta-item">负责人：待补充</div>
+                    </div>
+                </div>
+                <div class="hero-panel" data-hero-version="0327">
+                    <h1>PRD｜0327 单人 Plan 与多人协作边界梳理</h1>
+                    <div class="meta">
+                        <div class="meta-item">0327 版本：单人 Plan / 多人协作边界</div>
+                        <div class="meta-item">版本：v0.1</div>
+                        <div class="meta-item">日期：2026-03-27</div>
+                        <div class="meta-item">负责人：待补充</div>
+                    </div>
+                </div>
+                <div class="hero-panel is-active" data-hero-version="0626">
+                    <h1>PRD｜0626 合同审查智能体需求梳理</h1>
+                    <div class="meta">
+                        <div class="meta-item">0626 版本：合同审查 / 对比审查 / 规则库</div>
+                        <div class="meta-item">版本：v0.1</div>
+                        <div class="meta-item">日期：2026-06-26</div>
+                        <div class="meta-item">负责人：待补充</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+            <div class="version-panel" data-version-panel="0107">
+            <div class="version-divider" id="prd-0107-overview">
+                <h2>1.0版本chat & mcp tool & account</h2>
+                <p>本次新增 0107 版本需求，核心目标是将“硅基员工”从零散对话能力升级为可配置、可授权、可执行、可追踪的工作资源，形成从员工创建、工作台对话、计划审批、分步执行到任务复盘的完整闭环。</p>
+            </div>
+
+            <section class="section" id="prd-0107-bg">
+                <h2>1. 核心功能点背景</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.1</div>
+                        <div class="numbered-content">企业对数字员工的诉求正在从单点问答走向可规模化的工作协作，希望 AI 不仅能回答问题，还能稳定承担资料检索与整理、分析报告生成、标准化文案产出、流程协助与执行跟踪等工作任务。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.2</div>
+                        <div class="numbered-content">Merak 旨在将硅基员工产品化：让碳基员工能够像管理团队成员一样，完成硅基员工的角色定义、能力授权、使用协作、执行监督与结果复盘，沉淀可复用的组织级数字生产力资产。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-goals">
+                <h2>2. 核心功能点目标</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.1</div>
+                        <div class="numbered-content">推动数字员工规模化落地，将分散的 AI 使用沉淀为可管理、可发布、可复用的“硅基员工资产”，降低组织侧重复配置与重复劳动成本。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.2</div>
+                        <div class="numbered-content">建立从“选择硅基员工发起会话”到“计划生成、审批、分步执行、反馈修正、历史恢复”的完整任务闭环，提升复杂任务的交付效率与稳定性。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.3</div>
+                        <div class="numbered-content">通过 To-do 与 Task Progress 建立过程可视化与结果可复盘能力，让多步骤任务具备更清晰的执行状态、责任归属和回溯路径。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-scope">
+                <h2>3. 核心功能点范围</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模块</th>
+                                <th>核心功能点目标</th>
+                                <th>核心功能点范围</th>
+                                <th>关键页面/对象</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">登录 / 退出</td>
+                                <td>支持碳基员工进入系统并安全退出。</td>
+                                <td>账号登录、登录态校验、退出返回登录页。</td>
+                                <td>登录页、退出入口</td>
+                                <td class="note">账号信息由碳基员工管理维护。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">首页 / 工作台入口</td>
+                                <td>提供近期 / 常用硅基员工入口，帮助用户快速进入工作台。</td>
+                                <td>倒序展示近 50 个硅基员工，支持直接进入对应聊天工作台。</td>
+                                <td>首页、工作台入口</td>
+                                <td class="note">加载失败需提供明确重试入口。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">硅基员工管理</td>
+                                <td>支持创建、编辑、草稿试用、发布与复用硅基员工。</td>
+                                <td>覆盖列表、基础信息配置、人设提示词、Core Skills、Extended Skills、Knowledge 文档选择、Playground 与 Onboard。</td>
+                                <td>My Silicon Worker、New Silicon Talent、Onboard</td>
+                                <td class="note">Database、Long-term Memory、Workspace 本期仅占位。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">聊天工作台</td>
+                                <td>支持围绕员工或群组完成连续、可恢复、可审批的工作会话。</td>
+                                <td>覆盖单聊、群聊、辩论模式、合作模式、计划审批、分步执行、反馈修正与历史恢复。</td>
+                                <td>Chat Workspace、Plan、消息流、群组模式</td>
+                                <td class="note">合作模式要求支持自动选人、执行顺序与上下游交接。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">To-do / Task Progress</td>
+                                <td>让计划执行过程具备结构化状态管理与可视化追踪能力。</td>
+                                <td>To-do 生成与状态更新、任务列表展示、刷新与定位到任务结果。</td>
+                                <td>To-do 面板、Task Progress</td>
+                                <td class="note">本期为基础版任务视图。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">碳基员工管理</td>
+                                <td>支持本期账号与人员维护能力。</td>
+                                <td>覆盖 Carbon Worker 列表、搜索、创建、编辑与状态维护。</td>
+                                <td>Carbon Workers</td>
+                                <td class="note">Teams 能力本期仅保留占位。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-details">
+                <h2>4. 核心功能点明细</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.1</div>
+                        <div class="numbered-content">硅基员工管理</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">用于承接硅基员工从创建、编辑到发布的完整配置流程，使单个数字员工具备明确的人设、可用能力、知识范围和发布状态，成为可复用的业务工作主体。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.2</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">My Silicon Worker</td>
+                                    <td>展示个人与团队硅基员工，支持搜索、筛选、进入工作台。</td>
+                                    <td>支持按 Team、Status、名称 / 简介筛选；卡片可直接进入聊天工作台。</td>
+                                    <td class="note">Team 员工不允许直接编辑，需先复制到个人。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">New Silicon Talent</td>
+                                    <td>用于创建或编辑硅基员工草稿。</td>
+                                    <td>配置基础信息、Instructions、Core Skills、Extended Skills、Knowledge 文档。</td>
+                                    <td class="note">Mode = Chat 时不展示能力配置区域。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Playground</td>
+                                    <td>保存当前配置并形成 Training 状态草稿。</td>
+                                    <td>右上角点击 Playground 保存，返回列表并提示保存成功。</td>
+                                    <td class="note">作为发布前试用与验证入口。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Onboard</td>
+                                    <td>将草稿版本发布为可用员工。</td>
+                                    <td>完成访问范围配置后点击发布，状态由 Training 变为 Active。</td>
+                                    <td class="note">本期按全员可用做简化表达。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.2</div>
+                        <div class="numbered-content">聊天工作台</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.2.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">聊天工作台用于承接用户与硅基员工之间的连续工作会话，支持从自然语言需求出发生成计划、执行步骤、接收反馈、恢复历史，并在群组模式下支持辩论与合作两种协作路径。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.2.2</div>
+                        <div class="numbered-content">核心流程</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>阶段</th>
+                                    <th>逻辑说明</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">选择员工 / 群组</td>
+                                    <td>用户选择目标硅基员工或群组后，系统加载对应历史消息与 To-do 状态。</td>
+                                    <td class="note">同一工作台对象需支持上下文恢复与继续执行。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">计划生成</td>
+                                    <td>系统将复杂请求转化为可审批的 Plan，以审批卡形式展示步骤列表。</td>
+                                    <td class="note">用户批准前不得直接进入执行阶段。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">分步执行</td>
+                                    <td>系统按步骤执行任务，并在每一步完成后输出结构化结果。</td>
+                                    <td class="note">每一步均支持确认继续或反馈重试。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">群组协作</td>
+                                    <td>群组模式下支持辩论模式与合作模式，合作模式可自动选人、自动排序并完成员工接力。</td>
+                                    <td class="note">每位员工仅能调用自身被授权的能力范围。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">历史恢复</td>
+                                    <td>刷新或重进后，系统恢复消息流、计划审批卡、步骤结果卡与 To-do 列表。</td>
+                                    <td class="note">保证任务可复盘、可继续、可协作。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.3</div>
+                        <div class="numbered-content">To-do 与任务进度</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.3.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">To-do 用于承接计划步骤的结构化状态表达，Task Progress 用于聚合展示一次计划执行过程，帮助用户与管理者理解当前任务进度、执行主体和结果定位信息。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.3.2</div>
+                        <div class="numbered-content">状态与规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>核心状态 / 字段</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">To-do</td>
+                                    <td>待开始 / 进行中 / 已完成 / 已终止 / 已取消</td>
+                                    <td class="note">计划批准后自动生成；步骤执行中状态实时更新。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Task Progress</td>
+                                    <td>任务名称、执行员工、状态、开始时间</td>
+                                    <td class="note">支持刷新列表与跳转定位到聊天结果。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">反馈重试</td>
+                                    <td>当前步骤维持进行中</td>
+                                    <td class="note">用户反馈后系统修订当前步骤产出，再次进入等待反馈。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.4</div>
+                        <div class="numbered-content">碳基员工管理</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.4.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">碳基员工管理用于支撑本期的登录账号与人员信息维护，保证系统具备最基本的真实员工档案、角色信息和状态管理能力。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.4.2</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Carbon Workers 列表</td>
+                                    <td>展示碳基员工信息，支持搜索与删除入口。</td>
+                                    <td>按 Name、Role 搜索；展示 Name、Role、Email、Phone、Status。</td>
+                                    <td class="note">Active Teams 本期仅固定展示为 Personal。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">New Carbon Worker</td>
+                                    <td>支持新建碳基员工账号。</td>
+                                    <td>配置 Full Name、Role、Email、Phone、Status。</td>
+                                    <td class="note">默认登录密码与邮箱一致。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-data">
+                <h2>5. 核心功能点数据口径与对象定义</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>对象</th>
+                                <th>定义</th>
+                                <th>关键字段</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">硅基员工</td>
+                                <td>具备角色人设、能力授权与知识范围的 AI 工作主体。</td>
+                                <td>Name、Description、Avatar、Category、Mode、Model、Instructions、Core Skills、Extended Skill IDs、Knowledge Document IDs、Status</td>
+                            </tr>
+                            <tr>
+                                <td class="module">消息</td>
+                                <td>会话中的结构化交互单元，承载用户输入、助手回复及过程事件。</td>
+                                <td>会话标识、发送者、内容、时间、消息类型、结构化元信息</td>
+                            </tr>
+                            <tr>
+                                <td class="module">计划</td>
+                                <td>对用户需求形成的可执行步骤列表，执行前需经用户批准。</td>
+                                <td>关联会话、步骤列表、步骤负责人、依赖关系、状态、版本</td>
+                            </tr>
+                            <tr>
+                                <td class="module">To-do</td>
+                                <td>计划步骤在执行过程中的结构化状态记录。</td>
+                                <td>关联 planId / stepIndex、标题、负责人、顺序、状态、时间</td>
+                            </tr>
+                            <tr>
+                                <td class="module">任务</td>
+                                <td>一次可追踪的计划执行聚合视图，用于任务进度页展示与回溯定位。</td>
+                                <td>任务名称 / 摘要、执行模式、执行员工、状态、开始时间、定位信息</td>
+                            </tr>
+                            <tr>
+                                <td class="module">碳基员工</td>
+                                <td>真实员工账号与人员档案，用于登录、配置与监督硅基员工。</td>
+                                <td>Full Name、Role、Email Address、Phone Number、Status</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-system-rules">
+                <h2>6. 核心功能点通用规则与系统级说明</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">6.1</div>
+                        <div class="numbered-content">账号与登录态规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">登录态失效规则</td>
+                                    <td>连续 12 小时无页面操作后，登录态自动失效并回到登录页，系统要求用户重新登录。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">账号状态联动</td>
+                                    <td>账号被禁用、冻结或删除后，已登录中的会话在下一次接口请求时失效，并提示账号不可用。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">6.2</div>
+                        <div class="numbered-content">会话定义与分组规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">单聊会话</td>
+                                    <td>以“硅基员工 + 对话分组策略”为唯一范围；同一员工在同一时间窗口内的连续消息归属同一会话。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">群聊会话</td>
+                                    <td>以“群组 + 模式类型 + 对话分组策略”为唯一范围；普通群聊、辩论模式、合作模式视为不同会话上下文。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">时间窗口</td>
+                                    <td>连续超过 4 小时无消息时，新消息进入新会话；4 小时内默认延续上一会话。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">刷新与切换</td>
+                                    <td>刷新后优先恢复最近一次未超时会话；切换员工或群组后进入目标对象最近一次会话，不共享原上下文。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">清空历史</td>
+                                    <td>清空聊天记录只影响当前会话；清空后下次发送消息时，创建新的空会话。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">6.3</div>
+                        <div class="numbered-content">状态、删除与恢复规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Plan</td>
+                                    <td>支持待审批、已批准、已取消、执行中、已完成；重新生成计划后，旧版本保留为历史版本，新版本进入待审批。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Task / To-do</td>
+                                    <td>任务与 To-do 状态需联动；反馈重试时当前步骤保持进行中，终止任务时未开始步骤统一记为已取消。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">历史恢复</td>
+                                    <td>恢复范围包括消息、计划审批卡、步骤结果卡、群组事件、To-do 状态与任务定位信息。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">删除影响</td>
+                                    <td>删除某会话历史时，应同步删除关联消息、To-do、任务进度、步骤执行记录与临时执行上下文。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">6.4</div>
+                        <div class="numbered-content">权限与异常规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">能力边界</td>
+                                    <td>员工执行任务时仅能调用其被授权的 Core Skills、Extended Skills、MCP 与 Knowledge，不得跨员工越权调用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">配置变更生效</td>
+                                    <td>对硅基员工配置、Skill、Knowledge、MCP 的变更默认只影响后续新任务；运行中的任务继续使用启动时快照。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">计划与执行异常</td>
+                                    <td>计划生成失败时保留用户原始输入；单步执行失败时至少提供重试与终止任务两个动作。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">群组协作异常</td>
+                                    <td>合作模式下若某步骤负责人缺少所需能力授权，系统应中止后续流转，并提示具体缺失能力与责任节点。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">6.5</div>
+                        <div class="numbered-content">配置对象新增、编辑、删除逻辑</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>新增逻辑</th>
+                                    <th>编辑逻辑</th>
+                                    <th>删除逻辑</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">硅基员工</td>
+                                    <td>新建时先生成草稿或 Training 状态记录；未完成必填项或未发布前，不出现在可直接使用的员工列表中。</td>
+                                    <td>编辑已发布员工时，修改内容默认进入新的草稿版本；仅在用户完成 Onboard 或重新发布后，才对后续新会话和新任务生效。</td>
+                                    <td>删除前需校验是否存在未完成会话；若存在需提示处理影响。若存在运行中的任务，允许删除硅基员工本体，任务继续按启动时快照执行。删除后不再出现在员工列表，但历史会话、任务与执行记录保留用于复盘。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Skill</td>
+                                    <td>新建 Skill 时需完成名称、说明及必要配置；保存成功后进入 Skill 列表，并可被后续数字员工分配。</td>
+                                    <td>编辑 Skill 后，仅影响后续新的分配关系和新启动任务；已在运行中的任务继续使用启动时的 Skill 快照。</td>
+                                    <td>删除 Skill 前需展示其被哪些数字员工引用及影响范围；用户确认删除后，系统自动移除相关绑定。删除后历史任务中的 Skill 名称与调用痕迹保留。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">MCP Toolset</td>
+                                    <td>新增 MCP 时需填写连接名称、服务地址及必要鉴权信息；支持测试连接，测试失败时保留填写内容并提示原因。</td>
+                                    <td>编辑 MCP 连接参数后，仅影响后续新的 Skill 调用与新任务执行；已启动任务继续沿用原执行快照，不中途切换连接。</td>
+                                    <td>删除 MCP 前需展示其被哪些 Skill 或数字员工间接引用及影响范围；用户确认删除后，系统自动移除相关绑定。删除后历史调用记录保留，不回写改动历史结果。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">模型配置</td>
+                                    <td>新增模型时需完成提供商类型、模型名称、API Endpoint、API Key 等必填项；新建成功后进入模型列表，并可被数字员工后续选择使用。</td>
+                                    <td>编辑模型配置后，仅影响后续新会话或新任务；若当前模型正被运行中的任务使用，不中途切换其运行时模型。</td>
+                                    <td>删除模型前需校验是否仍被数字员工引用；若存在引用，需提示影响范围，用户确认删除后系统自动移除对应数字员工上的模型引用。删除不影响历史任务结果与审计记录。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0107-risk">
+                <h2>7. 风险点、用户影响与缓解方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险点</th>
+                                <th>典型场景</th>
+                                <th>对用户的影响</th>
+                                <th>缓解方案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">工具 / MCP 调用超时</td>
+                                <td>外部工具响应慢、网络抖动、第三方服务负载高。</td>
+                                <td>用户看到步骤长时间无响应，误以为系统卡死；计划执行中断，任务完成时间不可控。</td>
+                                <td>系统需提供超时提示、当前步骤重试入口与终止任务入口；超时不应吞掉原任务上下文，用户可在原会话中继续恢复执行。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">模型响应失败</td>
+                                <td>模型接口限流、报错、上下文超长或返回异常。</td>
+                                <td>用户无法拿到计划或阶段结果，可能重复提交同一请求。</td>
+                                <td>保留用户原始输入与当前计划状态；提示“生成失败 / 稍后重试”；对重复提交需避免生成多份并行任务。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">历史恢复不完整</td>
+                                <td>刷新页面、重新进入工作台、接口恢复失败。</td>
+                                <td>用户看不到完整消息、To-do 或计划审批卡，影响继续执行和复盘。</td>
+                                <td>恢复失败时优先恢复任务骨架信息；至少保留任务名称、当前步骤、状态与最近一次结果；前端需提供手动刷新与重新拉取入口。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">配置变更与运行中任务不一致</td>
+                                <td>员工、Skill、Knowledge、MCP、模型在任务运行期间被修改或删除。</td>
+                                <td>用户会疑惑为什么当前任务仍在使用旧配置，或为什么新配置没有立即生效。</td>
+                                <td>明确采用运行时快照机制；在任务详情或提示文案中说明“当前任务使用启动时配置，不随最新配置自动变更”。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">多人协作链路中断</td>
+                                <td>合作模式下某一位员工缺少权限、执行失败或交接异常。</td>
+                                <td>任务停在中间步骤，用户无法判断责任节点与下一步动作。</td>
+                                <td>系统需明确展示失败节点、责任员工、缺失能力与可选动作；至少支持重试当前节点、改派负责人或终止后续步骤。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">误删除历史或配置对象</td>
+                                <td>删除会话、删除员工、删除 Skill / MCP / 模型。</td>
+                                <td>用户后续无法继续原任务，或误以为历史结果也被删除。</td>
+                                <td>删除前展示影响范围与二次确认；历史任务结果、审计信息与关键执行记录应保留，不因配置对象删除而被抹除。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            </div>
+            <div class="version-panel" data-version-panel="0317">
+            <section class="section" id="prd-0317-bg">
+                <h2>1. 背景</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.1</div>
+                        <div class="numbered-content">本期工作聚焦于资源配置与管理侧能力补齐，围绕 Knowledge Base、MCP、Skill 与模型配置四个模块，完善前端入口、配置表达和页面结构，为后续产品化与后端能力接入建立统一基础。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0317-goals">
+                <h2>2. 本期目标</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.1</div>
+                        <div class="numbered-content">新增 Knowledge Base 相关前端能力，完成知识库列表、详情、文档状态展示等基础功能建设，并纳入数字员工创建页中的 Knowledge Base 选择入口。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.2</div>
+                        <div class="numbered-content">新增 Skill 与 MCP 配置相关能力，完成 Skill 配置入口、MCP 配置入口以及 MCP 绑定表达的前端落地，并纳入数字员工创建页中的 Skill 分配入口。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.3</div>
+                        <div class="numbered-content">新增模型配置入口，完成模型列表管理、模型新建/编辑抽屉，以及模型提供商类型、模型名称、API Endpoint、API Key、公开范围等前端配置能力，并支持数字员工按需选择模型。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.4</div>
+                        <div class="numbered-content">新增聊天对话文件上传能力，支持用户通过 Add Photos &amp; Files 按钮一次性选择并上传最多 10 个本地图片或文档文件，补齐上传数量校验、解析中状态展示、解析成功后的删除交互与异常提示文案。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0317-scope">
+                <h2>3. 本期范围</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模块</th>
+                                <th>本期目标</th>
+                                <th>本期范围</th>
+                                <th>关键页面/对象</th>
+                                <th>权限</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">Knowledge Base</td>
+                                <td>新增知识库前端能力，建立文档导入、切块与向量化相关的基础配置与展示入口，并承接 Matrix 侧相关能力。</td>
+                                <td>覆盖知识库列表、文档导入、详情、切块结果展示，以及数字员工创建页中的 Knowledge Base 选择入口；前端导入后借用 Matrix 的切块与向量化能力进入处理流程。</td>
+                                <td>Knowledge Base 列表页、导入页、知识库详情页、切块展示页、数字员工创建页 Knowledge 选择弹窗。</td>
+                                <td class="note">用户导入的知识库默认仅供本人使用。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">MCP</td>
+                                <td>新增 MCP 相关配置表达，明确其作为 Skill 可选绑定能力的产品定位。</td>
+                                <td>覆盖 MCP 绑定入口、绑定状态展示与相关配置文案。</td>
+                                <td>MCP 配置页、Skill 配置页、MCP Binding 区域。</td>
+                                <td class="note">普通用户配置的 MCP 默认仅供本人查看和使用；Admin 账号配置的 MCP 对所有账号可查看和使用。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Skill</td>
+                                <td>新增并统一 Skill 相关配置能力，建立 Skill 及其 MCP 绑定的产品表达。</td>
+                                <td>覆盖 Skills 列表、Skill 配置、数字员工创建页中的 Skill 选择与分配能力，以及相关文案调整。</td>
+                                <td>Skills 列表页、SkillEditor、数字员工创建页 Skill 选择弹窗。</td>
+                                <td class="note">普通用户创建和配置的 Skill 默认仅供本人查看和使用；Admin 账号配置的 Skill 对所有账号可查看和使用。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">数字员工配置</td>
+                                <td>新增数字员工配置页面范围定义，明确其作为 Knowledge 与 Skill 分配承接页的产品入口。</td>
+                                <td>覆盖数字员工创建/编辑场景中的基础信息配置、Knowledge Base 分配、Skill 分配，以及相关结果展示与回填能力。</td>
+                                <td>数字员工配置页、数字员工创建页、数字员工编辑页。</td>
+                                <td class="note">仅定义当前用户可配置的数字员工页面范围，不扩展到团队协作与共享配置。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">模型配置</td>
+                                <td>新增模型配置前端入口，补齐基础模型参数配置能力。</td>
+                                <td>覆盖模型列表展示、模型新建/编辑、模型启用切换、公开范围设置，以及模型提供商类型、模型名称、API Endpoint、API Key 等基础字段配置。</td>
+                                <td>Settings &gt; Model Configuration。</td>
+                                <td class="note">当前前端支持 Private / Public 表达；Public 需二次确认后保存。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">聊天对话文件上传</td>
+                                <td>新增对话中的图片与文档上传能力，支持用户在发送消息前补充本地文件上下文。</td>
+                                <td>覆盖 Add Photos &amp; Files 按钮、本地文件选择、一次最多 10 个文件的数量校验、解析中状态展示、解析成功后的悬浮删除能力，以及超限失败提示。</td>
+                                <td>Chat Workspace 输入区、上传文件卡片。</td>
+                                <td class="note">本期聚焦单次选择与上传态表达，不展开文件内容理解链路细节。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0317-details">
+                <h2>4. 功能明细</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.1</div>
+                        <div class="numbered-content">Knowledge Base</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">Knowledge Base 用于承接数字员工可调用的知识来源管理能力，本期仅支持本地知识库导入与处理链路，围绕文档导入、切块、向量化结果展示等能力提供前端入口与状态表达。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.2</div>
+                        <div class="numbered-content">核心流程</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">本地知识库主流程为创建知识库、导入文档、借用 Matrix 能力完成切块与向量化处理，并在详情页查看原始文档与切片结果。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.3</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Knowledge Base 列表页</td>
+                                    <td>展示知识库列表，支持按名称搜索，并提供新建知识库入口。</td>
+                                    <td>搜索框按 Knowledge Base Name 检索；支持进入本地知识库详情。</td>
+                                    <td class="note">本期以管理入口与列表展示为主。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">创建知识库弹窗</td>
+                                    <td>支持创建本地知识库。</td>
+                                    <td>填写 Name、Description，用于创建本地知识库并进入后续导入流程。</td>
+                                    <td class="note">本期不包含外部知识库连接入口。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Import Documents</td>
+                                    <td>用于向本地知识库导入原始文档并触发处理流程。</td>
+                                    <td>支持点击上传或拖拽上传；支持 PDF、TXT、DOCX、JPG、PNG；最多 10 个文件，单文件不超过 20 MB；点击 Save and Process 后进入处理。</td>
+                                    <td class="note">导入后进入 Matrix 切块与向量化流程。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">知识库详情页</td>
+                                    <td>包含 Original Docs 与 Slice Details 两个页签。</td>
+                                    <td>Original Docs 展示文档列表、状态、文件类型、上传时间与查看/删除动作；Slice Details 展示切片卡片与原文查看入口。</td>
+                                    <td class="note">用于承接文档明细与切片结果查看。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">数字员工创建页 / Knowledge 选择弹窗</td>
+                                    <td>用于为数字员工分配可用 Knowledge Base。</td>
+                                    <td>弹窗采用左侧 Knowledge Base 列表、右侧 Knowledge Base 详情的结构；仅展示包含至少一个 Processed 文档的 Knowledge Base；支持搜索、勾选、批量选择当前筛选结果并确认保存。</td>
+                                    <td class="note">选择对象为 Knowledge Base，不下沉到文档粒度。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.4</div>
+                        <div class="numbered-content">字段与状态规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>字段/状态</th>
+                                    <th>规则</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">本地知识库</td>
+                                    <td>Name / Description</td>
+                                    <td>Name 为必填，最大 100 字；Description 为选填，最大 2000 字。</td>
+                                    <td class="note">用于知识库基础信息管理。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">文档状态</td>
+                                    <td>Pending / Processing / Processed / Failed</td>
+                                    <td>详情页需完整展示四种状态，并提供对应视觉区分。</td>
+                                    <td class="note">用于体现导入后处理进度与异常状态。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">数字员工知识绑定</td>
+                                    <td>Knowledge Base IDs / Processed</td>
+                                    <td>数字员工创建页保存的对象为 knowledge base id；仅允许选择并保存包含至少一个 Processed 文档的 Knowledge Base；支持多选并需去重保存。</td>
+                                    <td class="note">用于限定数字员工可调用的知识范围。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.1.5</div>
+                        <div class="numbered-content">业务规则与边界</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Matrix 能力</td>
+                                    <td>本地知识库导入文档后，切块与向量化处理能力借用 Matrix 能力完成；本期 PRD 关注前端入口、状态表达与结果展示，不展开 Matrix 内部算法细节。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">权限范围</td>
+                                    <td>用户创建或导入的知识库默认仅供本人使用，共享、授权、团队级知识库管理不在本期范围内。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">范围约束</td>
+                                    <td>本期不支持外部知识库连接、外部知识源配置与外部知识检索调用能力。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">数字员工分配边界</td>
+                                    <td>数字员工创建页中只支持绑定 Knowledge Base，不下沉到知识文档粒度；仅包含至少一个 Processed 文档的 Knowledge Base 进入可选列表。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.2</div>
+                        <div class="numbered-content">MCP</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.2.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">用于承接 MCP 服务连接配置、连接管理与在 Skill 中的绑定表达，作为数字员工可调用外部能力的接入层。本期产品表达以 MCP Toolset 为主，即先配置可复用的 MCP 服务连接，再在 Skill 中选择绑定。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.2.2</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">MCP Toolsets 列表页</td>
+                                    <td>展示 MCP Toolset 列表，作为 Skill 可绑定的 MCP 服务连接管理入口。</td>
+                                    <td>支持按名称搜索；卡片展示名称、描述、场景（Domain）；支持点击卡片进入详情；支持直接在卡片上执行启用/停用与删除。</td>
+                                    <td class="note">列表搜索范围仅限 Name，不支持按 Transport、Domain、Description 检索。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">MCP Toolset 新建 / 详情抽屉</td>
+                                    <td>用于创建、查看、编辑单个 MCP Toolset 的连接配置。</td>
+                                    <td>新建时直接进入编辑态；查看已有 Toolset 时默认进入只读态，顶部提供 Edit 按钮切换编辑态；编辑项包括 Name、Version、Description、Source Type、Transport、Domain、Status、Config JSON；支持 Test Connection、Save Changes、Delete。</td>
+                                    <td class="note">当前前端不展示 Toolset Key、Icon URL 等非必要字段。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Domain 分类</td>
+                                    <td>用于定义 MCP Toolset 的能力场景分类，便于用户识别和后续筛选扩展。</td>
+                                    <td>Domain 采用预置分类下拉单选；本期默认分类包括：浏览器自动化、搜索工具、交流协作工具、开发者工具、娱乐与多媒体、文件系统、金融、知识管理与记忆、位置服务、文化与艺术、学术研究、日程管理、其他。</td>
+                                    <td class="note">本期按预置分类表达，不在前端开放自定义 Domain 分类能力。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Config JSON 区域</td>
+                                    <td>用于维护不同传输协议下的连接参数配置。</td>
+                                    <td>根据 Transport 自动回填默认 JSON 模板；STDIO 结构包含 command、args、env、timeout_seconds；HTTP / Streamable HTTP 结构包含 url、headers、timeout_seconds。</td>
+                                    <td class="note">前端以 JSON 文本框形式直接编辑，不拆分为多字段表单。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">SkillEditor / MCP Toolset Binding</td>
+                                    <td>用于在 Skill 中绑定单个或多个 MCP Toolset。</td>
+                                    <td>非 Workflow Skill 展示 MCP Toolset Binding 区域；查看态展示已绑定 Toolset 名称与描述；编辑态通过支持搜索的下拉复选框选择 MCP Toolset，选项展示为 Toolset 名称与一行描述，支持多选，也支持设置为空。</td>
+                                    <td class="note">绑定对象可为单个或多个 MCP Toolset。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.2.3</div>
+                        <div class="numbered-content">业务规则与边界</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">权限与可见性</td>
+                                    <td>普通用户创建和维护的 MCP Toolset 默认仅供本人查看和使用；Admin 账号创建和维护的 MCP Toolset 对所有账号可查看和使用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">连接校验</td>
+                                    <td>Name、Description、Transport 为必填；保存时需校验 Config JSON 为合法 JSON；仅已保存的 MCP Toolset 支持 Test Connection；测试失败时需返回错误提示，不改变已保存配置。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Transport 规则</td>
+                                    <td>本期支持 STDIO、HTTP、Streamable HTTP 三种传输方式；切换 Transport 时前端需按协议自动回填默认配置模板，供用户继续编辑。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Domain 规则</td>
+                                    <td>Domain 使用系统预置分类；默认分类包括浏览器自动化、搜索工具、交流协作工具、开发者工具、娱乐与多媒体、文件系统、金融、知识管理与记忆、位置服务、文化与艺术、学术研究、日程管理、其他；本期不支持用户自定义新增分类。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">绑定规则</td>
+                                    <td>Skill 与 MCP Toolset 为可选绑定关系；非 Workflow Skill 可配置绑定；一个 Skill 可绑定单个或多个 MCP Toolset；允许不绑定；变更绑定关系不修改 MCP Toolset 本身的定义。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">状态规则</td>
+                                    <td>MCP Toolset 支持 Enabled / Disabled 状态切换；列表卡片可直接执行启用/停用；Disabled 状态仍保留配置记录，便于后续重新启用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">范围边界</td>
+                                    <td>本期聚焦 MCP 服务连接配置、查看、编辑、测试与 Skill 绑定表达。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.3</div>
+                        <div class="numbered-content">Skill</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.3.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">用于承接业务动作抽象、配置说明、以及与 MCP 的可选绑定关系，形成可供数字员工调用的技能单元；同时支持在数字员工创建页中进行 Skill 选择与分配。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.3.2</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Skills 列表页</td>
+                                    <td>展示 Skill 列表，支持按名称搜索并进入详情配置页。</td>
+                                    <td>列表页以卡片方式展示 Skill 名称、说明、类型与启停状态，支持查看详情。</td>
+                                    <td class="note">用于统一管理可分配 Skill。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">SkillEditor</td>
+                                    <td>用于维护 Skill 的基础字段、说明文案与 MCP 绑定表达。</td>
+                                    <td>支持编辑名称、描述、类型与 MCP Binding 区域等配置项。</td>
+                                    <td class="note">本期重点是配置表达与绑定关系展示。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">数字员工创建页 / Skill 选择弹窗</td>
+                                    <td>用于为数字员工分配可用 Skill。</td>
+                                    <td>弹窗采用左侧 Skill 列表、右侧 Skill 详情与启用开关的结构；支持搜索、切换当前 Skill、单个启用与批量勾选当前筛选结果。</td>
+                                    <td class="note">保存对象为 skill key，创建页需展示已选 Skill 卡片并支持再次编辑或移除。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.3.3</div>
+                        <div class="numbered-content">业务规则与边界</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Skill 规则</td>
+                                    <td>Skill 支持在数字员工创建页中按 skill key 分配；同一数字员工可分配多个 Skill；保存时需按 skill key 去重。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">权限与可见性</td>
+                                    <td>普通用户创建和配置的 Skill 默认仅供本人查看和使用；Admin 账号创建和配置的 Skill 对所有账号可查看和使用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">分配关系</td>
+                                    <td>数字员工创建页中的 Skill 分配只作用于当前数字员工，不改变全局 Skill 定义；已分配 Skill 需支持回填、编辑与移除。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">显示边界</td>
+                                    <td>Skill 选择弹窗展示可分配 Skill 列表与详情，不在数字员工创建页内直接编辑 Skill 配置内容；Skill 详情修改仍在 SkillEditor 完成。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.4</div>
+                        <div class="numbered-content">模型配置</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.4.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">用于承接模型连接信息的前端管理能力，支持用户维护模型列表、编辑基础连接参数、设置单个激活模型，并通过 Private / Public 表达模型的可见范围。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.4.2</div>
+                        <div class="numbered-content">页面与配置明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Model Configuration</td>
+                                    <td>作为模型连接管理入口，展示当前已配置模型列表。</td>
+                                    <td>列表展示 Name、Provider、Endpoint、Public、Updated；支持 Add Model、Edit、Delete，并支持在数字员工配置中选择该模型。</td>
+                                    <td class="note">页面已在 Settings &gt; Model Configuration 下独立路由落地。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Create / Edit Drawer</td>
+                                    <td>用于创建与编辑单个模型连接配置。</td>
+                                    <td>抽屉中支持填写 Model Name、Provider Type、API Endpoint、API Key；支持切换 Public；Public 打开后需勾选确认项；支持 Cancel、Create Model / Save Changes。</td>
+                                    <td class="note">API Key 支持 Show / Hide 切换。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Provider Type</td>
+                                    <td>用于选择模型连接的提供商兼容类型。</td>
+                                    <td>本期预置下拉选项仅包含：Open AI Compatible、Azure OpenAI Compatible。</td>
+                                    <td class="note">本期不支持自定义新增 Provider Type，也不包含其他兼容类型选项。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">模型选择与可用范围</td>
+                                    <td>用于维护可被数字员工选择的模型连接。</td>
+                                    <td>模型保存后进入模型列表，数字员工可在创建或编辑时按需选择具体模型；系统不维护全局唯一默认模型。</td>
+                                    <td class="note">模型是否实际生效，以数字员工配置和运行时接入能力为准。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.4.3</div>
+                        <div class="numbered-content">业务规则与边界</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">配置规则</td>
+                                    <td>Model Name、API Endpoint 为必填；API Key 当前前端可为空保存；Provider Type 为预置下拉选择，默认值为 Open AI Compatible；API Endpoint 默认值为 https://api.example.com/v1。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">公开范围规则</td>
+                                    <td>模型默认以 Private 保存；切换为 Public 时需额外勾选确认项，明确该模型将对当前组织内所有成员可用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">选择规则</td>
+                                    <td>模型保存后进入可选范围，由数字员工在创建或编辑时自行选择；未被数字员工选择的模型仅作为候选配置存在。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">存储规则</td>
+                                    <td>当前模型配置数据保存在浏览器 localStorage 中；首次进入页面时会以默认示例模型初始化，用于前端演示和交互验证。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">前后端边界</td>
+                                    <td>当前 Model Configuration 页面尚未对接独立后端模型配置接口；页面中的新增、编辑、删除仅影响前端本地存储与数字员工可选项表达。后端运行时模型仍基于环境变量读取，当前实际使用的是 Azure OpenAI 或 OpenAI 的环境配置，不直接消费该页面数据。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.5</div>
+                        <div class="numbered-content">聊天对话文件上传</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.5.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">用于承接聊天工作台中用户发送前的本地文件补充能力，使用户可在对话上下文中附带图片或文档作为输入材料，并在上传解析阶段获得明确状态反馈。</div>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.5.2</div>
+                        <div class="numbered-content">页面与交互明细</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>页面/模块</th>
+                                    <th>功能说明</th>
+                                    <th>核心交互</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Chat Workspace / Add Photos &amp; Files</td>
+                                    <td>作为聊天输入区的文件补充入口，支持用户从本地选择图片或文档文件。</td>
+                                    <td>点击 Add Photos &amp; Files 后打开本地文件选择器；支持用户一次性选择多个文件，并将所选文件插入输入区上方的文件列表。</td>
+                                    <td class="note">按钮文案固定为 Add Photos &amp; Files。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">文件数量校验</td>
+                                    <td>用于限制单次选择文件数量，避免一次上传过多文件造成交互混乱与解析压力。</td>
+                                    <td>单次从本地选择文件时最多允许选择 10 个；若选择数量超过 10 个，则本次选择失败，且需直接提示错误文案：You may only upload 10 files at a time.</td>
+                                    <td class="note">超限场景下，本次所选文件不进入待解析列表。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">文件解析中状态</td>
+                                    <td>用于表达文件已被选中并正在被系统解析。</td>
+                                    <td>文件进入列表后默认展示加载符，表示当前处于解析中；解析完成前文件不可作为稳定输入结果展示。</td>
+                                    <td class="note">本期重点是上传后状态可见，不展开解析进度百分比。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">解析成功态与删除</td>
+                                    <td>用于表达文件已可被对话使用，并支持用户移除不再需要的文件。</td>
+                                    <td>解析成功后移除加载中状态；当鼠标悬浮在已解析成功的文件卡片上时，展示删除入口，支持删除当前文件。</td>
+                                    <td class="note">删除仅作用于当前输入区已选文件，不影响本地原文件。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item sub-item">
+                        <div class="numbered-index">4.5.3</div>
+                        <div class="numbered-content">业务规则与边界</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>规则项</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">文件类型范围</td>
+                                    <td>本期仅支持用户在聊天中上传图片与文档文件，作为对话输入材料使用；不展开音视频等其他文件类型能力。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">数量限制</td>
+                                    <td>一次本地文件选择最多 10 个；超过 10 个时，本次选择整体失败，不做部分接收，并提示固定错误文案：You may only upload 10 files at a time.</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">状态规则</td>
+                                    <td>文件选中后先进入解析中状态并展示加载符；解析成功后不再显示加载中状态；本期仅要求明确表达解析中与解析成功两类前端状态。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">删除规则</td>
+                                    <td>仅解析成功后的文件支持在鼠标悬浮时显示删除入口；删除后文件立即从当前上传列表移除，不保留占位。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">范围边界</td>
+                                    <td>本期 PRD 聚焦聊天输入区的上传入口、数量校验、状态表达与删除交互，不展开服务端解析实现、文件摘要生成或跨会话持久化规则。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.6</div>
+                        <div class="numbered-content">配置对象新增、编辑、删除逻辑</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>新增逻辑</th>
+                                    <th>编辑逻辑</th>
+                                    <th>删除逻辑</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">数字员工</td>
+                                    <td>新增数字员工时，需先完成基础信息、Knowledge/Skill 分配及必要配置；保存成功后形成可继续编辑的配置记录，发布后才进入可用范围。</td>
+                                    <td>编辑数字员工配置时，系统需保留原有已发布版本，修改内容仅对后续新任务生效；运行中的任务继续使用启动时快照。</td>
+                                    <td>删除数字员工前需校验是否存在历史会话或有效绑定，并提示相关影响；若存在运行中任务，允许删除数字员工本体，运行中任务继续按启动快照执行。删除后不再允许被新会话选择，但历史会话和任务记录保留。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Skill</td>
+                                    <td>新增 Skill 时校验名称、描述、配置项及 MCP 绑定信息；保存成功后可进入 Skill 列表，并支持后续分配给数字员工。</td>
+                                    <td>编辑 Skill 后，仅影响后续新分配与新任务；若 Skill 已被多个数字员工使用，系统需在保存前提示影响范围。</td>
+                                    <td>删除 Skill 前需展示被引用的数字员工与绑定数量；用户确认删除后，系统自动解除相关绑定。删除不抹除历史执行记录。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">MCP Toolset</td>
+                                    <td>新增 MCP 时需完成连接信息与鉴权配置，并支持测试连接；保存失败时保留已填内容并给出明确原因。</td>
+                                    <td>编辑 MCP 连接参数或绑定信息后，仅影响后续新的调用链路；运行中的任务不应动态切换到新连接。</td>
+                                    <td>删除 MCP 前需校验其是否仍被 Skill 引用；若存在引用，需提示失效关系，用户确认删除后系统自动解除相关绑定。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">模型配置</td>
+                                    <td>新增模型时需校验必填字段完整性；保存成功后进入模型列表，并可被数字员工后续选择使用。</td>
+                                    <td>编辑模型后，仅影响后续新会话与新任务；对于运行中的任务，保留当次启动时使用的模型配置快照。</td>
+                                    <td>删除模型前需校验是否仍被数字员工引用；若存在引用，需提示影响范围，用户确认删除后系统自动移除对应数字员工上的模型引用。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">聊天上传文件</td>
+                                    <td>用户通过 Add Photos &amp; Files 选择文件后，系统立即创建当前输入态下的文件项并进入解析中状态；若单次选择超过 10 个，则本次新增失败并展示错误提示，不创建任何文件项。</td>
+                                    <td>文件在解析中阶段持续展示加载状态；解析成功后切换为稳定展示态，可继续参与当前消息发送流程。</td>
+                                    <td>删除当前输入区文件时，仅移除本次会话输入中的挂载关系，不删除本地源文件，也不回写历史消息内容。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0317-system-rules">
+                <h2>5. 通用规则与系统级说明</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.1</div>
+                        <div class="numbered-content">所有权、可见性与生效范围</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>所有权与可见性</th>
+                                    <th>生效范围</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Knowledge Base</td>
+                                    <td>普通用户导入的知识库默认仅本人可见；团队共享和组织共享不在本期范围内。</td>
+                                    <td>知识库分配给数字员工后，仅对后续新任务生效；运行中的任务继续使用启动时的知识快照。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Skill</td>
+                                    <td>普通用户创建的 Skill 默认仅本人可见；Admin 创建的 Skill 可全员可见可用。</td>
+                                    <td>Skill 被分配给数字员工后，仅影响后续任务；不追溯修改历史任务结果。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">MCP Toolset</td>
+                                    <td>普通用户创建的 MCP 仅本人可见；Admin 创建的 MCP 可全员查看与使用。</td>
+                                    <td>MCP 绑定关系修改后，仅影响后续发起的任务与执行链路。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">模型配置</td>
+                                    <td>Private 模型仅创建者可见；Public 模型对当前组织成员可见。</td>
+                                    <td>数字员工重新选择模型后，仅影响后续新会话或新任务，不强制打断运行中的任务。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.2</div>
+                        <div class="numbered-content">状态、处理时效与失败规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>对象</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">知识库文档处理</td>
+                                    <td>文档导入后进入 Pending 或 Processing；若处理超过系统阈值仍未完成，应标记为 Failed，并支持重新处理或删除。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Skill 状态</td>
+                                    <td>Skill 支持启用与停用；停用后的 Skill 不再出现在数字员工可分配列表中，但历史任务保留其执行记录与展示文案。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">MCP 状态</td>
+                                    <td>MCP Toolset 支持 Enabled / Disabled；Disabled 后不允许被新任务调用，但历史绑定关系与历史任务记录保留。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">模型引用状态</td>
+                                    <td>模型可被多个数字员工分别选择使用；删除模型时，系统需自动移除对应数字员工上的引用关系，并保留历史任务执行快照。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">连接与校验失败</td>
+                                    <td>MCP 测试连接失败、模型配置不合法、知识库文档处理失败时，均需保留用户已填写内容并返回明确失败原因，不自动丢弃配置。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">聊天文件解析</td>
+                                    <td>聊天中新增的图片或文档文件在解析完成前需持续展示加载符；若用户单次选择数量超过上限，则本次选择直接失败并返回固定提示：You may only upload 10 files at a time.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.3</div>
+                        <div class="numbered-content">删除、解绑与历史影响</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>操作</th>
+                                    <th>对当前配置的影响</th>
+                                    <th>对历史记录的影响</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">删除 Knowledge Base</td>
+                                    <td>从知识库列表和数字员工可选范围中移除；已分配员工需提示存在失效绑定。</td>
+                                    <td>历史任务与历史消息保留，不因知识库删除而抹除原结果。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">移除 Skill</td>
+                                    <td>从数字员工当前配置中移除，不再参与后续新任务。</td>
+                                    <td>历史任务中已使用的 Skill 保留名称、说明和执行痕迹。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">删除 MCP Toolset</td>
+                                    <td>删除后不再允许新 Skill 绑定；已有绑定在用户确认删除后自动解除。</td>
+                                    <td>历史任务中的 MCP 调用记录保留，便于复盘和审计。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">删除模型配置</td>
+                                    <td>从模型列表移除；若已被数字员工引用，用户确认删除后自动清除对应引用关系。</td>
+                                    <td>不修改历史任务的输出结果与记录。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">删除聊天上传文件</td>
+                                    <td>仅从当前对话输入区的待发送文件列表中移除，不影响用户本地文件及其他已发送消息中的附件快照。</td>
+                                    <td>若文件尚未发送进消息流，则历史中不产生记录；已发送历史消息不因当前输入区删除动作而被回溯修改。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="section" id="prd-0317-risk">
+                <h2>6. 风险点、用户影响与缓解方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险点</th>
+                                <th>典型场景</th>
+                                <th>对用户的影响</th>
+                                <th>缓解方案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">知识库处理超时或失败</td>
+                                <td>文档过大、OCR / 切块 / 向量化耗时过长、底层处理服务异常。</td>
+                                <td>用户已上传文档但迟迟不可用，无法分配给数字员工，容易误判为上传成功即生效。</td>
+                                <td>需明确区分 Pending、Processing、Processed、Failed；超时进入 Failed 或异常提示；支持重新处理、删除失败文档，并在知识库选择弹窗中过滤不可用知识库。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">MCP 测试连接失败</td>
+                                <td>地址错误、鉴权失败、目标服务不可达、返回结构异常。</td>
+                                <td>用户无法判断是配置问题、网络问题还是服务端问题，可能重复保存无效连接。</td>
+                                <td>保留已填写配置；返回明确失败原因；仅允许已启用且测试通过的 MCP 进入高置信度使用范围。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Config JSON 配置错误</td>
+                                <td>JSON 非法、字段缺失、Transport 与配置结构不匹配。</td>
+                                <td>用户保存失败，或保存成功但运行时不可用。</td>
+                                <td>保存前做结构校验与协议校验；按 Transport 自动给默认模板；错误提示需指向具体字段或 JSON 路径。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">权限与可见范围理解偏差</td>
+                                <td>Private / Public、普通用户 / Admin 的 Skill、MCP、模型、知识库可见范围不一致。</td>
+                                <td>用户会误认为某项资源“丢失”或“无法分配”。</td>
+                                <td>在列表、详情和选择弹窗中统一展示所有者、可见范围、可分配状态；保存或切换 Public 时增加二次确认与说明文案。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">聊天上传数量或解析状态理解偏差</td>
+                                <td>用户一次选择超过 10 个文件，或看到文件已加入列表但不清楚其仍在解析中。</td>
+                                <td>用户可能误以为超限文件已部分上传成功，或误把解析中的文件当作已可用输入，导致重复操作或错误发送。</td>
+                                <td>超限时采用固定英文提示 You may only upload 10 files at a time. 并阻断本次选择；解析中持续显示加载符，解析成功后清除状态，并在 hover 时提供删除入口。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            </div>
+
+            <div class="version-panel" data-version-panel="0326">
+            <div class="version-divider" id="prd-0326-overview">
+                <h2>0326 版本 PRD</h2>
+                <p>本次新增 0326 版本需求，核心补充聊天工作台中的单聊对话逻辑与不同群聊模式下的对话逻辑，统一定义会话、计划审批、执行反馈、群聊分发、辩论模式与合作模式的产品交互和规则边界。</p>
+            </div>
+
+            <section class="section" id="prd-0326-goals">
+                <h2>1. 背景</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.1</div>
+                        <div class="numbered-content">现有需求对单聊场景下的完整对话逻辑定义不够充分，需要补齐从用户提问、计划生成、计划审批、分步执行、反馈修正到历史恢复的标准交互链路。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.2</div>
+                        <div class="numbered-content">现有需求对群聊场景下的不同对话模式定义不完整，需要明确普通群聊、辩论模式、合作模式三种协作路径及其消息表现、参与成员选择和执行规则。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.3</div>
+                        <div class="numbered-content">为支撑后续审批流、任务追踪和协作能力扩展，需要统一聊天工作台在单聊与群聊中的状态表达、消息类型和历史恢复逻辑。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0326-scope">
+                <h2>2. 本期范围</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模块</th>
+                                <th>本期目标</th>
+                                <th>本期范围</th>
+                                <th>关键页面/对象</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">单聊工作台</td>
+                                <td>建立单个硅基员工的一对一对话闭环。</td>
+                                <td>覆盖选择员工、历史恢复、计划生成、审批执行、步骤反馈、To-do 联动和结果交付。</td>
+                                <td>Chat Workspace 单聊模式、计划审批卡、步骤结果卡、To-do 面板。</td>
+                                <td class="note">强调“先计划、后执行”的复杂任务交互。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">普通群聊</td>
+                                <td>支持多名数字员工在同一群组内围绕用户消息进行路由回复。</td>
+                                <td>覆盖群组会话、自动分发、@ 点名、系统路由提示、成员回复与历史恢复。</td>
+                                <td>Chat Workspace 群聊模式、群成员列表、群消息流。</td>
+                                <td class="note">适用于轻量咨询、多人同步响应场景。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">辩论模式</td>
+                                <td>支持多成员围绕同一主题先陈述观点，再输出综合结论。</td>
+                                <td>覆盖辩论参与者选择、轮次设置、分轮发言、主持总结与历史消息保留。</td>
+                                <td>群聊模式切换区、辩论轮次选择、辩论消息流。</td>
+                                <td class="note">适用于方案评估、观点碰撞、优劣比较。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">合作模式</td>
+                                <td>支持多成员围绕同一任务串行协作。</td>
+                                <td>覆盖参与员工自动分配、协作计划生成、计划审批、步骤接力、交接摘要、最终汇总。</td>
+                                <td>群聊模式切换区、协作计划审批卡、协作轨迹消息、最终汇总消息。</td>
+                                <td class="note">适用于需要多角色分工推进的复杂任务。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0326-single-chat">
+                <h2>3. 单聊对话逻辑</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">3.1</div>
+                        <div class="numbered-content">功能定位</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">单聊用于承接用户与单个硅基员工之间的连续工作会话，强调上下文连续、任务可审批、执行可追踪、结果可复盘。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">3.2</div>
+                        <div class="numbered-content">核心流程</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>阶段</th>
+                                    <th>系统行为</th>
+                                    <th>用户交互</th>
+                                    <th>产出</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">进入会话</td>
+                                    <td>加载当前员工信息与最近一段会话历史，恢复历史消息和 To-do 状态。</td>
+                                    <td>用户可继续原会话，或在历史上下文上发起新需求。</td>
+                                    <td class="note">历史消息流、当前会话上下文。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">识别请求</td>
+                                    <td>系统判断当前请求是直接答复、澄清问题还是需要生成计划。</td>
+                                    <td>用户发送文本消息。</td>
+                                    <td class="note">直接答复 / 澄清问题 / 执行计划草案。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">计划审批</td>
+                                    <td>对复杂请求生成计划审批卡，列出步骤与预计产出。</td>
+                                    <td>用户批准执行，或提交修改建议重新生成。</td>
+                                    <td class="note">计划审批卡。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">分步执行</td>
+                                    <td>系统按步骤执行任务，在每步结束后展示步骤结果。</td>
+                                    <td>用户确认继续，或输入反馈后重试当前步骤。</td>
+                                    <td class="note">步骤结果卡、To-do 状态更新。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">完成与复盘</td>
+                                    <td>全部步骤完成后输出最终总结，并保留关键决策点。</td>
+                                    <td>用户可刷新或重进后复盘历史。</td>
+                                    <td class="note">最终交付结果、历史消息、任务记录。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">3.3</div>
+                        <div class="numbered-content">状态规则</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>状态</th>
+                                    <th>含义</th>
+                                    <th>触发条件</th>
+                                    <th>下一状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">Idle</td>
+                                    <td>等待用户输入。</td>
+                                    <td>打开工作台、执行完成或取消后进入。</td>
+                                    <td class="note">Clarify / Waiting For Plan Approval / Executing</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Waiting For Plan Approval</td>
+                                    <td>系统已生成计划，等待用户确认。</td>
+                                    <td>复杂任务被识别为需要计划执行。</td>
+                                    <td class="note">Executing / Idle</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Executing</td>
+                                    <td>系统正在执行当前步骤。</td>
+                                    <td>用户批准计划，或确认继续进入下一步。</td>
+                                    <td class="note">Waiting For Feedback / Completed / Failed</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Waiting For Feedback</td>
+                                    <td>当前步骤结果已产出，等待用户确认或反馈。</td>
+                                    <td>步骤完成但需要用户继续确认。</td>
+                                    <td class="note">Executing / Idle</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">Completed</td>
+                                    <td>全部步骤执行完毕。</td>
+                                    <td>最后一步通过确认或直接完成。</td>
+                                    <td class="note">Idle</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0326-group-chat">
+                <h2>4. 群聊对话逻辑</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.1</div>
+                        <div class="numbered-content">群聊模式总览</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>模式</th>
+                                    <th>适用场景</th>
+                                    <th>核心机制</th>
+                                    <th>主要输出</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">普通群聊</td>
+                                    <td>用户希望获得 1 名或多名成员的直接回复。</td>
+                                    <td>系统按意图自动选择回复成员，或根据 @ 点名路由到指定成员。</td>
+                                    <td class="note">成员直接回复消息、系统路由提示。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">辩论模式</td>
+                                    <td>用户希望比较观点、听取不同立场并获得综合结论。</td>
+                                    <td>系统选择参与者、按轮次发言、最后生成主持总结。</td>
+                                    <td class="note">轮次消息、辩论总结。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">合作模式</td>
+                                    <td>用户希望完成一个需要多角色分工的复杂任务。</td>
+                                    <td>系统自动分配成员，先生成协作计划，审批后按顺序接力执行。</td>
+                                    <td class="note">协作计划审批卡、接力结果、最终汇总。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.2</div>
+                        <div class="numbered-content">普通群聊</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>环节</th>
+                                    <th>逻辑说明</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">消息发送</td>
+                                    <td>用户在群中发送消息，可直接输入文本，也可通过 @ 触发成员选择面板。</td>
+                                    <td class="note">@ 单人表示点名该成员；@All 表示全员收到点名。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">成员分发</td>
+                                    <td>若用户未点名，系统根据消息意图自动匹配最合适的 1 至 2 名成员进行回复。</td>
+                                    <td class="note">系统会插入一条路由提示消息，说明已分配给哪些成员。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">成员回复</td>
+                                    <td>每个被选中的成员只代表自己回复，不代替其他成员发言。</td>
+                                    <td class="note">回复消息需带成员身份标识和头像。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">历史恢复</td>
+                                    <td>群聊消息刷新后仍可恢复，包括用户消息、系统路由消息和成员回复。</td>
+                                    <td class="note">会话维度为 group id + 时间分组策略。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.3</div>
+                        <div class="numbered-content">辩论模式</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>环节</th>
+                                    <th>逻辑说明</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">模式开启</td>
+                                    <td>用户在群聊顶部切换为辩论模式，并可设置辩论轮数。</td>
+                                    <td class="note">默认轮数为 2，支持按产品配置限制最大轮数。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">参与者选择</td>
+                                    <td>系统优先使用被 @ 点名的成员参与辩论；若未点名，则自动挑选最适合主题的成员。</td>
+                                    <td class="note">参与成员应至少为 2 人。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">分轮发言</td>
+                                    <td>第一轮各成员陈述核心观点；后续轮次针对其他成员观点进行补充或反驳。</td>
+                                    <td class="note">每条辩论消息需标记轮次和阶段。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">主持总结</td>
+                                    <td>辩论结束后由系统或主持成员输出综合结论。</td>
+                                    <td class="note">总结需给出最终推荐结论与主要理由。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">4.4</div>
+                        <div class="numbered-content">合作模式</div>
+                    </div>
+                    <div class="table-wrap nested-table compact">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>环节</th>
+                                    <th>逻辑说明</th>
+                                    <th>规则</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="module">模式开启</td>
+                                    <td>用户切换为合作模式并输入任务目标、约束和期望产物。</td>
+                                    <td class="note">合作模式默认面向复杂任务，不适合简单问答。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">协作计划生成</td>
+                                    <td>系统根据群成员角色、人设、可用 MCP / Skill / Knowledge 自动选择参与成员，并生成协作计划审批卡。</td>
+                                    <td class="note">计划需标明步骤编号、负责人、输入来源、预计输出。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">计划审批</td>
+                                    <td>用户可批准执行，或提交调整意见重新生成协作计划。</td>
+                                    <td class="note">未经批准不得进入协作执行阶段。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">接力执行</td>
+                                    <td>步骤负责人执行后，系统将结果自动交接给下一位成员继续处理。</td>
+                                    <td class="note">消息流需展示系统交接提示、当前负责人、交接摘要。</td>
+                                </tr>
+                                <tr>
+                                    <td class="module">结果汇总</td>
+                                    <td>最后一位成员或系统协调者输出最终交付结果。</td>
+                                    <td class="note">最终消息需可直接作为面向用户的完整结果。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0326-rules">
+                <h2>5. 通用规则与边界</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>规则项</th>
+                                <th>内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">会话恢复</td>
+                                <td>单聊与群聊均需支持刷新后恢复历史消息。群聊历史除消息文本外，还需保留模式类型、发言成员、步骤阶段和系统路由信息。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">消息类型</td>
+                                <td>消息类型至少包括：用户消息、助手文本、系统路由消息、计划审批卡、步骤结果卡、辩论轮次消息、辩论总结消息、合作模式交接消息、合作模式最终汇总消息。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">模式切换</td>
+                                <td>群聊支持在普通群聊、辩论模式、合作模式之间切换。切换模式只影响后续新消息处理逻辑，不应篡改历史消息的模式标识。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">能力边界</td>
+                                <td>在群聊合作模式下，每个参与员工只能调用其被授权的 MCP、Core Skills、Extended Skills 与 Knowledge；系统不得跨员工越权调用其他成员能力。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">异常处理</td>
+                                <td>计划生成失败、单步执行失败、协作交接失败、模式执行中切换群组等异常场景，均需提供清晰的错误提示与可恢复动作，例如重试、终止、返回 Idle 状态。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">范围边界</td>
+                                <td>0326 版本 PRD 聚焦对话逻辑、状态表达和交互闭环，不扩展组织级权限体系、复杂协作审计策略和群聊外的广场/市场能力。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0326-risk">
+                <h2>6. 风险点、用户影响与缓解方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险点</th>
+                                <th>典型场景</th>
+                                <th>对用户的影响</th>
+                                <th>缓解方案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">计划生成耗时过长或失败</td>
+                                <td>复杂请求过长、模型负载高、上下文过大。</td>
+                                <td>用户不知道当前是“正在规划”还是“已卡死”，可能反复发送同一需求。</td>
+                                <td>在计划生成阶段展示明确的处理中状态；超时后保留原始输入并提示重试；避免重复触发多份并行计划。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">步骤执行超时</td>
+                                <td>单步调用搜索、浏览器、MCP 或多轮模型推理时间过长。</td>
+                                <td>用户感知系统卡顿，无法判断当前执行到哪一步。</td>
+                                <td>在消息流和 To-do 中同步当前步骤状态；超过阈值需提示“执行超时”；支持重试当前步骤、跳过或终止任务。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">群聊路由错误</td>
+                                <td>普通群聊自动分发给了不合适的成员，或遗漏更适合的成员。</td>
+                                <td>用户收到低质量回复，降低对自动选人的信任。</td>
+                                <td>系统路由消息需可解释；允许用户通过 @ 点名修正；对自动分发结果保留人工覆盖能力。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">辩论模式失控</td>
+                                <td>成员观点重复、轮次过多、总结无法收束。</td>
+                                <td>用户看到大量冗余消息，信息密度下降，难以得到结论。</td>
+                                <td>限制轮次上限；要求每轮消息有阶段标记；最后必须输出结构化总结与明确结论，不可只停留在观点罗列。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">合作模式交接失败</td>
+                                <td>上一步结果格式异常、下一位成员缺少上下文、负责人能力不足。</td>
+                                <td>任务中断，用户只能看到部分产物，无法继续推进。</td>
+                                <td>系统需展示交接摘要、当前负责人和失败节点；失败后支持重试交接、改派负责人或回退到上一步重新产出。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">刷新后恢复错位</td>
+                                <td>群聊模式切换频繁、消息类型复杂、历史状态未完整恢复。</td>
+                                <td>用户无法区分当前会话属于普通群聊、辩论还是合作模式，影响继续操作。</td>
+                                <td>恢复时需带回模式标识、轮次、步骤阶段和系统事件；恢复失败时至少展示最近一次任务模式和状态摘要。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            </div>
+
+            <div class="version-panel" data-version-panel="0327">
+            <div class="version-divider" id="prd-0327-overview">
+                <h2>0327 版本 PRD</h2>
+                <p>本次新增 0327 版本需求，核心目标是在既有单聊、普通群聊、辩论模式与合作模式基础上，进一步明确“单人 Plan”和“多人协作”之间的适用边界、路由原则与交互表达，避免复杂任务被误判为多人任务，或多人任务被错误压缩为单人执行。</p>
+            </div>
+
+            <section class="section" id="prd-0327-core-concepts">
+                <h2>1. 核心概念定义</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>概念</th>
+                                <th>定义</th>
+                                <th>核心价值</th>
+                                <th>不应误解为</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">Direct</td>
+                                <td>不需要系统级显式规划，直接由一个数字员工完成处理。</td>
+                                <td>响应快、交互轻、成本低。</td>
+                                <td class="note">不等于只能纯文字回答；员工内部仍可调用能力。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单人 Plan</td>
+                                <td>由一个数字员工先对复杂任务进行内部或系统级步骤拆解，再按顺序执行并产出统一交付。</td>
+                                <td>覆盖“复杂但不需要多人分工”的中间地带。</td>
+                                <td class="note">不等于多人协作的降级版。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Collaboration</td>
+                                <td>多个数字员工围绕同一任务按步骤分工推进，存在上下游交接关系。</td>
+                                <td>适合跨角色、多阶段、强依赖任务。</td>
+                                <td class="note">不等于所有复杂任务都要走 collaboration。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Debate</td>
+                                <td>多个数字员工围绕同一问题输出不同观点，再由系统或指定员工总结。</td>
+                                <td>适合策略评估、方案比较、视角碰撞。</td>
+                                <td class="note">不适合流程型接力任务。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-why-single-plan">
+                <h2>2. 为什么一定要有单人 Plan</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问题</th>
+                                <th>如果没有单人 Plan</th>
+                                <th>带来的问题</th>
+                                <th>单人 Plan 的价值</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">复杂任务只能 direct 或多人二选一</td>
+                                <td>系统要么直接回答，要么强行拉多人协作。</td>
+                                <td>前者容易答乱，后者成本过高。</td>
+                                <td>补足“复杂但不需要多人”的中间能力层。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户需要统一口径</td>
+                                <td>多人拆开执行后再拼接。</td>
+                                <td>风格不一致、术语不统一、结论可能冲突。</td>
+                                <td>由一个数字员工统一完成，保证口径一致。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">任务存在顺序依赖</td>
+                                <td>直接回答无法显式控制先后步骤。</td>
+                                <td>结果容易遗漏中间判断和关键检查点。</td>
+                                <td>通过 Plan 保证先分析、再归纳、再输出。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">交互成本控制</td>
+                                <td>多人协作链路默认更长。</td>
+                                <td>更多 token、更多切换、更多失败点。</td>
+                                <td>在单员工范围内完成复杂任务，更高效稳定。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户心智</td>
+                                <td>用户每次都看到多人参与。</td>
+                                <td>会感知系统冗长，削弱“负责人到底”的体验。</td>
+                                <td>单人 Plan 更符合“一个负责人到底”的工作心智。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-scenarios">
+                <h2>3. 典型用户场景</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>场景类型</th>
+                                <th>用户示例</th>
+                                <th>适合单人 Plan 的原因</th>
+                                <th>为什么不适合多人</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">写方案类</td>
+                                <td>帮我做一个竞品分析框架，再给结论，再整理成汇报结构。</td>
+                                <td>先分析、再归纳、再组织表达，流程复杂但责任主体可为一个分析型员工。</td>
+                                <td>用户要的是统一交付，不是多人各写一段后再拼接。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">内容生产类</td>
+                                <td>先帮我想咖啡馆海报方向，再写提示词，再决定要不要生图。</td>
+                                <td>步骤有依赖关系，但整体风格需要由同一创意员工统一把控。</td>
+                                <td>多人参与容易造成风格分散、表达不统一。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">研究归纳类</td>
+                                <td>先梳理 OpenClaw 的定位，再分析竞品，再给合作建议。</td>
+                                <td>是典型研究链路，一个研究型员工即可完成闭环。</td>
+                                <td>多人拆分后容易出现信息重复、口径冲突、结论不一致。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单职能深任务</td>
+                                <td>帮我优化一个页面文案，先找问题，再给改法，再给最终版本。</td>
+                                <td>这是完整诊断到输出链路，适合由同一个文案或运营员工独立完成。</td>
+                                <td>设计、产品、运营都参与会导致协作成本远高于收益。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">工具链串行任务</td>
+                                <td>先搜集资料，再整理重点，再输出总结。</td>
+                                <td>虽然中间会调用搜索、知识库、技能，但这些只是同一员工内部能力调用。</td>
+                                <td>工具调用不等于角色切换，不应因此强制多人化。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-complexity">
+                <h2>4. 为什么复杂不等于多人</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>复杂度类型</th>
+                                <th>定义</th>
+                                <th>适合的解决方式</th>
+                                <th>典型例子</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">流程复杂</td>
+                                <td>任务步骤多、存在先后顺序、需要中间检查点。</td>
+                                <td>优先考虑单人 Plan。</td>
+                                <td>先分析，再归纳，再写结论。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">角色复杂</td>
+                                <td>需要不同专业角色分别负责不同子任务。</td>
+                                <td>优先考虑 Collaboration。</td>
+                                <td>产品方案 + 设计建议 + 运营落地。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">视角复杂</td>
+                                <td>需要不同立场、不同角色给出对立或补充观点。</td>
+                                <td>优先考虑 Debate。</td>
+                                <td>两个方案优劣比较、战略选择讨论。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-why-not-default-multi">
+                <h2>5. 为什么不能默认都用多人完成</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问题项</th>
+                                <th>多人默认化后的结果</th>
+                                <th>业务影响</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">延迟更高</td>
+                                <td>多人链路天然带来上下文传递、等待、汇总与角色切换。</td>
+                                <td>整体响应变慢，简单复杂任务都被重型化。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">成本更高</td>
+                                <td>需要更多模型调用、更多上下文拼接、更多协调 prompt。</td>
+                                <td>token 消耗增加，链路更长，失败点更多。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">结果不一致</td>
+                                <td>多人各自理解任务，容易出现术语、风格、结论不统一。</td>
+                                <td>尤其影响方案类、文案类、视觉类交付。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">责任边界模糊</td>
+                                <td>用户难以判断谁对最终结果负责。</td>
+                                <td>不符合“一个负责人到底”的工作心智。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户体验更重</td>
+                                <td>用户频繁看到协作过程和中间状态。</td>
+                                <td>会觉得系统在“表演协作”，而不是高效完成任务。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-when-multi">
+                <h2>6. 什么时候才应该多人完成</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>触发条件</th>
+                                <th>说明</th>
+                                <th>推荐模式</th>
+                                <th>示例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">明显跨职能</td>
+                                <td>任务天然需要不同职能员工分别完成不同部分。</td>
+                                <td>Collaboration</td>
+                                <td>产品方案 + 设计建议 + 运营落地。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">明显需要不同视角</td>
+                                <td>任务重点在于比较不同观点，而不是顺序执行。</td>
+                                <td>Debate</td>
+                                <td>路线选择、方案优劣比较、战略讨论。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">子任务可独立拆分</td>
+                                <td>多个子任务之间可分配给不同角色，且合并后价值更高。</td>
+                                <td>Collaboration</td>
+                                <td>A 调研，B 整理，C 汇报。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户明确要求多角色参与</td>
+                                <td>用户希望看到不同角色共同参与或评审。</td>
+                                <td>Collaboration / Debate</td>
+                                <td>让产品、设计、运营一起评审这个方案。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单人执行会明显丢专业性</td>
+                                <td>任务需要多专业背景共同参与才可靠。</td>
+                                <td>Collaboration</td>
+                                <td>法律审查 + 财务测算 + 品牌表达。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-routing">
+                <h2>7. 路由判断原则</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>判断顺序</th>
+                                <th>问题</th>
+                                <th>是</th>
+                                <th>否</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">第一步</td>
+                                <td>是否需要澄清信息后才能继续？</td>
+                                <td>进入 Clarify</td>
+                                <td>继续下一步判断</td>
+                            </tr>
+                            <tr>
+                                <td class="module">第二步</td>
+                                <td>任务是否需要显式步骤拆解？</td>
+                                <td>进入 Plan 判断</td>
+                                <td>进入 Direct</td>
+                            </tr>
+                            <tr>
+                                <td class="module">第三步</td>
+                                <td>任务是否需要多个角色分别负责？</td>
+                                <td>进入 Collaboration</td>
+                                <td>进入单人 Plan</td>
+                            </tr>
+                            <tr>
+                                <td class="module">第四步</td>
+                                <td>任务是否更适合多观点碰撞而非串行执行？</td>
+                                <td>进入 Debate</td>
+                                <td>保留原判断</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-mode-matrix">
+                <h2>8. 模式适用矩阵</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模式</th>
+                                <th>是否多步骤</th>
+                                <th>是否多人</th>
+                                <th>是否强调统一口径</th>
+                                <th>适合任务</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">Direct</td>
+                                <td>否或极弱</td>
+                                <td>否</td>
+                                <td>是</td>
+                                <td>简单问答、轻量生成、即时建议</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单人 Plan</td>
+                                <td>是</td>
+                                <td>否</td>
+                                <td>强</td>
+                                <td>复杂但单角色可闭环的任务</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Single Assignee</td>
+                                <td>可有可无</td>
+                                <td>群聊中仍由单人负责</td>
+                                <td>强</td>
+                                <td>群里提问但只需一个专业角色回答</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Collaboration</td>
+                                <td>是</td>
+                                <td>是</td>
+                                <td>中</td>
+                                <td>跨角色分工、强交接依赖、复合交付</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Debate</td>
+                                <td>不一定</td>
+                                <td>是</td>
+                                <td>弱到中</td>
+                                <td>方案比较、优劣讨论、策略分歧场景</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-interaction">
+                <h2>9. 交互设计原则</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>场景</th>
+                                <th>用户应感知到什么</th>
+                                <th>不应感知到什么</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">Direct</td>
+                                <td>快速得到结果。</td>
+                                <td>不应被复杂计划审批打断。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单人 Plan</td>
+                                <td>任务被有条理地拆解和完成，必要时可展示计划与执行过程。</td>
+                                <td>不应被强行多人化。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Single Assignee</td>
+                                <td>群里由最适合的员工负责回复，其他成员不制造噪音。</td>
+                                <td>不应所有人都同步发言。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Collaboration</td>
+                                <td>看到分工、接力、交接与最终汇总。</td>
+                                <td>不应看不到负责人和阶段信息。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">Debate</td>
+                                <td>看到不同观点及最终总结。</td>
+                                <td>不应被错误包装成串行执行流程。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-rules">
+                <h2>10. 通用规则与边界</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>规则项</th>
+                                <th>内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">执行主体</td>
+                                <td>系统中真正的执行主体与发言主体始终是数字员工。Skill、Knowledge、搜索、浏览器、生图能力均属于数字员工内部可调用能力，不作为独立发言主体存在。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">单人 Plan 定位</td>
+                                <td>单人 Plan 用于处理“流程复杂但角色不复杂”的任务，不以多人参与为前提。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">多人触发原则</td>
+                                <td>只有在角色分工、多视角讨论、用户明确要求多人参与或单人明显不足以保证专业性的场景下，才进入 Collaboration 或 Debate。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">统一口径原则</td>
+                                <td>对于方案类、文案类、视觉方向类等强调统一表达的任务，默认优先评估单人 Plan，而非直接多人协作。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">交互重量级控制</td>
+                                <td>系统应尽量以最轻的合适模式完成任务，避免将简单任务复杂化、将复杂任务无差别多人化。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0327-risk">
+                <h2>11. 风险点、用户影响与缓解方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险点</th>
+                                <th>典型场景</th>
+                                <th>对用户的影响</th>
+                                <th>缓解方案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">复杂任务被误判为多人协作</td>
+                                <td>本质上可由单一员工完成，但系统错误触发 Collaboration。</td>
+                                <td>用户感知链路变重、耗时更长、成本更高，且结果口径可能不统一。</td>
+                                <td>路由优先判断是否只是“流程复杂”；仅在明确跨角色分工时进入 Collaboration；对方案类、文案类、研究类任务优先评估单人 Plan。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">多人任务被误压缩为单人执行</td>
+                                <td>任务实际需要多职能输入，但系统只分配给一个员工。</td>
+                                <td>结果专业性不足，关键视角缺失，用户对最终结果可靠性存疑。</td>
+                                <td>当任务存在明显跨职能、强专业边界或用户明确要求多人参与时，应强制进入 Collaboration 或 Debate。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">将工具调用误当作多人协作</td>
+                                <td>单个员工在执行中调用搜索、知识库、浏览器或生图能力。</td>
+                                <td>用户误以为系统引入了多个执行主体，造成心智混乱。</td>
+                                <td>文案和交互上明确“执行主体始终是数字员工，工具仅为其内部能力”；不要把工具返回包装成独立成员发言。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">模式切换频繁导致心智断裂</td>
+                                <td>同一任务在 Direct、单人 Plan、Debate、Collaboration 之间反复切换。</td>
+                                <td>用户不清楚当前系统为什么这样执行，也不清楚谁对结果负责。</td>
+                                <td>模式一旦进入执行阶段，应尽量稳定；若需要切换模式，需先给出原因说明，并由用户确认。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">责任边界不清</td>
+                                <td>多人模式下没有明确负责人，或总结输出者不清晰。</td>
+                                <td>用户无法判断谁应对最终交付负责，影响信任和复盘。</td>
+                                <td>单人 Plan 默认一个员工负责到底；Collaboration 需明确步骤负责人和最终汇总负责人；Debate 需明确主持总结角色。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户对系统能力预期过高</td>
+                                <td>用户看到多人或计划化流程后，默认认为结果一定更准确。</td>
+                                <td>一旦输出质量一般，会放大失望感与不信任。</td>
+                                <td>在 PRD 和产品文案中明确：多人不天然优于单人，系统目标是以最轻且最合适的模式完成任务，而非默认追求复杂编排。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            </div>
+
+            <div class="version-panel is-active" data-version-panel="0626">
+            <div class="version-divider" id="prd-0626-overview">
+                <h2>0626 合同审查智能体 PRD</h2>
+                <p>本次新增合同审查智能体需求，核心目标是将合同、招投标文件、广告文案等法律文件的风险审查，从人工逐条检查升级为可上传、可审查、可对比、可修订、可沉淀规则的智能工作流，帮助用户快速发现法律风险、定位原文并生成可操作的修改建议。</p>
+            </div>
+
+            <section class="section" id="prd-0626-bg">
+                <h2>1. 背景</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.1</div>
+                        <div class="numbered-content">合同类文件存在条款多、版本多、风险点分散、人工审查耗时长等问题，法务或业务人员需要在较短时间内完成风险定位、主体核验、条款修改与结果留痕。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.2</div>
+                        <div class="numbered-content">当前业务场景已具备合同审查智能体原型，包括法律文件审查、对比审查、风险分级、审查结果展示、知识库与规则库等页面能力，适合作为 WorkMate 垂直智能体的首批落地样板。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">1.3</div>
+                        <div class="numbered-content">本期需将合同审查能力产品化，明确上传入口、审查链路、审查清单、规则配置、修订动作、历史记录与人工确认边界，支撑后续扩展到人资、采购、法务等更多业务智能体。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-goals">
+                <h2>2. 本期目标</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.1</div>
+                        <div class="numbered-content">支持用户上传单份法律文件进行审查，覆盖合同、招投标文件、广告文案等文件类型，输出风险等级、风险点、原文定位与修改建议。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.2</div>
+                        <div class="numbered-content">支持对比审查，允许用户上传待审文档与标准文档，识别两份文档在条款、格式、主体、金额、期限、义务、责任等方面的差异。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.3</div>
+                        <div class="numbered-content">建立合同审查知识库与规则库，支持文件审查清单、审查规则分组、自定义规则、新建规则、规则文档解析和规则详情查看。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">2.4</div>
+                        <div class="numbered-content">形成审查结果闭环，支持风险筛选、风险详情、定位原文、编辑建议、一键修订、接受建议并添加修订、下载结果与历史记录查看。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-scope">
+                <h2>3. 本期范围</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>模块</th>
+                                <th>本期目标</th>
+                                <th>本期范围</th>
+                                <th>关键页面/对象</th>
+                                <th>权限与边界</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">文件审查</td>
+                                <td>完成单份法律文件的智能风险审查。</td>
+                                <td>覆盖文件上传、格式校验、剩余额度展示、开始审查、审查进度、结果生成与历史记录。</td>
+                                <td>法律文件审查首页、上传区、历史面板、审查结果页。</td>
+                                <td class="note">单个合同文件字数不超过 20 万字，格式支持 PDF / DOC / DOCX。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">对比审查</td>
+                                <td>完成待审文档与标准文档的差异识别。</td>
+                                <td>覆盖双文件上传、标准文档说明、差异识别、格式要求提示、结果输出。</td>
+                                <td>对比审查页、待审文档上传区、标准文档上传区、对比结果。</td>
+                                <td class="note">本期聚焦文档差异与风险提示，不直接替代法律结论。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">审查结果</td>
+                                <td>以可读、可定位、可操作方式展示审查结果。</td>
+                                <td>覆盖合同概览、审查清单、审查结果三步进度，高/中/低风险与通过项统计，风险详情卡片与原文定位。</td>
+                                <td>合同概览、审查清单、审查结果、风险点卡片、原文编辑器。</td>
+                                <td class="note">高风险建议默认需要用户确认后再执行修订。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">知识库</td>
+                                <td>沉淀审查清单与业务审查标准。</td>
+                                <td>覆盖文件审查清单列表、新建清单、规则数量、最后修改时间、搜索与空状态。</td>
+                                <td>知识库、文件审查清单、清单列表、新建清单。</td>
+                                <td class="note">清单可作为不同文件类型或业务场景的审查入口。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">审查规则库</td>
+                                <td>支持规则配置、规则解析和规则复用。</td>
+                                <td>覆盖规则分组、自定义场景、买卖合同等默认分类、新建规则、解析规则文档、规则详情、编辑规则。</td>
+                                <td>审查规则库、规则分组、规则列表、规则详情。</td>
+                                <td class="note">规则更新后需记录修改时间，后续可扩展审批与版本管理。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-flow">
+                <h2>4. 核心业务链路</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>链路阶段</th>
+                                <th>用户动作</th>
+                                <th>系统处理</th>
+                                <th>输出结果</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">1. 文件接入</td>
+                                <td>用户选择法律文件审查或对比审查，并上传 PDF / DOC / DOCX 文件。</td>
+                                <td>校验文件格式、字数上限、审查额度，创建审查任务并进入解析队列。</td>
+                                <td>上传成功状态、审查任务 ID、历史记录入口。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">2. 文档解析</td>
+                                <td>用户等待系统处理。</td>
+                                <td>解析正文、标题、表格、签署页、附件、水印和关键字段，生成合同结构化视图。</td>
+                                <td>合同概览、主体信息、条款分段、关键字段。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">3. 规则匹配</td>
+                                <td>用户可选择默认规则或自定义审查清单。</td>
+                                <td>按合同类型匹配审查清单与审查规则，执行风险识别、主体审查和对话审查。</td>
+                                <td>审查清单执行结果、高/中/低风险统计、通过项统计。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">4. 风险生成</td>
+                                <td>用户查看风险点。</td>
+                                <td>生成风险说明、合同原文、建议修订条款，并关联原文位置。</td>
+                                <td>风险卡片、原文定位、修改建议。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">5. 修订确认</td>
+                                <td>用户编辑建议、添加批注、接受建议并添加修订或一键修订。</td>
+                                <td>将建议转为文档修订痕迹，保留原文、建议、用户动作与审计记录。</td>
+                                <td>修订后文档、批注记录、审查日志。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">6. 结果沉淀</td>
+                                <td>用户下载结果或返回历史记录。</td>
+                                <td>保存审查结果、风险分类、规则命中、用户采纳情况。</td>
+                                <td>历史审查记录、可复用规则样本、后续优化数据。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-details">
+                <h2>5. 功能明细</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.1</div>
+                        <div class="numbered-content">法律文件审查首页</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">页面需展示产品标题“法律文件审查，智能识别法律风险”、说明文案、法律文件审查 / 对比审查切换、文件上传区、审查剩余额度、历史记录入口和法律文件审查知识库入口。上传区支持点击或拖拽上传，未上传时展示空态，上传后展示文件信息与开始审查按钮。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.2</div>
+                        <div class="numbered-content">对比审查</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">对比审查需提供待审文档与标准文档两个上传区域，说明待审文档用于与标准文档比对差异，标准文档用于识别差异点。两份文件均上传完成后，开始审查按钮可用。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.3</div>
+                        <div class="numbered-content">审查过程与三步进度</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">审查任务进入结果页后，顶部展示合同概览、审查清单、审查结果三个阶段。已完成阶段高亮，当前阶段展示处理中或完成状态，用户可理解当前任务所处位置。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.4</div>
+                        <div class="numbered-content">风险审查结果</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">结果页按风险审查、主体审查、对话审查三个页签组织内容。风险审查页需展示高风险、中风险、低风险、通过项数量，并以卡片形式列出审查项、风险等级、风险说明、合同原文、建议修订条款、添加批注和接受建议并添加修订按钮。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.5</div>
+                        <div class="numbered-content">原文定位与文档修订</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">当用户点击定位原文时，左侧文档编辑区应滚动并高亮对应合同原文。用户点击接受建议并添加修订后，系统将建议条款写入文档修订结果，并提示“已找到相似原文，建议划选准确后点击接受进行更正”。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.6</div>
+                        <div class="numbered-content">知识库与审查清单</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">知识库页包含文件审查清单和审查规则库两个入口。文件审查清单列表需展示清单名称、规则数量、最后修改时间、操作、新建清单、搜索和空状态。</div>
+                    </div>
+                    <div class="numbered-item module-item">
+                        <div class="numbered-index">5.7</div>
+                        <div class="numbered-content">审查规则库</div>
+                    </div>
+                    <div class="nested-block">
+                        <div class="numbered-content">审查规则库左侧展示规则分组，包括自定义场景、买卖合同、供用电水气热力合同、赠与合同、借款合同、租赁合同、融资租赁合同、承揽合同、建设工程合同、运输合同、技术合同、保管合同、仓储合同等。中间区域展示规则列表、搜索、新建规则和解析规则文档；右侧展示规则详情和编辑入口。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-data">
+                <h2>6. 数据口径与对象定义</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>对象</th>
+                                <th>定义</th>
+                                <th>关键字段</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">审查任务</td>
+                                <td>用户发起的一次法律文件审查或对比审查任务。</td>
+                                <td>任务 ID、审查类型、文件 ID、创建人、创建时间、任务状态、审查额度消耗。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">法律文件</td>
+                                <td>用户上传的待审合同、标准合同、招投标文件或广告文案。</td>
+                                <td>文件名、文件格式、字数、页数、解析状态、结构化内容、原文定位信息。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">审查规则</td>
+                                <td>用于判断法律风险或格式差异的规则项。</td>
+                                <td>规则 ID、规则名称、适用合同类型、风险等级、判断条件、建议模板、最后修改时间。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">风险点</td>
+                                <td>系统基于规则或模型识别出的合同风险。</td>
+                                <td>风险 ID、风险等级、审查项、风险说明、原文片段、建议修订、命中规则、用户处理状态。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">修订记录</td>
+                                <td>用户对风险建议执行编辑、采纳或批注后的操作记录。</td>
+                                <td>修订 ID、风险 ID、原文、建议文本、用户修订文本、操作人、操作时间、是否采纳。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-rules">
+                <h2>7. 通用规则与系统级说明</h2>
+                <div class="numbered-list">
+                    <div class="numbered-item">
+                        <div class="numbered-index">7.1</div>
+                        <div class="numbered-content">合同审查结果需明确声明“服务生成的所有内容均由人工智能模型生成，其生成内容的准确性和完整性无法保证，不能代表我们的态度和观点”。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">7.2</div>
+                        <div class="numbered-content">风险等级至少包含高风险、中风险、低风险、通过四类，风险结果需支持按等级筛选和统计。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">7.3</div>
+                        <div class="numbered-content">一键修订和接受建议并添加修订均不得自动覆盖原文，需保留原文、建议文本和修订痕迹，便于用户复核。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">7.4</div>
+                        <div class="numbered-content">审查规则库中新增或解析生成的规则需可追溯来源，后续版本应支持规则启停、版本管理和发布前评测。</div>
+                    </div>
+                    <div class="numbered-item">
+                        <div class="numbered-index">7.5</div>
+                        <div class="numbered-content">历史记录需区分文件审查与对比审查，支持按名称搜索，并展示审查任务的最近状态。</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="prd-0626-risk">
+                <h2>8. 风险点、用户影响与缓解方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险点</th>
+                                <th>典型场景</th>
+                                <th>对用户的影响</th>
+                                <th>缓解方案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="module">法律风险误判或漏判</td>
+                                <td>模型对复杂条款、行业特定条款或上下文关系理解不足。</td>
+                                <td>用户可能误以为审查结果等同法律意见，导致决策风险。</td>
+                                <td>明确 AI 免责声明；高风险建议保留人工确认；提供原文定位、规则命中和建议依据，便于复核。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">原文定位不准确</td>
+                                <td>PDF 解析、跨页段落、表格条款或扫描件 OCR 结果存在偏差。</td>
+                                <td>用户无法快速验证风险来源，影响修订效率。</td>
+                                <td>定位失败时展示相似原文候选；允许用户手动划选准确文本后再接受修订。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">规则配置不当</td>
+                                <td>用户新增规则表达不清、规则冲突或适用合同类型错误。</td>
+                                <td>审查结果不稳定，可能出现重复风险或错误建议。</td>
+                                <td>规则保存前做必填项校验；解析规则文档后进入待确认状态；后续支持规则测试样本。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">用户误触一键修订</td>
+                                <td>用户未逐条确认即批量采纳建议。</td>
+                                <td>合同文本可能产生不符合真实谈判意图的修改。</td>
+                                <td>一键修订前展示二次确认；高风险或主体类条款默认不自动批量采纳。</td>
+                            </tr>
+                            <tr>
+                                <td class="module">文件隐私与敏感信息泄露</td>
+                                <td>合同包含客户名称、金额、人员信息、商业机密等敏感内容。</td>
+                                <td>用户对上传和审查过程的安全性产生顾虑。</td>
+                                <td>限制文件可见范围；记录下载和修订审计；后续结合敏感信息识别与脱敏能力。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        const menuLinks = Array.from(document.querySelectorAll('.toc-list a[data-version]'));
+        const panels = Array.from(document.querySelectorAll('[data-version-panel]'));
+        const heroPanels = Array.from(document.querySelectorAll('[data-hero-version]'));
+
+        const activateVersion = (version) => {
+            menuLinks.forEach((link) => {
+                link.classList.toggle('is-active', link.dataset.version === version);
+            });
+
+            panels.forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.versionPanel === version);
+            });
+
+            heroPanels.forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.heroVersion === version);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        menuLinks.forEach((link) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                activateVersion(link.dataset.version);
+            });
+        });
+    }());
+</script>
+</body>
+</html>

@@ -1,0 +1,5830 @@
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import mermaid from 'mermaid';
+import * as XLSX from 'xlsx';
+import Sidebar from '../components/Sidebar';
+import { SequentialReasoner } from '../mcp/sequential_reasoner';
+import TodoListManager from '../components/TodoListManager';
+import TaskResultsPanel from '../components/TaskResultsPanel';
+import { useLanguage } from '../i18n';
+import axios from 'axios';
+import { API_BASE } from '../config/api';
+import { CREATED_GROUPS_UPDATED_EVENT, buildGroupChatId, fetchCreatedGroupById, findCreatedGroupById, updateCreatedGroup } from '../utils/groupStorage';
+import { AUTOMATION_RESULTS_READ_EVENT, DEFAULT_AUTOMATION_USER_ID, getAutomationTaskResultSummary } from '../utils/automationTasks';
+
+const APPROVAL_KEYWORDS = ['ok', 'okay', 'yes', 'confirm', 'approve', '确认', '没问题', '继续', '继续执行', '好', '好的', '可以', '行', '开始', '开始吧', '执行吧', 'proceed', 'go ahead'];
+const APPROVAL_PATTERNS = [
+  /^(好|好的|好啊|行|可以|没问题|确认|同意)$/i,
+  /^(ok|okay|yes|confirm|approve|proceed|go ahead)$/i,
+  /(开始|执行|继续|推进|跑起来|往下做|做吧|开始吧|执行吧|继续吧)/i,
+  /(按这个|照这个|就按这个|按这个来|照这个来|就这么做|就这样做|按此方案)/i,
+  /(没问题.*开始|没问题.*执行|没问题.*继续)/i,
+  /(可以.*开始|可以.*执行|可以.*继续)/i,
+  /(好的.*开始|好的.*执行|好的.*继续)/i,
+];
+const REJECTION_PATTERNS = [
+  /(不要|不行|不对|不可以|不用|先别|等等|等下|暂停|停止|取消)/i,
+  /(修改|调整|重做|重来|重新规划|换一个|换种|再想想|补充|优化一下)/i,
+  /(但是|不过|不过先|先改|先调整)/i,
+];
+const HIDDEN_WORKFLOW_MESSAGE_TYPES = new Set([
+  'workflow_started',
+  'workflow_resumed',
+  'workflow_completed',
+  'workflow_cancelled',
+]);
+const DEBATE_MESSAGE_TYPES = new Set([
+  'group_router',
+  'group_debate_round',
+  'group_debate_summary',
+]);
+const IMAGE_REQUEST_PATTERNS = [
+  /生成(?:一张|一个)?(?:图片|图像|插画|海报|封面|配图|效果图|渲染图|视觉稿|场景图)/i,
+  /画(?:一张|个)?(?:图|图片|插画|海报|封面|效果图|渲染图|场景图)/i,
+  /出(?:一张|个)?图/i,
+  /做(?:一张|个)?(?:图|海报|封面|插画|效果图|渲染图|场景图)/i,
+  /设计(?:一张|个)?(?:海报|封面|配图|效果图|渲染图|视觉稿|场景图)/i,
+  /create\s+(?:an?\s+)?(?:image|poster|illustration|cover|render|mockup|visual)/i,
+  /generate\s+(?:an?\s+)?(?:image|poster|illustration|cover|render|mockup|visual)/i,
+  /draw\s+(?:an?\s+)?(?:image|illustration|poster|render|concept)/i,
+  /(?:效果图|渲染图|视觉稿|概念图|场景图)/i,
+];
+const IMAGE_NEGATIVE_PATTERNS = [
+  /图片分析/i,
+  /分析图片/i,
+  /识别图片/i,
+  /看图/i,
+  /image\s+analysis/i,
+  /analy[sz]e\s+(?:the\s+)?image/i,
+];
+const GROUP_CHAT_MODES = {
+  NORMAL: 'normal',
+  DEBATE: 'debate',
+  COLLABORATION: 'collaboration',
+};
+const CHAT_UPLOAD_LIMIT = 10;
+const CHAT_UPLOAD_PARSE_BASE_DELAY = 900;
+const CHAT_UPLOAD_ACCEPT = '.png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt';
+
+const formatComposerUploadSize = (sizeBytes = 0) => {
+  if (!sizeBytes) {
+    return '0 KB';
+  }
+
+  if (sizeBytes >= 1024 * 1024) {
+    return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`;
+};
+
+const getComposerUploadFileType = (name = '') => {
+  const parts = String(name).split('.');
+  return parts.length > 1 ? parts.pop().toUpperCase() : 'FILE';
+};
+
+const createComposerUploadItem = (file, index = 0) => ({
+  id: `chat_upload_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`,
+  file,
+  name: file.name,
+  fileType: getComposerUploadFileType(file.name),
+  sizeLabel: formatComposerUploadSize(file.size),
+  status: 'processing',
+});
+
+const normalizeComposerUploadForMessage = (item) => ({
+  id: item.id,
+  upload_id: item.upload_id || null,
+  name: item.name,
+  fileType: item.fileType,
+  sizeLabel: item.sizeLabel,
+  path: item.path || null,
+});
+
+const getMessageUploadedFiles = (message) => {
+  const uploadedFiles = Array.isArray(message?.metaData?.uploaded_files) ? message.metaData.uploaded_files : [];
+  return uploadedFiles.filter((item) => item && item.name);
+};
+
+const isApprovalReply = (value) => {
+  const normalized = (value || '').trim();
+  if (!normalized) {
+    return false;
+  }
+
+  const lowered = normalized.toLowerCase();
+  if (APPROVAL_KEYWORDS.includes(lowered)) {
+    return true;
+  }
+
+  if (REJECTION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return false;
+  }
+
+  return APPROVAL_PATTERNS.some((pattern) => pattern.test(normalized));
+};
+
+const isValidGroupChatMode = (value) => Object.values(GROUP_CHAT_MODES).includes(value);
+
+const shouldGenerateImageFromPrompt = (message) => {
+  const normalized = (message || '').trim();
+  if (!normalized) {
+    return false;
+  }
+
+  if (IMAGE_NEGATIVE_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return false;
+  }
+
+  return IMAGE_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
+};
+
+const resolveImageSizeFromPrompt = (message) => {
+  const normalized = (message || '').toLowerCase();
+  if (normalized.includes('竖版') || normalized.includes('portrait') || normalized.includes('9:16')) {
+    return { width: 768, height: 1344 };
+  }
+  if (normalized.includes('横版') || normalized.includes('landscape') || normalized.includes('16:9')) {
+    return { width: 1344, height: 768 };
+  }
+  if (normalized.includes('4:3')) {
+    return { width: 1216, height: 832 };
+  }
+  return { width: 1024, height: 1024 };
+};
+
+const getEmployeeAvatarFallback = (name) => {
+  const normalized = String(name || '').trim();
+  return normalized ? normalized.slice(0, 1).toUpperCase() : '组';
+};
+
+const mapWorkflowStepStatusToTodo = (status) => {
+  if (status === 'completed') return 'completed';
+  if (status === 'running' || status === 'paused') return 'in-progress';
+  return 'pending';
+};
+
+const deriveWorkflowTodos = (workflowRun) => {
+  if (!workflowRun?.steps?.length) {
+    return [];
+  }
+
+  return workflowRun.steps.map((step) => ({
+    id: `workflow-step-${workflowRun.id}-${step.step_id}`,
+    text: step.step_name || step.step_id,
+    status: mapWorkflowStepStatusToTodo(step.status),
+    level: 1,
+  }));
+};
+
+const deriveVisibleTodos = (parentTodos, workflowRun, currentStepIndex) => {
+  if (!Array.isArray(parentTodos) || parentTodos.length === 0) {
+    return deriveWorkflowTodos(workflowRun);
+  }
+
+  if (!workflowRun?.steps?.length) {
+    return parentTodos;
+  }
+
+  const workflowTodos = deriveWorkflowTodos(workflowRun);
+  const workflowParentIndex = Number.isInteger(currentStepIndex)
+    ? currentStepIndex
+    : Number.isInteger(workflowRun?.context_data?.parent_plan_step_index)
+      ? workflowRun.context_data.parent_plan_step_index
+      : null;
+
+  if (workflowParentIndex === null || workflowParentIndex < 0 || workflowParentIndex >= parentTodos.length) {
+    return [...parentTodos, ...workflowTodos];
+  }
+
+  return parentTodos.flatMap((todo, index) => {
+    if (index !== workflowParentIndex) {
+      return [todo];
+    }
+
+    const parentText = typeof todo?.text === 'string' && todo.text.trim()
+      ? todo.text
+      : workflowRun?.context_data?.parent_step_content || workflowRun?.workflow_name || `步骤 ${index + 1}`;
+
+    return [
+      {
+        ...todo,
+        text: parentText,
+      },
+      ...workflowTodos,
+    ];
+  });
+};
+
+const getWorkflowSummaryText = (workflowRun) => {
+  const outputs = workflowRun?.context_data?.step_outputs || {};
+  const outputValues = Object.values(outputs).reverse();
+  const summaryEntry = outputValues.find((entry) => entry && typeof entry === 'object' && typeof entry.summary === 'string' && entry.summary.trim());
+  if (summaryEntry?.summary) {
+    return summaryEntry.summary;
+  }
+
+  const resultEntry = outputValues.find((entry) => entry && typeof entry === 'object' && typeof entry.result === 'string' && entry.result.trim());
+  if (resultEntry?.result) {
+    return resultEntry.result;
+  }
+
+  return '';
+};
+
+const stripHtmlLikeContent = (text) => (
+  String(text || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&lt;[^&]*&gt;/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+);
+
+const looksLikeRawDeliverableContent = (text) => {
+  const normalized = String(text || '').trim();
+  if (!normalized) {
+    return false;
+  }
+
+  const lowered = normalized.toLowerCase();
+  if (['<!doctype html', '<html', '<body', '<section', '<header', '<footer'].some((token) => lowered.includes(token))) {
+    return true;
+  }
+
+  if (normalized.includes('&lt;/html&gt;') || normalized.includes('&lt;section')) {
+    return true;
+  }
+
+  return normalized.length > 800 && normalized.includes('\n## ');
+};
+
+const buildWorkspaceArtifactNotice = (artifacts) => {
+  const names = (Array.isArray(artifacts) ? artifacts : [])
+    .map((artifact) => artifact?.name || artifact?.title || '')
+    .filter(Boolean);
+
+  if (names.length === 1) {
+    return `已生成文件《${names[0]}》，请在 Workspace 查看。`;
+  }
+
+  if (names.length > 1) {
+    return `已生成 ${names.length} 个文件，请在 Workspace 查看。`;
+  }
+
+  return '已生成交付文件，请在 Workspace 查看。';
+};
+
+const sanitizeWorkflowStepDisplayText = (text, artifacts = []) => {
+  const normalized = String(text || '').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  if (artifacts.length > 0 && looksLikeRawDeliverableContent(normalized)) {
+    return buildWorkspaceArtifactNotice(artifacts);
+  }
+
+  const cleaned = stripHtmlLikeContent(normalized)
+    .replace(/\n(?:下一步：|下一步:)[\s\S]*$/i, '')
+    .replace(/^执行结果：\s*/i, '')
+    .replace(/^关键信息：\s*$/gim, '')
+    .replace(/^相关产物：.*$/gim, '')
+    .replace(/^###\s*消息\s+\d+\s+·.*$/gim, '')
+    .replace(/^###\s*工具调用\s+\d+(?:\.\d+)?\s+·.*$/gim, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return cleaned;
+};
+
+let mermaidRenderIndex = 0;
+
+const MermaidBlock = ({ chart }) => {
+  const [svg, setSvg] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const source = String(chart || '').trim();
+    if (!source) {
+      setSvg('');
+      setError('');
+      return;
+    }
+
+    let cancelled = false;
+    const renderId = `chat-mermaid-${mermaidRenderIndex++}`;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: 'neutral',
+      fontFamily: 'Segoe UI, PingFang SC, Microsoft YaHei, sans-serif',
+    });
+
+    mermaid.render(renderId, source)
+      .then(({ svg: renderedSvg }) => {
+        if (!cancelled) {
+          setSvg(renderedSvg);
+          setError('');
+        }
+      })
+      .catch((renderError) => {
+        if (!cancelled) {
+          setSvg('');
+          setError(renderError?.message || '图表渲染失败');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [chart]);
+
+  if (error) {
+    return (
+      <div className="chat-mermaid-fallback">
+        <div className="chat-mermaid-error">图表暂时无法渲染，下面显示原始定义。</div>
+        <pre className="chat-markdown-pre"><code>{chart}</code></pre>
+      </div>
+    );
+  }
+
+  if (!svg) {
+    return <div className="chat-mermaid-loading">图表加载中...</div>;
+  }
+
+  return <div className="chat-mermaid-block" dangerouslySetInnerHTML={{ __html: svg }} />;
+};
+
+const markdownComponents = {
+  img: ({ ...props }) => <img {...props} className="chat-markdown-image" loading="lazy" />,
+  table: ({ children, ...props }) => (
+    <div className="chat-markdown-table-wrap">
+      <table {...props}>{children}</table>
+    </div>
+  ),
+  code: ({ inline, className, children, ...props }) => {
+    const value = String(children || '').replace(/\n$/, '');
+    const language = /language-([\w-]+)/.exec(className || '')?.[1]?.toLowerCase();
+
+    if (!inline && language === 'mermaid') {
+      return <MermaidBlock chart={value} />;
+    }
+
+    if (inline) {
+      return <code className={className} {...props}>{children}</code>;
+    }
+
+    return (
+      <pre className="chat-markdown-pre">
+        <code className={className} {...props}>{value}</code>
+      </pre>
+    );
+  },
+};
+
+const MarkdownContent = ({ content, className = '' }) => (
+  <div className={className}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      {content || ''}
+    </ReactMarkdown>
+  </div>
+);
+
+const STRUCTURED_FORM_MARKERS = ['结构化表单字段', '结构化表单', 'json表单', 'json form'];
+
+const isJsonObjectLike = (value) => value !== null && typeof value === 'object';
+
+const tryParseJson = (value) => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const extractBalancedJsonObject = (text, searchStart = 0) => {
+  const source = String(text || '');
+  const start = source.indexOf('{', searchStart);
+  if (start < 0) {
+    return null;
+  }
+
+  let depth = 0;
+  let inString = false;
+  let escaping = false;
+
+  for (let index = start; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (inString) {
+      if (escaping) {
+        escaping = false;
+      } else if (char === '\\') {
+        escaping = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === '{') {
+      depth += 1;
+      continue;
+    }
+
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        const jsonText = source.slice(start, index + 1);
+        const data = tryParseJson(jsonText);
+        if (isJsonObjectLike(data)) {
+          return {
+            data,
+            jsonText,
+            startIndex: start,
+            endIndex: index + 1,
+          };
+        }
+        return null;
+      }
+    }
+  }
+
+  return null;
+};
+
+const extractStructuredFormPayload = (content) => {
+  const text = String(content || '');
+  const fencedMatch = text.match(/```json\s*([\s\S]*?)```/i);
+  if (fencedMatch) {
+    const data = tryParseJson(fencedMatch[1].trim());
+    if (isJsonObjectLike(data)) {
+      return {
+        data,
+        rawJson: fencedMatch[1].trim(),
+        prefix: text.slice(0, fencedMatch.index).trim(),
+        suffix: text.slice((fencedMatch.index || 0) + fencedMatch[0].length).trim(),
+      };
+    }
+  }
+
+  const lowerText = text.toLowerCase();
+  const markerIndex = STRUCTURED_FORM_MARKERS.reduce((foundIndex, marker) => {
+    if (foundIndex >= 0) {
+      return foundIndex;
+    }
+    return lowerText.indexOf(marker);
+  }, -1);
+
+  if (markerIndex >= 0) {
+    const extracted = extractBalancedJsonObject(text, markerIndex);
+    if (extracted) {
+      return {
+        data: extracted.data,
+        rawJson: extracted.jsonText,
+        prefix: text.slice(0, markerIndex).trim(),
+        suffix: text.slice(extracted.endIndex).trim(),
+      };
+    }
+  }
+
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    const data = tryParseJson(trimmed);
+    if (isJsonObjectLike(data)) {
+      return {
+        data,
+        rawJson: trimmed,
+        prefix: '',
+        suffix: '',
+      };
+    }
+  }
+
+  return null;
+};
+
+const buildJsonFieldDefaultValue = (sample) => {
+  if (Array.isArray(sample)) {
+    return [];
+  }
+  if (typeof sample === 'number') {
+    return 0;
+  }
+  if (typeof sample === 'boolean') {
+    return false;
+  }
+  if (sample && typeof sample === 'object') {
+    return {};
+  }
+  return '';
+};
+
+const updateJsonValueAtPath = (source, path, nextValue) => {
+  if (path.length === 0) {
+    return nextValue;
+  }
+
+  const [currentKey, ...restPath] = path;
+  if (Array.isArray(source)) {
+    const nextArray = [...source];
+    nextArray[currentKey] = updateJsonValueAtPath(source[currentKey], restPath, nextValue);
+    return nextArray;
+  }
+
+  return {
+    ...(source || {}),
+    [currentKey]: updateJsonValueAtPath(source?.[currentKey], restPath, nextValue),
+  };
+};
+
+const removeJsonArrayItemAtPath = (source, path, itemIndex) => {
+  if (path.length === 0) {
+    return Array.isArray(source) ? source.filter((_, index) => index !== itemIndex) : source;
+  }
+
+  const [currentKey, ...restPath] = path;
+  if (Array.isArray(source)) {
+    const nextArray = [...source];
+    nextArray[currentKey] = removeJsonArrayItemAtPath(source[currentKey], restPath, itemIndex);
+    return nextArray;
+  }
+
+  return {
+    ...(source || {}),
+    [currentKey]: removeJsonArrayItemAtPath(source?.[currentKey], restPath, itemIndex),
+  };
+};
+
+const appendJsonArrayItemAtPath = (source, path, nextItem) => {
+  if (path.length === 0) {
+    return Array.isArray(source) ? [...source, nextItem] : [nextItem];
+  }
+
+  const [currentKey, ...restPath] = path;
+  if (Array.isArray(source)) {
+    const nextArray = [...source];
+    nextArray[currentKey] = appendJsonArrayItemAtPath(source[currentKey], restPath, nextItem);
+    return nextArray;
+  }
+
+  return {
+    ...(source || {}),
+    [currentKey]: appendJsonArrayItemAtPath(source?.[currentKey], restPath, nextItem),
+  };
+};
+
+const formatStructuredTextPoints = (value) => {
+  const text = String(value || '');
+  const numberedPoints = text.match(/(?:^|[\s；;。])\d+[.、．]\s*/g);
+
+  if (!numberedPoints || numberedPoints.length < 2) {
+    return value;
+  }
+
+  return text.replace(/([；;。])\s*(?=\d+[.、．]\s*)/g, '$1\n');
+};
+
+const formatStructuredFormData = (value) => {
+  if (typeof value === 'string') {
+    return formatStructuredTextPoints(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => formatStructuredFormData(item));
+  }
+
+  if (isJsonObjectLike(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, childValue]) => [key, formatStructuredFormData(childValue)])
+    );
+  }
+
+  return value;
+};
+
+const formatStructuredFieldLabel = (label) => String(label || '').replace(/_/g, ' ');
+
+const StructuredJsonField = ({ label, value, path, onChange, onAddArrayItem, onRemoveArrayItem, depth = 0 }) => {
+  const labelText = formatStructuredFieldLabel(label);
+  const isLongText = typeof value === 'string' && (value.includes('\n') || value.length > 60);
+
+  if (Array.isArray(value)) {
+    const templateSample = value.find((item) => item !== null && item !== undefined);
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-gray-900">{labelText}</div>
+            <div className="text-xs text-gray-500">数组字段，可继续编辑和补充</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onAddArrayItem(path, buildJsonFieldDefaultValue(templateSample))}
+            className="rounded-full border border-gray-200 bg-[#fbfbfd] px-3 py-1 text-xs font-medium text-gray-700 transition hover:border-[#6266EA] hover:text-[#6266EA]"
+          >
+            新增
+          </button>
+        </div>
+        <div className="space-y-3">
+          {value.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-[#fbfbfd] px-4 py-3 text-sm text-gray-500">暂无内容</div>
+          ) : value.map((item, index) => {
+            const itemIsScalar = !Array.isArray(item) && !isJsonObjectLike(item);
+            return (
+              <div key={`${labelText}-${index}`} className="rounded-2xl border border-gray-100 bg-[#fbfbfd] p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">第 {index + 1} 项</div>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveArrayItem(path, index)}
+                    className="rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                  >
+                    删除
+                  </button>
+                </div>
+                {itemIsScalar ? (
+                  <StructuredJsonField
+                    label={`${labelText} ${index + 1}`}
+                    value={item}
+                    path={[...path, index]}
+                    onChange={onChange}
+                    onAddArrayItem={onAddArrayItem}
+                    onRemoveArrayItem={onRemoveArrayItem}
+                    depth={depth + 1}
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {Array.isArray(item) ? (
+                      <StructuredJsonField
+                        label={`${labelText} ${index + 1}`}
+                        value={item}
+                        path={[...path, index]}
+                        onChange={onChange}
+                        onAddArrayItem={onAddArrayItem}
+                        onRemoveArrayItem={onRemoveArrayItem}
+                        depth={depth + 1}
+                      />
+                    ) : Object.entries(item || {}).map(([childKey, childValue]) => (
+                      <StructuredJsonField
+                        key={childKey}
+                        label={childKey}
+                        value={childValue}
+                        path={[...path, index, childKey]}
+                        onChange={onChange}
+                        onAddArrayItem={onAddArrayItem}
+                        onRemoveArrayItem={onRemoveArrayItem}
+                        depth={depth + 1}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (isJsonObjectLike(value)) {
+    return (
+      <div className={`space-y-3 ${depth > 0 ? 'rounded-2xl border border-gray-200 bg-white p-4' : ''}`}>
+        {depth > 0 ? <div className="text-sm font-semibold text-gray-900">{labelText}</div> : null}
+        {Object.entries(value).map(([childKey, childValue]) => (
+          <StructuredJsonField
+            key={childKey}
+            label={childKey}
+            value={childValue}
+            path={[...path, childKey]}
+            onChange={onChange}
+            onAddArrayItem={onAddArrayItem}
+            onRemoveArrayItem={onRemoveArrayItem}
+            depth={depth + 1}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (typeof value === 'boolean') {
+    return (
+      <label className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-[#fbfbfd] px-4 py-3">
+        <span className="text-sm font-semibold text-gray-900">{labelText}</span>
+        <input
+          type="checkbox"
+          checked={value}
+          onChange={(event) => onChange(path, event.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-[#6266EA] focus:ring-[#6266EA]"
+        />
+      </label>
+    );
+  }
+
+  if (typeof value === 'number') {
+    return (
+      <label className="block space-y-2">
+        <span className="text-sm font-semibold text-gray-900">{labelText}</span>
+        <input
+          type="number"
+          value={value}
+          onChange={(event) => onChange(path, Number(event.target.value))}
+          className="w-full rounded-2xl border border-gray-200 bg-[#fbfbfd] px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#6266EA]"
+        />
+      </label>
+    );
+  }
+
+  if (isLongText) {
+    return (
+      <label className="block space-y-2">
+        <span className="text-sm font-semibold text-gray-900">{labelText}</span>
+        <textarea
+          value={value ?? ''}
+          onChange={(event) => onChange(path, event.target.value)}
+          rows={Math.min(8, Math.max(3, String(value || '').split('\n').length))}
+          className="w-full rounded-2xl border border-gray-200 bg-[#fbfbfd] px-4 py-3 text-sm leading-6 text-gray-900 outline-none transition focus:border-[#6266EA]"
+        />
+      </label>
+    );
+  }
+
+  return (
+    <label className="block space-y-2">
+      <span className="text-sm font-semibold text-gray-900">{labelText}</span>
+      <input
+        type="text"
+        value={value ?? ''}
+        onChange={(event) => onChange(path, event.target.value)}
+        className="w-full rounded-2xl border border-gray-200 bg-[#fbfbfd] px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#6266EA]"
+      />
+    </label>
+  );
+};
+
+const StructuredFormMessageContent = ({ content, className = '' }) => {
+  const payload = useMemo(() => extractStructuredFormPayload(content), [content]);
+  const [formData, setFormData] = useState(() => formatStructuredFormData(payload?.data) || null);
+
+  useEffect(() => {
+    setFormData(formatStructuredFormData(payload?.data) || null);
+  }, [payload?.rawJson]);
+
+  if (!payload || !isJsonObjectLike(payload.data)) {
+    return <MarkdownContent className={className} content={content} />;
+  }
+
+  const handleValueChange = (path, nextValue) => {
+    setFormData((current) => updateJsonValueAtPath(current, path, nextValue));
+  };
+
+  const handleAddArrayItem = (path, nextItem) => {
+    setFormData((current) => appendJsonArrayItemAtPath(current, path, nextItem));
+  };
+
+  const handleRemoveArrayItem = (path, itemIndex) => {
+    setFormData((current) => removeJsonArrayItemAtPath(current, path, itemIndex));
+  };
+
+  return (
+    <div className={`${className} w-[700px] max-w-full`}>
+      {payload.prefix ? <MarkdownContent className="mb-4" content={payload.prefix} /> : null}
+      <div className="space-y-4">
+        <div className="space-y-3">
+          {Object.entries(formData || {}).map(([fieldKey, fieldValue]) => (
+            <StructuredJsonField
+              key={fieldKey}
+              label={fieldKey}
+              value={fieldValue}
+              path={[fieldKey]}
+              onChange={handleValueChange}
+              onAddArrayItem={handleAddArrayItem}
+              onRemoveArrayItem={handleRemoveArrayItem}
+            />
+          ))}
+        </div>
+        <details className="mt-4 rounded-2xl border border-gray-200 bg-white p-3">
+          <summary className="cursor-pointer text-xs font-medium text-gray-600">查看当前 JSON</summary>
+          <pre className="mt-3 overflow-auto rounded-2xl bg-[#0f172a] p-4 text-xs leading-6 text-slate-100">{JSON.stringify(formData, null, 2)}</pre>
+        </details>
+      </div>
+      {payload.suffix ? <MarkdownContent className="mt-4" content={payload.suffix} /> : null}
+    </div>
+  );
+};
+
+const getWorkflowStepOutputEntry = (workflowRun, step) => {
+  const stepId = step?.step_id;
+  if (!stepId) {
+    return null;
+  }
+
+  const outputs = workflowRun?.context_data?.step_outputs || {};
+  const directEntry = outputs?.[stepId];
+  if (directEntry && typeof directEntry === 'object') {
+    return directEntry;
+  }
+
+  return null;
+};
+
+const getWorkflowStepDisplayText = (workflowRun, step, artifacts = []) => {
+  const draftText = step?.pause_payload?.draft;
+  if (typeof draftText === 'string' && draftText.trim()) {
+    return sanitizeWorkflowStepDisplayText(draftText.trim(), artifacts);
+  }
+
+  const outputSummary = step?.output_data?.summary;
+  if (typeof outputSummary === 'string' && outputSummary.trim()) {
+    return sanitizeWorkflowStepDisplayText(outputSummary.trim(), artifacts);
+  }
+
+  const outputResult = step?.output_data?.result;
+  if (typeof outputResult === 'string' && outputResult.trim()) {
+    return sanitizeWorkflowStepDisplayText(outputResult.trim(), artifacts);
+  }
+
+  const outputEntry = getWorkflowStepOutputEntry(workflowRun, step);
+  const persistedSummary = outputEntry?.summary;
+  if (typeof persistedSummary === 'string' && persistedSummary.trim()) {
+    return sanitizeWorkflowStepDisplayText(persistedSummary.trim(), artifacts);
+  }
+
+  const persistedResult = outputEntry?.result;
+  if (typeof persistedResult === 'string' && persistedResult.trim()) {
+    return sanitizeWorkflowStepDisplayText(persistedResult.trim(), artifacts);
+  }
+
+  return '';
+};
+
+const buildWorkflowStepMessageKey = ({ workflowRunId, stepId, text, awaitingConfirmation }) => (
+  `${workflowRunId || 'workflow'}:${stepId || 'step'}:${awaitingConfirmation ? 'paused' : 'done'}:${(text || '').trim()}`
+);
+
+const getWorkflowArtifacts = (workflowRun) => {
+  if (!workflowRun?.context_data?.step_outputs) {
+    return [];
+  }
+
+  const orderedSteps = Array.isArray(workflowRun?.steps)
+    ? [...workflowRun.steps]
+        .filter((step) => step && (step.status === 'completed' || step.status === 'paused'))
+        .sort((left, right) => (left.step_index || 0) - (right.step_index || 0))
+    : [];
+
+  for (let index = orderedSteps.length - 1; index >= 0; index -= 1) {
+    const step = orderedSteps[index];
+    const outputEntry = getWorkflowStepOutputEntry(workflowRun, step);
+    const stepArtifacts = [
+      ...(Array.isArray(step?.output_data?.artifacts) ? step.output_data.artifacts : []),
+      ...(Array.isArray(outputEntry?.artifacts) ? outputEntry.artifacts : []),
+    ];
+
+    const artifactMap = new Map();
+    stepArtifacts.forEach((artifact) => {
+      const normalized = normalizeArtifactEntry(artifact);
+      if (normalized) {
+        artifactMap.set(normalized.relativePath, normalized);
+      }
+    });
+
+    if (artifactMap.size > 0) {
+      return Array.from(artifactMap.values());
+    }
+  }
+
+  const artifactMap = new Map();
+  Object.values(workflowRun.context_data.step_outputs).forEach((entry) => {
+    const artifacts = Array.isArray(entry?.artifacts) ? entry.artifacts : [];
+    artifacts.forEach((artifact) => {
+      const normalized = normalizeArtifactEntry(artifact);
+      if (normalized) {
+        artifactMap.set(normalized.relativePath, normalized);
+      }
+    });
+  });
+
+  return Array.from(artifactMap.values());
+};
+
+const buildWorkflowStepMessages = (workflowRun) => {
+  if (!workflowRun?.steps?.length) {
+    return [];
+  }
+
+  return workflowRun.steps
+    .filter((step) => step.status === 'completed' || step.status === 'paused')
+    .map((step) => {
+      const outputEntry = getWorkflowStepOutputEntry(workflowRun, step);
+      const artifacts = Array.isArray(step?.output_data?.artifacts)
+        ? step.output_data.artifacts
+        : Array.isArray(outputEntry?.artifacts)
+          ? outputEntry.artifacts
+          : [];
+
+      const text = getWorkflowStepDisplayText(workflowRun, step, artifacts);
+      if (!text) {
+        return null;
+      }
+
+      const awaitingConfirmation = step.status === 'paused';
+      return {
+        key: buildWorkflowStepMessageKey({
+          workflowRunId: workflowRun.id,
+          stepId: step.step_id,
+          text,
+          awaitingConfirmation,
+        }),
+        type: 'workflow_step_result',
+        text,
+        metaData: {
+          workflow_run_id: workflowRun.id,
+          workflow_name: workflowRun.workflow_name,
+          step_id: step.step_id,
+          step_name: step.step_name,
+          step_index: step.step_index,
+          step_type: step.step_type,
+          awaiting_confirmation: awaitingConfirmation,
+          artifacts,
+        },
+      };
+    })
+    .filter(Boolean);
+};
+
+const normalizePlanSteps = (response) => {
+  if (Array.isArray(response?.plan_steps) && response.plan_steps.length > 0) {
+    return response.plan_steps.map((step, index) => ({
+      ...step,
+      id: step?.id || `step_${index + 1}`,
+      title: step?.title || step?.task || step?.name || step?.description || `步骤 ${index + 1}`,
+      description: step?.description || '',
+      selected_skill_key: step?.selected_skill_key || step?.skill_key || null,
+      selected_skill_type: step?.selected_skill_type || null,
+      candidate_skill_keys: step?.candidate_skill_keys || [],
+      status: step?.status || 'pending',
+    }));
+  }
+
+  if (Array.isArray(response?.plan) && response.plan.length > 0) {
+    return response.plan.map((step, index) => {
+      if (typeof step === 'string') {
+        return {
+          id: `step_${index + 1}`,
+          title: step,
+          description: '',
+          selected_skill_key: null,
+          selected_skill_type: null,
+          candidate_skill_keys: [],
+          status: 'pending',
+        };
+      }
+
+      return {
+        id: step.id || `step_${index + 1}`,
+        title: step.title || step.task || step.name || step.description || `步骤 ${index + 1}`,
+        description: step.description || '',
+        selected_skill_key: step.selected_skill_key || step.skill_key || null,
+        selected_skill_type: step.selected_skill_type || null,
+        candidate_skill_keys: step.candidate_skill_keys || [],
+        status: step.status || 'pending',
+      };
+    });
+  }
+
+  return [];
+};
+
+const formatPlanStepText = (step, index) => {
+  const title = step?.title || step?.task || step?.description || `步骤 ${index + 1}`;
+  const assignee = step?.assigned_employee_name ? `[${step.assigned_employee_name}] ` : '';
+  const detail = step?.description ? `：${step.description}` : '';
+  const skillHint = step?.selected_skill_key ? ` [调用技能: ${step.selected_skill_key}]` : '';
+  return `${assignee}${title}${skillHint}${detail}`;
+};
+
+const getWorkflowStepCompletionText = (workflowRun) => {
+  const summary = getWorkflowSummaryText(workflowRun);
+  if (summary) {
+    return summary;
+  }
+  return `工作流“${workflowRun?.workflow_name || '未命名工作流'}”已执行完成。`;
+};
+
+const EMBEDDED_ARTIFACT_FORMATS = new Set(['html', 'pdf']);
+const IMAGE_ARTIFACT_FORMATS = new Set(['jpg', 'jpeg']);
+const TEXT_ARTIFACT_FORMATS = new Set(['md', 'markdown', 'txt', 'json', 'csv']);
+const DOWNLOADABLE_PREVIEW_ARTIFACT_FORMATS = new Set(['ppt', 'pptx', 'xls', 'xlsx']);
+const SPREADSHEET_ARTIFACT_FORMATS = new Set(['xls', 'xlsx']);
+const MAX_SPREADSHEET_PREVIEW_ROWS = 200;
+const MAX_SPREADSHEET_PREVIEW_COLUMNS = 26;
+
+const normalizeArtifactEntry = (artifact, fallbackCreatedAt = null) => {
+  const relativePath = artifact?.relative_path || artifact?.relativePath || artifact?.path;
+  if (!relativePath) {
+    return null;
+  }
+
+  const format = String(artifact?.format || relativePath.split('.').pop() || 'file').toLowerCase();
+  return {
+    id: artifact?.id || relativePath,
+    name: artifact?.name || relativePath.split('/').pop(),
+    title: artifact?.title || null,
+    relativePath,
+    format,
+    mimeType: artifact?.mime_type || artifact?.mimeType || 'application/octet-stream',
+    sizeBytes: Number(artifact?.size_bytes || artifact?.sizeBytes || 0),
+    createdAt: artifact?.created_at || artifact?.createdAt || fallbackCreatedAt || null,
+    previewText: artifact?.preview_text || artifact?.previewText || '',
+  };
+};
+
+const getMessageArtifacts = (message) => {
+  const artifacts = Array.isArray(message?.metaData?.artifacts) ? message.metaData.artifacts : [];
+  return artifacts
+    .map((artifact) => normalizeArtifactEntry(artifact, message?.createdAt || null))
+    .filter(Boolean);
+};
+
+const collectArtifactsFromWorkflowRun = (workflowRun, artifactMap) => {
+  const outputs = workflowRun?.context_data?.step_outputs || {};
+  Object.values(outputs).forEach((entry) => {
+    const artifacts = Array.isArray(entry?.artifacts) ? entry.artifacts : [];
+    artifacts.forEach((artifact) => {
+      const normalized = normalizeArtifactEntry(artifact);
+      if (normalized) {
+        artifactMap.set(normalized.relativePath, normalized);
+      }
+    });
+  });
+};
+
+const formatWorkspaceFileSize = (sizeBytes) => {
+  if (!sizeBytes) {
+    return '0 B';
+  }
+
+  if (sizeBytes < 1024) {
+    return `${sizeBytes} B`;
+  }
+
+  if (sizeBytes < 1024 * 1024) {
+    return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const getWorkspaceArtifactIcon = (format) => {
+  if (format === 'html') return '🌐';
+  if (format === 'pdf') return '📕';
+  if (IMAGE_ARTIFACT_FORMATS.has(format)) return '🖼️';
+  if (format === 'pptx' || format === 'ppt') return '📊';
+  if (format === 'xlsx' || format === 'xls') return '📗';
+  if (format === 'md' || format === 'markdown') return '📝';
+  return '📄';
+};
+
+const trimSpreadsheetRows = (rows) => {
+  const limitedRows = Array.isArray(rows) ? rows.slice(0, MAX_SPREADSHEET_PREVIEW_ROWS) : [];
+  return limitedRows.map((row) => {
+    const cells = Array.isArray(row) ? row.slice(0, MAX_SPREADSHEET_PREVIEW_COLUMNS) : [];
+    return cells.map((cell) => (cell == null ? '' : String(cell)));
+  });
+};
+
+const parseSpreadsheetPreview = (arrayBuffer) => {
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  const sheets = workbook.SheetNames.map((sheetName) => {
+    const worksheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+      raw: false,
+      defval: '',
+      blankrows: false,
+    });
+    return {
+      name: sheetName,
+      rows: trimSpreadsheetRows(rows),
+    };
+  }).filter((sheet) => sheet.rows.length > 0);
+
+  return sheets;
+};
+
+const getWorkspacePreviewMode = (format) => {
+  if (EMBEDDED_ARTIFACT_FORMATS.has(format)) {
+    return 'embedded';
+  }
+  if (IMAGE_ARTIFACT_FORMATS.has(format)) {
+    return 'image';
+  }
+  if (SPREADSHEET_ARTIFACT_FORMATS.has(format)) {
+    return 'spreadsheet';
+  }
+  if (TEXT_ARTIFACT_FORMATS.has(format)) {
+    return 'text';
+  }
+  if (DOWNLOADABLE_PREVIEW_ARTIFACT_FORMATS.has(format)) {
+    return 'preview';
+  }
+  return 'text';
+};
+
+const isMarkdownArtifactFormat = (format) => format === 'md' || format === 'markdown';
+
+const hasProposedPlan = (response) => normalizePlanSteps(response).length > 0;
+const getExecutionMode = (response) => {
+  const mode = response?.mode || response?.execution_mode;
+  if (mode === 'direct' || mode === 'direct_answer' || mode === 'direct_skill') {
+    return 'direct';
+  }
+  if (mode === 'clarify' || mode === 'plan') {
+    return mode;
+  }
+
+  if ((response?.clarifying_question || response?.clarifying_questions?.[0]) && !hasProposedPlan(response)) {
+    return 'clarify';
+  }
+
+  return 'plan';
+};
+const getDirectResponseText = (response) => {
+  if (typeof response?.direct_response_text === 'string' && response.direct_response_text.trim()) {
+    return response.direct_response_text;
+  }
+  if (typeof response?.result === 'string' && response.result.trim()) {
+    return response.result;
+  }
+  if (typeof response?.result?.summary === 'string' && response.result.summary.trim()) {
+    return response.result.summary;
+  }
+  return null;
+};
+const getClarifyingQuestionText = (response) => response?.clarifying_question || response?.clarifying_questions?.[0] || null;
+const getAutomationDraftMeta = (response) => {
+  const meta = {};
+  if (response?.automation_draft) {
+    meta.automation_draft = response.automation_draft;
+  }
+  if (Array.isArray(response?.artifacts) && response.artifacts.length > 0) {
+    meta.artifacts = response.artifacts;
+  }
+  return Object.keys(meta).length > 0 ? meta : null;
+};
+const isAgentPlanRun = (workflowRun) => (
+  workflowRun?.workflow_skill_key === '__agent_plan__'
+  || workflowRun?.context_data?.run_kind === 'agent_plan'
+);
+
+const resolveWorkflowRunId = (source) => source?.workflow_run_id || source?.workflow_run?.id || null;
+
+const isSyntheticFinalDeliveryStep = (step) => {
+  if (!step || typeof step === 'string') {
+    return false;
+  }
+
+  const title = (step.title || step.task || '').trim();
+  const description = (step.description || '').trim();
+  return title === '交付最终结果'
+    || description.startsWith('基于前序步骤产出，直接完成用户请求');
+};
+
+const allowsEmptySubmit = (executionState, activeWorkflowRun) => (
+  activeWorkflowRun?.status === 'paused'
+  || executionState === 'waiting_for_feedback'
+  || executionState === 'waiting_for_plan_approval'
+);
+
+const LAST_ACTIVE_GROUP_KEY = 'lastActiveGroupId';
+const CHAT_HISTORY_INDEX_KEY = 'des-chat-history-index';
+const GROUP_CHAT_MODE_KEY_PREFIX = 'des-group-chat-mode:';
+const GROUP_DEBATE_MODE_KEY_PREFIX = 'des-group-debate-mode:';
+const CHAT_SESSION_ID_PREFIX = 'chat:';
+const FORCE_OPEN_TASK_SESSION_KEY = 'des-force-open-task-session';
+const CODEX_ACCESS_MODE_KEY = 'des-codex-access-mode';
+
+const getGroupChatModeKey = (groupId) => `${GROUP_CHAT_MODE_KEY_PREFIX}${groupId}`;
+const getGroupDebateModeKey = (groupId) => `${GROUP_DEBATE_MODE_KEY_PREFIX}${groupId}`;
+const GROUP_TIME_DIVIDER_MINUTES = 5;
+
+const getStoredGroupChatMode = (groupId) => {
+  if (typeof window === 'undefined' || !groupId) {
+    return GROUP_CHAT_MODES.NORMAL;
+  }
+
+  const storedMode = window.sessionStorage.getItem(getGroupChatModeKey(groupId));
+  if (isValidGroupChatMode(storedMode)) {
+    return storedMode;
+  }
+
+  return window.sessionStorage.getItem(getGroupDebateModeKey(groupId)) === '1'
+    ? GROUP_CHAT_MODES.DEBATE
+    : GROUP_CHAT_MODES.NORMAL;
+};
+
+const readChatHistoryIndex = () => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CHAT_HISTORY_INDEX_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error('Failed to parse chat history index:', error);
+    return [];
+  }
+};
+
+const writeChatHistoryIndex = (entries) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(CHAT_HISTORY_INDEX_KEY, JSON.stringify(entries));
+};
+
+const upsertChatHistoryEntry = (entry) => {
+  if (!entry?.id) {
+    return;
+  }
+
+  const existingEntries = readChatHistoryIndex().filter((item) => item.id !== entry.id);
+  const nextEntries = [entry, ...existingEntries].sort((left, right) => new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime());
+  writeChatHistoryIndex(nextEntries.slice(0, 50));
+};
+
+const removeChatHistoryEntry = (entryId) => {
+  if (!entryId) {
+    return;
+  }
+
+  const nextEntries = readChatHistoryIndex().filter((item) => item.id !== entryId);
+  writeChatHistoryIndex(nextEntries);
+};
+
+const formatHistoryDateTime = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const formatMessageTimeLabel = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const shouldRenderTimeDivider = (messages, index) => {
+  const current = messages[index];
+  if (!current?.createdAt) {
+    return false;
+  }
+
+  if (index === 0) {
+    return true;
+  }
+
+  const previous = messages[index - 1];
+  if (!previous?.createdAt) {
+    return true;
+  }
+
+  const currentTime = new Date(current.createdAt).getTime();
+  const previousTime = new Date(previous.createdAt).getTime();
+  if (Number.isNaN(currentTime) || Number.isNaN(previousTime)) {
+    return false;
+  }
+
+  return ((currentTime - previousTime) / 60000) >= GROUP_TIME_DIVIDER_MINUTES;
+};
+
+const buildHistoryEntry = ({ id, type, title, summary, chatId, updatedAt, activeMember, groupId }) => ({
+  id,
+  type,
+  title,
+  summary,
+  chatId,
+  updatedAt,
+  activeMember: activeMember || null,
+  groupId: groupId || null,
+});
+
+const normalizeChatId = (value) => {
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return Math.trunc(numeric);
+  }
+
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const createChatSessionId = () => Date.now() + Math.floor(Math.random() * 1000);
+
+const buildSingleChatHistoryEntryId = (chatId) => `${CHAT_SESSION_ID_PREFIX}${chatId}`;
+
+const getLatestSingleHistoryEntryForMember = (memberId, entries = readChatHistoryIndex()) => {
+  const normalizedMemberId = String(memberId || '');
+  return entries.find((entry) => entry?.type === 'member' && String(entry.activeMember || '') === normalizedMemberId) || null;
+};
+
+const resolveRequestedChatId = (requestedChatId) => {
+  const normalized = normalizeChatId(requestedChatId);
+  return normalized && normalized > 0 ? normalized : null;
+};
+
+const buildAutomationTaskChatId = (employeeId, taskId) => {
+  const normalizedEmployeeId = String(employeeId || '').trim();
+  const normalizedTaskId = String(taskId || '').trim();
+  if (!normalizedEmployeeId || !normalizedTaskId) {
+    return resolveRequestedChatId(employeeId) || resolveRequestedChatId(taskId) || createChatSessionId();
+  }
+
+  let stableHash = 0;
+  const seed = `automation-task-chat:${normalizedTaskId}:${normalizedEmployeeId}`;
+  for (let index = 0; index < seed.length; index += 1) {
+    stableHash = ((stableHash << 5) - stableHash + seed.charCodeAt(index)) >>> 0;
+  }
+  return (stableHash % 2_000_000_000) + 1;
+};
+
+const resolveAutomationTargetChatId = (memberId, requestedChatId, taskId = null) => {
+  if (taskId) {
+    return buildAutomationTaskChatId(memberId, taskId);
+  }
+  return resolveRequestedChatId(requestedChatId) || normalizeChatId(memberId) || createChatSessionId();
+};
+
+const extractMentionNames = (message) => {
+  const matches = String(message || '').match(/@([^\s@，。,！!？?]+)/g) || [];
+  return matches.map((item) => item.slice(1).trim()).filter(Boolean);
+};
+
+const stripMentionNames = (message) => String(message || '').replace(/@([^\s@，。,！!？?]+)/g, '').replace(/\s{2,}/g, ' ').trim();
+
+const getActiveMentionContext = (message, caretPosition) => {
+  const normalizedMessage = String(message || '');
+  const safeCaret = Number.isInteger(caretPosition) ? caretPosition : normalizedMessage.length;
+  const contentBeforeCaret = normalizedMessage.slice(0, safeCaret);
+  const matched = /(?:^|[\s\n])@([^\s@，。,！!？?]*)$/.exec(contentBeforeCaret);
+
+  if (!matched) {
+    return null;
+  }
+
+  return {
+    query: matched[1] || '',
+    start: safeCaret - matched[1].length - 1,
+    end: safeCaret,
+  };
+};
+
+const filterMentionableMembers = (members, query) => {
+  const normalizedQuery = String(query || '').trim().toLowerCase();
+  if (!normalizedQuery) {
+    return members;
+  }
+
+  return members.filter((member) => {
+    const searchable = [member.name, member.role_title]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return searchable.includes(normalizedQuery);
+  });
+};
+
+const resolveMentionedMembers = (members, message) => {
+  const mentionNames = extractMentionNames(message);
+  if (mentionNames.length === 0) {
+    return [];
+  }
+
+  const resolved = [];
+  mentionNames.forEach((mentionName) => {
+    const matchedMember = members.find((member) => {
+      const name = String(member.name || '').toLowerCase();
+      const mention = mentionName.toLowerCase();
+      return name === mention || name.includes(mention) || mention.includes(name);
+    });
+
+    if (matchedMember && !resolved.some((member) => member.id === matchedMember.id)) {
+      resolved.push(matchedMember);
+    }
+  });
+
+  return resolved;
+};
+
+const inferResponderScore = (member, message) => {
+  const normalizedMessage = String(message || '').toLowerCase();
+  const searchable = [member.name, member.role_title, member.persona_prompt]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const keywordGroups = [
+    { keywords: ['hr', '招聘', '人事', '入职', '面试'], score: 10 },
+    { keywords: ['数据', '分析', '报表', '洞察', 'sql'], score: 10 },
+    { keywords: ['运营', '增长', '投放', '活动', '小红书', '内容'], score: 10 },
+    { keywords: ['销售', '客户', '商机', '转化', '跟进'], score: 10 },
+    { keywords: ['产品', '需求', 'roadmap', '原型', '规划'], score: 10 },
+    { keywords: ['设计', '视觉', '界面', '海报', 'ui'], score: 10 },
+    { keywords: ['开发', '代码', '接口', '后端', '前端', 'bug'], score: 10 },
+  ];
+
+  let score = 0;
+  keywordGroups.forEach(({ keywords, score: groupScore }) => {
+    if (keywords.some((keyword) => normalizedMessage.includes(keyword)) && keywords.some((keyword) => searchable.includes(keyword))) {
+      score += groupScore;
+    }
+  });
+
+  if (normalizedMessage.includes(member.name?.toLowerCase?.() || '')) {
+    score += 12;
+  }
+
+  if (searchable.includes(normalizedMessage.slice(0, 4))) {
+    score += 4;
+  }
+
+  return score;
+};
+
+const selectAutoResponders = (members, message) => {
+  if (members.length <= 1) {
+    return members;
+  }
+
+  const ranked = members
+    .map((member, index) => ({ member, score: inferResponderScore(member, message) + (members.length - index) }))
+    .sort((left, right) => right.score - left.score);
+
+  const normalizedMessage = String(message || '').toLowerCase();
+  const multiReplyHints = ['一起', '分别', '都说说', '讨论', '协作', '配合', '分别回答', '大家'];
+  const responderCount = multiReplyHints.some((hint) => normalizedMessage.includes(hint)) ? 2 : 1;
+  return ranked.slice(0, Math.min(responderCount, ranked.length)).map(({ member }) => member);
+};
+
+const selectDebateParticipants = (members, message, mentionedMembers = []) => {
+  const uniqueMentionedMembers = mentionedMembers.filter((member, index, list) => (
+    list.findIndex((candidate) => candidate.id === member.id) === index
+  ));
+
+  if (members.length <= 2) {
+    return uniqueMentionedMembers.length > 0 ? uniqueMentionedMembers : members;
+  }
+
+  if (uniqueMentionedMembers.length >= 2) {
+    return uniqueMentionedMembers.slice(0, 3);
+  }
+
+  const rankedMembers = members
+    .map((member, index) => ({ member, score: inferResponderScore(member, message) + (members.length - index) }))
+    .sort((left, right) => right.score - left.score)
+    .map(({ member }) => member);
+
+  const selectedMembers = [...uniqueMentionedMembers];
+  rankedMembers.forEach((member) => {
+    if (selectedMembers.length >= 3) {
+      return;
+    }
+
+    if (!selectedMembers.some((candidate) => candidate.id === member.id)) {
+      selectedMembers.push(member);
+    }
+  });
+
+  return selectedMembers.slice(0, Math.max(2, Math.min(3, selectedMembers.length)));
+};
+
+const selectCollaborationParticipants = (members, message, mentionedMembers = []) => {
+  const uniqueMentionedMembers = mentionedMembers.filter((member, index, list) => (
+    list.findIndex((candidate) => candidate.id === member.id) === index
+  ));
+
+  if (members.length <= 2) {
+    return uniqueMentionedMembers.length > 0 ? uniqueMentionedMembers.slice(0, members.length) : members;
+  }
+
+  const rankedMembers = members
+    .map((member, index) => ({ member, score: inferResponderScore(member, message) + (members.length - index) }))
+    .sort((left, right) => right.score - left.score)
+    .map(({ member }) => member);
+
+  const selectedMembers = [...uniqueMentionedMembers];
+  const normalizedMessage = String(message || '').toLowerCase();
+  const needBroaderCollaboration = ['协作', '合作', '分工', '任务', '流程', '报告', '交付', '执行', '方案'].some((keyword) => normalizedMessage.includes(keyword));
+  const targetCount = Math.min(needBroaderCollaboration ? 3 : 2, members.length);
+
+  rankedMembers.forEach((member) => {
+    if (selectedMembers.length >= targetCount) {
+      return;
+    }
+
+    if (!selectedMembers.some((candidate) => candidate.id === member.id)) {
+      selectedMembers.push(member);
+    }
+  });
+
+  return selectedMembers.slice(0, Math.max(2, selectedMembers.length));
+};
+
+const buildGroupReplyPrompt = ({ group, member, userMessage }) => {
+  const teammates = (group?.members || [])
+    .filter((candidate) => candidate.id !== member.id)
+    .map((candidate) => `${candidate.name}${candidate.role_title ? `（${candidate.role_title}）` : ''}`)
+    .join('、');
+
+  const shouldReturnDeliverable = /正文|章节|第一章|第二章|开篇|扩写|写下|写一段|写一章|写个开头|2000|3000|设定|策划案|大纲|角色总表|关系图谱|世界观|详细|完整|完整版|展开|梳理/.test(userMessage || '');
+
+  if (shouldReturnDeliverable) {
+    return `你正在一个名为“${group?.name || '协作小组'}”的多人群聊中发言。你的身份是 ${member.name}${member.role_title ? `（${member.role_title}）` : ''}。${teammates ? `同组其他数字员工有：${teammates}。` : ''}用户刚刚说：${userMessage}\n\n请只代表你自己回复，不要代替其他成员发言，不要输出 Markdown，不要写“作为某某”这种前缀。用户这次要的是可直接使用的交付内容，请你在这一轮直接交付完整结果，而不是说“收到”“我来写”“我先整理”“稍后给你”或其他过渡话术。如果用户要正文，就直接写正文；如果用户要设定，就直接给完整设定；如果用户要策划案，就直接给完整策划案。长度以完成任务为准，不要故意压缩成短句。`;
+  }
+
+  return `你正在一个名为“${group?.name || '协作小组'}”的多人群聊中发言。你的身份是 ${member.name}${member.role_title ? `（${member.role_title}）` : ''}。${teammates ? `同组其他数字员工有：${teammates}。` : ''}用户刚刚说：${userMessage}\n\n请只代表你自己回复，不要代替其他成员发言，不要输出 Markdown，不要写“作为某某”这种前缀。请用中文自然回复，篇幅和深度根据用户需求决定：简单问题可以简短回答，复杂问题就完整展开，但始终保持像群聊里本人直接发言的口吻。`;
+};
+
+const buildDebateOpeningPrompt = ({ group, member, userMessage, participants }) => {
+  const teammateSummary = participants
+    .filter((candidate) => candidate.id !== member.id)
+    .map((candidate) => `${candidate.name}${candidate.role_title ? `（${candidate.role_title}）` : ''}`)
+    .join('、');
+
+  return `你正在群聊“${group?.name || '协作小组'}”中参加一场围绕用户需求的内部辩论。你的身份是 ${member.name}${member.role_title ? `（${member.role_title}）` : ''}。${teammateSummary ? `和你一起参与辩论的成员有：${teammateSummary}。` : ''}用户需求是：${userMessage}\n\n请先给出你的核心主张：你最推荐的方案是什么，为什么。只代表你自己的专业立场发言，不要替其他成员下结论，不要使用 Markdown，不要写标题，控制在 2 到 3 句话。`;
+};
+
+const buildDebateRebuttalPrompt = ({ group, member, userMessage, openingStatements }) => {
+  const otherStatements = openingStatements
+    .filter((entry) => entry.member.id !== member.id)
+    .map((entry) => `${entry.member.name}：${entry.text}`)
+    .join('\n');
+
+  return `你正在群聊“${group?.name || '协作小组'}”中进行第二轮讨论。你的身份是 ${member.name}${member.role_title ? `（${member.role_title}）` : ''}。用户需求是：${userMessage}\n\n第一轮各成员观点如下：\n${otherStatements || '暂无其他成员观点。'}\n\n请你针对其他人的观点指出一个最关键的风险、盲点或补充点，并给出你修正后的建议。只代表你自己发言，不要输出 Markdown，不要写标题，控制在 2 到 3 句话。`;
+};
+
+const buildDebateSummaryPrompt = ({ group, userMessage, transcript }) => `你现在担任群聊“${group?.name || '协作小组'}”的主持总结人。用户需求是：${userMessage}\n\n以下是本轮辩论摘要：\n${transcript}\n\n请给出最终综合结论：明确推荐的最佳方案、选择它的主要理由，以及一个需要优先注意的风险。请直接输出中文结论，不要使用 Markdown，不要写“总结如下”，控制在 3 到 4 句话。`;
+
+const getDebateStageLabel = (stage) => {
+  if (stage === 'opening') return '第一轮观点';
+  if (stage === 'rebuttal' || (typeof stage === 'string' && stage.startsWith('round_'))) return '攻防交锋';
+  if (stage === 'summary') return '综合结论';
+  return '';
+};
+
+const getCollaborationStageLabel = (stage) => {
+  if (stage === 'assignment') return '自动分配';
+  if (stage === 'handoff') return '接力执行';
+  if (stage === 'final') return '最终汇总';
+  return '';
+};
+
+const getGroupMessageStageLabel = (metaData) => {
+  if (!metaData) {
+    return '';
+  }
+
+  if (metaData.conversation_mode === GROUP_CHAT_MODES.DEBATE) {
+    return getDebateStageLabel(metaData.debate_stage);
+  }
+
+  if (metaData.conversation_mode === GROUP_CHAT_MODES.COLLABORATION) {
+    return getCollaborationStageLabel(metaData.collaboration_stage);
+  }
+
+  return '';
+};
+
+const getGroupConversationModeCopy = (mode) => {
+  if (mode === GROUP_CHAT_MODES.DEBATE) {
+    return {
+      title: '辩论模式',
+      description: '多人先表达立场，再汇总结论。适合方案评估、观点碰撞。',
+    };
+  }
+
+  if (mode === GROUP_CHAT_MODES.COLLABORATION) {
+    return {
+      title: '合作模式',
+      description: '系统自动分配员工并串行接力，后续成员默认基于上一步结果继续执行。',
+    };
+  }
+
+  return {
+    title: '普通群聊',
+    description: '按意图或 @ 点名让一个或多个成员直接回复。',
+  };
+};
+
+const isDebateChatMessage = (message) => {
+  if (!message) {
+    return false;
+  }
+
+  return message.meta_data?.conversation_mode === 'debate' || DEBATE_MESSAGE_TYPES.has(message.message_type);
+};
+
+const resolveGroupMessageSender = (message, activeGroup) => {
+  if (message.sender_role === 'user') {
+    return { senderName: '你', senderAvatar: null };
+  }
+
+  const matchedMember = (activeGroup?.members || []).find((member) => member.id === message.employee_id);
+  if (matchedMember) {
+    return {
+      senderName: matchedMember.name,
+      senderAvatar: matchedMember.avatar_url || null,
+    };
+  }
+
+  return {
+    senderName: message.meta_data?.sender_name || '数字员工',
+    senderAvatar: null,
+  };
+};
+
+const mapStoredMessageToUiMessage = (msg, activeGroup, isGroupChat) => {
+  const groupSender = isGroupChat ? resolveGroupMessageSender(msg, activeGroup) : null;
+
+  let type = 'ai';
+  if (msg.sender_role === 'user') {
+    type = 'user';
+  } else if (msg.message_type === 'group_router') {
+    type = 'router';
+  } else if (msg.message_type === 'plan_approval') {
+    type = 'plan_approval';
+  } else if (msg.message_type === 'step_confirmation') {
+    type = 'step_confirmation';
+  } else if (msg.message_type === 'workflow_step_result') {
+    type = 'workflow_step_result';
+  } else if (msg.message_type === 'image_generation_result') {
+    type = 'image_generation_result';
+  }
+
+  const mimeType = msg.meta_data?.mime_type || 'image/jpeg';
+  const imageBase64 = msg.meta_data?.image_base64 || null;
+  const imageUrl = msg.meta_data?.image_data_url || (imageBase64 ? `data:${mimeType};base64,${imageBase64}` : null);
+
+  return {
+    messageId: msg.id,
+    type,
+    text: msg.content,
+    createdAt: msg.created_at,
+    employeeId: msg.employee_id,
+    senderName: groupSender?.senderName || null,
+    senderAvatar: groupSender?.senderAvatar || null,
+    metaData: msg.meta_data || null,
+    imageUrl,
+    imageBase64,
+    mimeType,
+    plan: msg.meta_data?.plan,
+    is_task: msg.meta_data?.is_task,
+    task_summary: msg.meta_data?.task_summary,
+    result: msg.meta_data?.result || msg.content,
+    stepIndex: msg.meta_data?.stepIndex,
+    task: msg.meta_data?.stepContent,
+    confirmationId: msg.meta_data?.stepIndex,
+  };
+};
+
+const mapGroupApiMessageToUiMessage = (msg, activeGroup) => {
+  const matchedMember = (activeGroup?.members || []).find((member) => member.id === msg.employee_id);
+  let type = 'ai';
+
+  if (msg.sender_role === 'user') {
+    type = 'user';
+  } else if (msg.message_type === 'group_router') {
+    type = 'router';
+  } else if (msg.message_type === 'image_generation_result') {
+    type = 'image_generation_result';
+  }
+
+  const mimeType = msg.meta_data?.mime_type || 'image/jpeg';
+  const imageBase64 = msg.meta_data?.image_base64 || null;
+  const imageUrl = msg.meta_data?.image_data_url || (imageBase64 ? `data:${mimeType};base64,${imageBase64}` : null);
+
+  return {
+    type,
+    text: msg.content,
+    createdAt: msg.created_at,
+    employeeId: msg.employee_id,
+    senderName: msg.sender_name || matchedMember?.name || null,
+    senderAvatar: matchedMember?.avatar_url || null,
+    metaData: msg.meta_data || null,
+    imageUrl,
+    imageBase64,
+    mimeType,
+  };
+};
+
+const GroupMembersModal = ({ isOpen, group, onClose }) => {
+  const { isZh } = useLanguage();
+
+  if (!isOpen || !group) {
+    return null;
+  }
+
+  const members = Array.isArray(group.members) ? group.members : [];
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-[640px] overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] animate-fadeIn" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-start justify-between border-b border-[#eef1f5] px-6 py-5">
+          <div>
+            <h3 className="text-xl font-semibold text-[#111827]">{isZh ? '查看组内成员' : 'View Group Members'}</h3>
+            <p className="mt-1 text-sm text-[#667085]">{isZh ? `${group.name} 当前共有 ${members.length} 位成员` : `${group.name} currently has ${members.length} members`}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-2xl border border-[#e5e7eb] px-3 py-2 text-sm text-[#667085] transition hover:bg-[#f8fafc]">{isZh ? '关闭' : 'Close'}</button>
+        </div>
+
+        <div className="max-h-[520px] overflow-y-auto px-6 py-6">
+          {members.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-[#d8dee7] bg-[#fafbfc] px-5 py-8 text-center text-sm leading-6 text-[#7d8694]">{isZh ? '当前组内还没有成员。' : 'This group has no members yet.'}</div>
+          ) : (
+            <div className="space-y-3">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-start gap-4 rounded-3xl border border-[#e5e9ef] bg-[#fcfdff] px-4 py-4">
+                  <div className="h-12 w-12 overflow-hidden rounded-2xl bg-[#eef2f7] text-sm font-semibold text-[#667085]">
+                    {member.avatar_url ? (
+                      <img src={member.avatar_url} alt={member.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">{getEmployeeAvatarFallback(member.name)}</div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-semibold text-[#111827]">{member.name}</span>
+                      <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[11px] font-medium text-[#667085]">{member.role_title || (isZh ? '数字员工' : 'Digital Worker')}</span>
+                    </div>
+                    {member.description ? (
+                      <p className="mt-2 text-sm leading-6 text-[#667085]">{member.description}</p>
+                    ) : member.persona_prompt ? (
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#667085]">{member.persona_prompt}</p>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AddGroupMembersModal = ({
+  isOpen,
+  group,
+  searchTerm,
+  onSearchChange,
+  candidateEmployees,
+  selectedMemberIds,
+  onToggleMember,
+  onClose,
+  onSave,
+  isSaving,
+  error,
+}) => {
+  const { isZh } = useLanguage();
+
+  if (!isOpen || !group) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-[760px] overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] animate-fadeIn" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-start justify-between border-b border-[#eef1f5] px-6 py-5">
+          <div>
+            <h3 className="text-xl font-semibold text-[#111827]">{isZh ? '添加成员' : 'Add Members'}</h3>
+            <p className="mt-1 text-sm text-[#667085]">{isZh ? `为 ${group.name} 继续补充协作成员` : `Add more collaborators to ${group.name}`}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-2xl border border-[#e5e7eb] px-3 py-2 text-sm text-[#667085] transition hover:bg-[#f8fafc]">{isZh ? '关闭' : 'Close'}</button>
+        </div>
+
+        <div className="px-6 py-6">
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            {(group.members || []).map((member) => (
+              <span key={member.id} className="rounded-full border border-[#dbe3ee] bg-[#f8fafc] px-3 py-1 text-xs text-[#475467]">{member.name}</span>
+            ))}
+          </div>
+
+          <div className="relative mb-5">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder={isZh ? '搜索可添加的数字员工' : 'Search addable digital workers'}
+              className="w-full rounded-2xl border border-[#dfe5ec] bg-[#fbfcfd] py-3 pl-10 pr-4 text-sm text-[#1e2632] outline-none transition placeholder:text-[#a0a8b6] focus:border-[#bfc8d6] focus:bg-white"
+            />
+            <svg width="18" height="18" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#95a0ad]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
+          {error ? (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          ) : null}
+
+          <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+            {candidateEmployees.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-[#d8dee7] bg-[#fafbfc] px-5 py-8 text-center text-sm leading-6 text-[#7d8694]">{isZh ? '没有可添加的成员，或者当前搜索条件下没有匹配结果。' : 'No addable members are available, or nothing matches the current search.'}</div>
+            ) : candidateEmployees.map((employee) => {
+              const isSelected = selectedMemberIds.includes(employee.id);
+
+              return (
+                <button
+                  type="button"
+                  key={employee.id}
+                  onClick={() => onToggleMember(employee.id)}
+                  className={`w-full rounded-3xl border px-4 py-4 text-left transition ${isSelected ? 'border-[#111827] bg-[#f5f7fa]' : 'border-[#e5e9ef] bg-white hover:border-[#d5dce6] hover:bg-[#fafbfd]'}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef2f7] text-sm font-semibold text-[#667085]">
+                      {employee.avatar_url ? (
+                        <img src={employee.avatar_url} alt={employee.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <span>{getEmployeeAvatarFallback(employee.name)}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate text-sm font-semibold text-[#1d2430]">{employee.name}</span>
+                        <span className="rounded-full bg-[#f2f4f7] px-2.5 py-1 text-[11px] font-medium text-[#667085]">{employee.role_title || (isZh ? '数字员工' : 'Digital Worker')}</span>
+                        {isSelected ? <span className="rounded-full bg-[#111827] px-2.5 py-1 text-[11px] font-medium text-white">{isZh ? '待添加' : 'Queued'}</span> : null}
+                      </div>
+                      {employee.description ? (
+                        <div className="mt-2 line-clamp-2 text-xs leading-5 text-[#98a1ae]">{employee.description}</div>
+                      ) : employee.persona_prompt ? (
+                        <div className="mt-2 line-clamp-2 text-xs leading-5 text-[#98a1ae]">{employee.persona_prompt}</div>
+                      ) : null}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-[#eef1f5] px-6 py-4">
+          <div className="text-sm text-[#667085]">{isZh ? `已选择 ${selectedMemberIds.length} 位待添加成员` : `${selectedMemberIds.length} members selected to add`}</div>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={onClose} className="rounded-2xl border border-[#e5e7eb] px-4 py-2.5 text-sm text-[#667085] transition hover:bg-[#f8fafc]">{isZh ? '取消' : 'Cancel'}</button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={isSaving || selectedMemberIds.length === 0}
+              className="rounded-2xl bg-[#111827] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSaving ? (isZh ? '保存中...' : 'Saving...') : (isZh ? '确认添加' : 'Add Selected')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChatWorkspace = () => {
+  const { isZh, t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const chatMessagesRef = useRef(null);
+  const chatInputRef = useRef(null);
+  const chatFileInputRef = useRef(null);
+  const chatUploadParseTimersRef = useRef(new Map());
+  const reasonerRef = useRef(new SequentialReasoner());
+  
+  const [chatInput, setChatInput] = useState('');
+  const [codexAccessMode, setCodexAccessMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      return 'default';
+    }
+
+    return window.sessionStorage.getItem(CODEX_ACCESS_MODE_KEY) === 'full' ? 'full' : 'default';
+  });
+  const [isCodexAccessMenuOpen, setIsCodexAccessMenuOpen] = useState(false);
+  const [composerUploads, setComposerUploads] = useState([]);
+  const [chatUploadError, setChatUploadError] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [todosCollapsed, setTodosCollapsed] = useState(true);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [isWorkspaceStorageCollapsed, setIsWorkspaceStorageCollapsed] = useState(false);
+  const [openFiles, setOpenFiles] = useState({});
+  const [activeFileId, setActiveFileId] = useState(null);
+  const [workspaceFileError, setWorkspaceFileError] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showTaskResults, setShowTaskResults] = useState(false);
+  const [taskResultsUnreadCount, setTaskResultsUnreadCount] = useState(0);
+  const [isTaskResultsMaximized, setIsTaskResultsMaximized] = useState(false);
+  const [isGroupMembersModalOpen, setIsGroupMembersModalOpen] = useState(false);
+  const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false);
+  const [chatHistoryEntries, setChatHistoryEntries] = useState(() => readChatHistoryIndex());
+  const [activeGroup, setActiveGroup] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const lastGroupId = window.sessionStorage.getItem(LAST_ACTIVE_GROUP_KEY);
+    return lastGroupId ? findCreatedGroupById(lastGroupId) : null;
+  });
+  
+  // Initialize from navigation state so the previous employee never starts loading first.
+  const [activeMember, setActiveMember] = useState(() => {
+    return location.state?.activeMember || localStorage.getItem('lastActiveMember') || 'aria';
+  });
+  
+  const [activeEmployee, setActiveEmployee] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const sendingMessageRef = useRef(false);
+  const [isClearingHistory, setIsClearingHistory] = useState(false);
+  const [todos, setTodos] = useState([]);
+  const [pendingMessage, setPendingMessage] = useState(null);
+  const [highlightedExecutionId, setHighlightedExecutionId] = useState(null);
+  const [automationSetupMode, setAutomationSetupMode] = useState(false);
+  const [navigationToast, setNavigationToast] = useState(null);
+  const initialLoadRef = useRef(false);
+  const chatIdRef = useRef(null);
+  const requestedChatIdRef = useRef(null);
+  const automationTaskSessionRef = useRef(false);
+  const pendingExecutionTargetRef = useRef(null);
+  const pendingExecutionStatusRef = useRef(null);
+  const pendingExecutionTaskNameRef = useRef('');
+  const displayedWorkflowMessageKeysRef = useRef(new Set());
+  const debateSyncRef = useRef({
+    active: false,
+    timerId: null,
+    baseMessageId: 0,
+    seenMessageIds: new Set(),
+  });
+  const [activeWorkflowRun, setActiveWorkflowRun] = useState(null);
+  const [latestWorkflowRun, setLatestWorkflowRun] = useState(null);
+  const [workflowActionLoading, setWorkflowActionLoading] = useState(false);
+  const [workflowActionError, setWorkflowActionError] = useState('');
+  const [availableEmployees, setAvailableEmployees] = useState([]);
+  const [groupMemberSearchTerm, setGroupMemberSearchTerm] = useState('');
+  const [selectedGroupAddMemberIds, setSelectedGroupAddMemberIds] = useState([]);
+  const [isGroupMembersSaving, setIsGroupMembersSaving] = useState(false);
+  const [groupMembersActionError, setGroupMembersActionError] = useState('');
+
+  useEffect(() => {
+    if (!isProcessing) {
+      sendingMessageRef.current = false;
+    }
+  }, [isProcessing]);
+
+  // Execution State
+  const [executionState, setExecutionState] = useState('idle');
+  const [currentPlan, setCurrentPlan] = useState([]);
+  const currentPlanRef = useRef([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [stepResult, setStepResult] = useState(null);
+  const [pendingPlanContext, setPendingPlanContext] = useState(null);
+  const [planExecutionContext, setPlanExecutionContext] = useState({ step_outputs: {} });
+  const [mentionContext, setMentionContext] = useState(null);
+  const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const [groupConversationMode, setGroupConversationMode] = useState(GROUP_CHAT_MODES.NORMAL);
+  const [debateRoundCount, setDebateRoundCount] = useState(2);
+  const displayTodos = deriveVisibleTodos(todos, activeWorkflowRun, currentStepIndex);
+  const isGroupChat = Boolean(activeGroup);
+  const isDebateMode = isGroupChat && groupConversationMode === GROUP_CHAT_MODES.DEBATE;
+  const isCollaborationMode = isGroupChat && groupConversationMode === GROUP_CHAT_MODES.COLLABORATION;
+  const groupConversationCopy = getGroupConversationModeCopy(groupConversationMode);
+  const mentionableMembers = filterMentionableMembers(activeGroup?.members || [], mentionContext?.query || '');
+  const mentionSuggestions = mentionContext
+    ? [
+        {
+          id: '__mention_all__',
+          type: 'all',
+          name: 'Mention All',
+          description: '让群组内所有成员一起收到点名',
+        },
+        ...mentionableMembers.map((member) => ({
+          ...member,
+          type: 'member',
+        })),
+      ]
+    : [];
+  const parsedComposerUploads = useMemo(
+    () => composerUploads.filter((item) => item.status === 'parsed'),
+    [composerUploads],
+  );
+  const hasPendingComposerUploads = composerUploads.some((item) => item.status === 'processing');
+  const canSendCurrentMessage = ((chatInput.trim().length > 0 || parsedComposerUploads.length > 0 || allowsEmptySubmit(executionState, activeWorkflowRun)) && !hasPendingComposerUploads && !workflowActionLoading && !isProcessing);
+  const chatModeOptions = useMemo(() => ([
+    { key: GROUP_CHAT_MODES.NORMAL, label: isZh ? '普通群聊' : t('chat.mode.normal'), title: isZh ? '按意图分发或 @ 点名回复' : t('chat.mode.normalTitle') },
+    { key: GROUP_CHAT_MODES.DEBATE, label: isZh ? '辩论模式' : t('chat.mode.debate'), title: isZh ? '多成员先辩论再汇总结论' : t('chat.mode.debateTitle') },
+    { key: GROUP_CHAT_MODES.COLLABORATION, label: isZh ? '合作模式' : t('chat.mode.collaboration'), title: isZh ? '自动分配员工并串行接力执行' : t('chat.mode.collaborationTitle') },
+  ]), [isZh, t]);
+
+  const addableGroupEmployees = useMemo(() => {
+    const currentMemberIds = new Set((activeGroup?.members || []).map((member) => member.id));
+    const keyword = groupMemberSearchTerm.trim().toLowerCase();
+
+    return availableEmployees.filter((employee) => {
+      if (currentMemberIds.has(employee.id)) {
+        return false;
+      }
+
+      if (!keyword) {
+        return true;
+      }
+
+      return [employee.name, employee.role_title, employee.description, employee.persona_prompt]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(keyword);
+    });
+  }, [activeGroup?.members, availableEmployees, groupMemberSearchTerm]);
+
+  const workspaceArtifacts = useMemo(() => {
+    const artifactMap = new Map();
+
+    messages.forEach((message) => {
+      const artifacts = Array.isArray(message?.metaData?.artifacts) ? message.metaData.artifacts : [];
+      artifacts.forEach((artifact) => {
+        const normalized = normalizeArtifactEntry(artifact, message.createdAt || null);
+        if (normalized) {
+          artifactMap.set(normalized.relativePath, normalized);
+        }
+      });
+    });
+
+    collectArtifactsFromWorkflowRun(activeWorkflowRun || latestWorkflowRun, artifactMap);
+
+    return Array.from(artifactMap.values()).sort((left, right) => {
+      const leftTime = new Date(left.createdAt || 0).getTime();
+      const rightTime = new Date(right.createdAt || 0).getTime();
+      return rightTime - leftTime;
+    });
+  }, [messages, activeWorkflowRun, latestWorkflowRun]);
+
+  const activeHistoryEntryId = isGroupChat
+    ? `group:${activeGroup?.id || ''}`
+    : buildSingleChatHistoryEntryId(chatIdRef.current || 0);
+
+  useEffect(() => {
+    currentPlanRef.current = currentPlan;
+  }, [currentPlan]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(CODEX_ACCESS_MODE_KEY, codexAccessMode);
+    }
+  }, [codexAccessMode]);
+
+  useEffect(() => {
+    if (!activeGroup?.id || typeof window === 'undefined') {
+      setGroupConversationMode(GROUP_CHAT_MODES.NORMAL);
+      return;
+    }
+
+    setGroupConversationMode(getStoredGroupChatMode(activeGroup.id));
+  }, [activeGroup?.id]);
+
+  useEffect(() => {
+    if (!activeGroup?.id || typeof window === 'undefined') {
+      return;
+    }
+
+    window.sessionStorage.setItem(getGroupChatModeKey(activeGroup.id), groupConversationMode);
+    window.sessionStorage.setItem(getGroupDebateModeKey(activeGroup.id), groupConversationMode === GROUP_CHAT_MODES.DEBATE ? '1' : '0');
+  }, [activeGroup?.id, groupConversationMode]);
+
+  useEffect(() => {
+    if (!mentionContext) {
+      return;
+    }
+
+    if (mentionSuggestions.length === 0) {
+      setActiveMentionIndex(0);
+      return;
+    }
+
+    if (activeMentionIndex >= mentionSuggestions.length) {
+      setActiveMentionIndex(0);
+    }
+  }, [mentionContext, mentionSuggestions.length, activeMentionIndex]);
+
+  const updatePlanExecutionContext = (stepIndex, payload) => {
+    setPlanExecutionContext((prev) => ({
+      ...prev,
+      step_outputs: {
+        ...(prev?.step_outputs || {}),
+        [`step_${stepIndex + 1}`]: payload,
+      },
+    }));
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const syncActiveGroup = async () => {
+      const lastGroupId = window.sessionStorage.getItem(LAST_ACTIVE_GROUP_KEY);
+      if (lastGroupId) {
+        try {
+          const nextGroup = await fetchCreatedGroupById(lastGroupId);
+          setActiveGroup(nextGroup || null);
+        } catch (error) {
+          setActiveGroup((prev) => prev);
+        }
+      }
+      setChatHistoryEntries(readChatHistoryIndex());
+    };
+
+    syncActiveGroup();
+    window.addEventListener(CREATED_GROUPS_UPDATED_EVENT, syncActiveGroup);
+    window.addEventListener('focus', syncActiveGroup);
+
+    return () => {
+      window.removeEventListener(CREATED_GROUPS_UPDATED_EVENT, syncActiveGroup);
+      window.removeEventListener('focus', syncActiveGroup);
+    };
+  }, []);
+
+  const selectGroupChat = (group) => {
+    setActiveGroup(group);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(LAST_ACTIVE_GROUP_KEY, group.id);
+    }
+    setWorkspaceOpen(false);
+  };
+
+  const selectSingleMember = (memberId) => {
+    setActiveGroup(null);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(LAST_ACTIVE_GROUP_KEY);
+    }
+    requestedChatIdRef.current = null;
+    setActiveMember(memberId);
+  };
+
+  const openAutomationExecutionSession = ({ activeMember: memberId, requestedChatId, targetExecutionId, targetExecutionStatus, targetTaskName, taskId }) => {
+    if (!memberId) {
+      return;
+    }
+
+    const targetChatId = resolveAutomationTargetChatId(memberId, requestedChatId, taskId);
+    automationTaskSessionRef.current = Boolean(taskId);
+    if (automationTaskSessionRef.current) {
+      removeChatHistoryEntry(buildSingleChatHistoryEntryId(targetChatId));
+      refreshChatHistoryEntries();
+    }
+    pendingExecutionTargetRef.current = targetExecutionId ?? null;
+    pendingExecutionStatusRef.current = targetExecutionStatus ?? null;
+    pendingExecutionTaskNameRef.current = targetTaskName ?? '';
+    requestedChatIdRef.current = targetChatId;
+    chatIdRef.current = targetChatId;
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(FORCE_OPEN_TASK_SESSION_KEY, JSON.stringify({
+        activeMember: String(memberId),
+        requestedChatId: targetChatId,
+        targetExecutionId: targetExecutionId ?? null,
+        targetExecutionStatus: targetExecutionStatus ?? null,
+        targetTaskName: targetTaskName ?? '',
+        taskId: taskId ?? null,
+      }));
+    }
+    resetChatWorkspaceState();
+    setActiveGroup(null);
+    setActiveMember(String(memberId));
+    setTimeout(() => loadChatHistory(targetChatId), 50);
+  };
+
+  const openSingleMemberSession = (memberId, chatId = null) => {
+    setActiveGroup(null);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(LAST_ACTIVE_GROUP_KEY);
+    }
+    requestedChatIdRef.current = resolveRequestedChatId(chatId);
+    setActiveMember(memberId);
+  };
+
+  const locateExecutionMessage = (executionId) => {
+    if (!executionId || typeof document === 'undefined') {
+      return false;
+    }
+
+    const targetNode = document.querySelector(`[data-execution-id="${executionId}"]`);
+    if (!targetNode) {
+      return false;
+    }
+
+    targetNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedExecutionId(executionId);
+    window.setTimeout(() => {
+      setHighlightedExecutionId((current) => (current === executionId ? null : current));
+    }, 2200);
+    return true;
+  };
+
+  const showNavigationToast = (message) => {
+    if (!message) {
+      return;
+    }
+
+    setNavigationToast({ id: Date.now(), message });
+  };
+
+  const resolveExecutionNavigationFailureMessage = ({ hasAnyMessages, executionStatus, taskName }) => {
+    const normalizedTaskName = String(taskName || '').trim();
+    const taskLabel = normalizedTaskName ? `《${normalizedTaskName}》` : '该任务';
+
+    if (!hasAnyMessages) {
+      return `当前数字员工聊天记录已被清空，无法定位 ${taskLabel} 的执行记录。`;
+    }
+
+    if (['失败', '重试中', '已跳过'].includes(String(executionStatus || '').trim())) {
+      return `${taskLabel} 本次执行未触发可跳转的数字员工聊天记录，暂时无法定位。`;
+    }
+
+    return `当前数字员工对话中未找到 ${taskLabel} 的对应聊天记录，可能已被清空或尚未同步。`;
+  };
+
+  useEffect(() => {
+    const handleOpenAutomationExecutionSession = (event) => {
+      const payload = event?.detail || {};
+      if (!payload.activeMember) {
+        return;
+      }
+      openAutomationExecutionSession(payload);
+    };
+
+    window.addEventListener('automation-open-result-session', handleOpenAutomationExecutionSession);
+    return () => {
+      window.removeEventListener('automation-open-result-session', handleOpenAutomationExecutionSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!navigationToast) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setNavigationToast((current) => (current?.id === navigationToast.id ? null : current));
+    }, 3200);
+
+    return () => window.clearTimeout(timer);
+  }, [navigationToast]);
+
+  const refreshChatHistoryEntries = () => {
+    setChatHistoryEntries(readChatHistoryIndex());
+  };
+
+  const loadAvailableEmployees = async () => {
+    const response = await axios.get(`${API_BASE}/ai-employees/`);
+    const employees = Array.isArray(response.data) ? response.data : [];
+    setAvailableEmployees(employees);
+    return employees;
+  };
+
+  const openAddMembersModal = async () => {
+    setGroupMembersActionError('');
+    setSelectedGroupAddMemberIds([]);
+    setGroupMemberSearchTerm('');
+
+    try {
+      if (availableEmployees.length === 0) {
+        await loadAvailableEmployees();
+      }
+      setIsAddMembersModalOpen(true);
+    } catch (error) {
+      console.error('Failed to load employees for group member update:', error);
+      setGroupMembersActionError('加载候选成员失败，请稍后重试。');
+      setIsAddMembersModalOpen(true);
+    }
+  };
+
+  const toggleGroupAddMember = (employeeId) => {
+    setSelectedGroupAddMemberIds((prev) => (
+      prev.includes(employeeId)
+        ? prev.filter((id) => id !== employeeId)
+        : [...prev, employeeId]
+    ));
+  };
+
+  const handleSaveGroupMembers = async () => {
+    if (!activeGroup?.id || selectedGroupAddMemberIds.length === 0) {
+      return;
+    }
+
+    setIsGroupMembersSaving(true);
+    setGroupMembersActionError('');
+    try {
+      const nextMemberIds = Array.from(new Set([
+        ...(activeGroup.members || []).map((member) => member.id),
+        ...selectedGroupAddMemberIds,
+      ]));
+      const nextGroup = await updateCreatedGroup(activeGroup.id, { member_ids: nextMemberIds });
+      setActiveGroup(nextGroup);
+      setIsAddMembersModalOpen(false);
+      setSelectedGroupAddMemberIds([]);
+    } catch (error) {
+      console.error('Failed to update group members:', error);
+      setGroupMembersActionError('添加成员失败，请稍后重试。');
+    } finally {
+      setIsGroupMembersSaving(false);
+    }
+  };
+
+  const updateCurrentChatHistory = ({ summary, updatedAt = new Date().toISOString() } = {}) => {
+    if (automationTaskSessionRef.current) return;
+
+    const title = isGroupChat
+      ? (activeGroup?.name || '未命名小组')
+      : (activeEmployee?.name || 'Aria');
+    const nextEntry = buildHistoryEntry({
+      id: isGroupChat ? activeHistoryEntryId : buildSingleChatHistoryEntryId(chatIdRef.current),
+      type: isGroupChat ? 'group' : 'member',
+      title,
+      summary: summary || '打开了会话',
+      chatId: chatIdRef.current,
+      updatedAt,
+      activeMember: isGroupChat ? null : activeMember,
+      groupId: isGroupChat ? activeGroup?.id : null,
+    });
+    upsertChatHistoryEntry(nextEntry);
+    refreshChatHistoryEntries();
+  };
+
+  const selectHistoryEntry = async (entry) => {
+    if (!entry) {
+      return;
+    }
+
+    if (entry.type === 'group' && entry.groupId) {
+      let group = findCreatedGroupById(entry.groupId);
+      if (!group) {
+        try {
+          group = await fetchCreatedGroupById(entry.groupId);
+        } catch (error) {
+          group = null;
+        }
+      }
+      if (group) {
+        selectGroupChat(group);
+        setShowHistoryModal(false);
+      }
+      return;
+    }
+
+    if (entry.activeMember) {
+      openSingleMemberSession(entry.activeMember, entry.chatId);
+      setShowHistoryModal(false);
+    }
+  };
+
+  const fetchWorkflowRun = async (runId) => {
+    if (!runId) {
+      setActiveWorkflowRun(null);
+      setLatestWorkflowRun(null);
+      return null;
+    }
+
+    try {
+      const workflowRun = await reasonerRef.current.client.getWorkflowRun(runId);
+      setLatestWorkflowRun(workflowRun || null);
+      setActiveWorkflowRun(workflowRun.status === 'paused' ? workflowRun : null);
+      return workflowRun;
+    } catch (error) {
+      console.error('Failed to fetch workflow run:', error);
+      setActiveWorkflowRun(null);
+      setLatestWorkflowRun(null);
+      return null;
+    }
+  };
+
+  const resetChatWorkspaceState = () => {
+    if (debateSyncRef.current.timerId) {
+      clearTimeout(debateSyncRef.current.timerId);
+    }
+    debateSyncRef.current = {
+      active: false,
+      timerId: null,
+      baseMessageId: 0,
+      seenMessageIds: new Set(),
+    };
+    displayedWorkflowMessageKeysRef.current = new Set();
+    setMessages([]);
+    setTodos([]);
+    setTodosCollapsed(true);
+    setShowWelcome(true);
+    setActiveWorkflowRun(null);
+    setLatestWorkflowRun(null);
+    setWorkflowActionError('');
+    setExecutionState('idle');
+    setCurrentPlan([]);
+    setCurrentStepIndex(0);
+    setStepResult(null);
+    setPendingPlanContext(null);
+    setPlanExecutionContext({ step_outputs: {} });
+    setMentionContext(null);
+    setActiveMentionIndex(0);
+  };
+
+  const stopDebateMessageSync = () => {
+    if (debateSyncRef.current.timerId) {
+      clearTimeout(debateSyncRef.current.timerId);
+    }
+
+    debateSyncRef.current = {
+      ...debateSyncRef.current,
+      active: false,
+      timerId: null,
+    };
+  };
+
+  const appendSyncedDebateMessages = (incomingMessages) => {
+    if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
+      return 0;
+    }
+
+    let appendedCount = 0;
+    setMessages((prev) => {
+      const existingIds = new Set(
+        prev
+          .map((message) => Number(message.messageId))
+          .filter((value) => Number.isFinite(value) && value > 0)
+      );
+      const freshMessages = incomingMessages.filter((message) => {
+        const messageId = Number(message.messageId);
+        return Number.isFinite(messageId) && messageId > 0 && !existingIds.has(messageId);
+      });
+
+      if (freshMessages.length === 0) {
+        return prev;
+      }
+
+      appendedCount = freshMessages.length;
+      return [
+        ...prev.filter((message) => !message.metaData?.isPendingDebate),
+        ...freshMessages,
+      ];
+    });
+
+    return appendedCount;
+  };
+
+  const syncDebateMessages = async ({ finalSync = false, groupSnapshot = activeGroup } = {}) => {
+    if (!chatIdRef.current) {
+      return [];
+    }
+
+    const response = await axios.get(`${API_BASE}/chats/${chatIdRef.current}/messages/`);
+    const incomingMessages = (response.data || [])
+      .filter((message) => Number(message.id) > Number(debateSyncRef.current.baseMessageId || 0))
+      .filter((message) => message.sender_role !== 'user')
+      .filter((message) => isDebateChatMessage(message))
+      .filter((message) => !debateSyncRef.current.seenMessageIds.has(message.id))
+      .map((message) => mapStoredMessageToUiMessage(message, groupSnapshot, true));
+
+    if (incomingMessages.length > 0) {
+      incomingMessages.forEach((message) => {
+        if (message.messageId) {
+          debateSyncRef.current.seenMessageIds.add(message.messageId);
+        }
+      });
+
+      appendSyncedDebateMessages(incomingMessages);
+
+      const lastMessage = incomingMessages[incomingMessages.length - 1];
+      updateCurrentChatHistory({
+        summary: finalSync ? lastMessage?.text || '群聊辩论完成' : '群成员正在辩论中',
+        updatedAt: lastMessage?.createdAt || new Date().toISOString(),
+      });
+    }
+
+    return incomingMessages;
+  };
+
+  const startDebateMessageSync = ({ baseMessageId, groupSnapshot }) => {
+    stopDebateMessageSync();
+    debateSyncRef.current = {
+      active: true,
+      timerId: null,
+      baseMessageId,
+      seenMessageIds: new Set(),
+    };
+
+    const poll = async () => {
+      if (!debateSyncRef.current.active) {
+        return;
+      }
+
+      try {
+        await syncDebateMessages({ groupSnapshot });
+      } catch (error) {
+        console.error('Failed to sync debate messages:', error);
+      }
+
+      if (!debateSyncRef.current.active) {
+        return;
+      }
+
+      debateSyncRef.current.timerId = window.setTimeout(poll, 900);
+    };
+
+    void poll();
+  };
+
+  useEffect(() => () => {
+    stopDebateMessageSync();
+  }, []);
+
+  useEffect(() => () => {
+    chatUploadParseTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+    chatUploadParseTimersRef.current.clear();
+  }, []);
+
+  const clearComposerUploads = () => {
+    chatUploadParseTimersRef.current.forEach((timerId) => clearTimeout(timerId));
+    chatUploadParseTimersRef.current.clear();
+    setComposerUploads([]);
+    setChatUploadError('');
+  };
+
+  const handleRemoveComposerUpload = (uploadId) => {
+    const timerId = chatUploadParseTimersRef.current.get(uploadId);
+    if (timerId) {
+      clearTimeout(timerId);
+      chatUploadParseTimersRef.current.delete(uploadId);
+    }
+
+    setComposerUploads((current) => current.filter((item) => item.id !== uploadId));
+  };
+
+  const queueComposerUploads = (fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) {
+      return;
+    }
+
+    if (files.length > CHAT_UPLOAD_LIMIT) {
+      setChatUploadError('You may only upload 10 files at a time.');
+      return;
+    }
+
+    setChatUploadError('');
+    const uploadItems = files.map((file, index) => createComposerUploadItem(file, index));
+    setComposerUploads((current) => [...current, ...uploadItems]);
+
+    uploadItems.forEach((item, index) => {
+      const timerId = window.setTimeout(() => {
+        chatUploadParseTimersRef.current.delete(item.id);
+        setComposerUploads((current) => current.map((candidate) => (
+          candidate.id === item.id
+            ? { ...candidate, status: 'parsed' }
+            : candidate
+        )));
+      }, CHAT_UPLOAD_PARSE_BASE_DELAY + index * 260);
+
+      chatUploadParseTimersRef.current.set(item.id, timerId);
+    });
+  };
+
+  const buildOutgoingMessageText = (rawMessage, uploadedFiles) => {
+    if (rawMessage) {
+      return rawMessage;
+    }
+
+    if (uploadedFiles.length === 1) {
+      return 'Shared 1 file';
+    }
+
+    if (uploadedFiles.length > 1) {
+      return `Shared ${uploadedFiles.length} files`;
+    }
+
+    return '';
+  };
+
+  const persistComposerUploads = async (items) => {
+    const storedFiles = [];
+    for (const item of items) {
+      setComposerUploads((current) => current.map((candidate) => (
+        candidate.id === item.id ? { ...candidate, status: 'uploading' } : candidate
+      )));
+      const stored = await reasonerRef.current.client.uploadChatFile(chatIdRef.current, item.file);
+      storedFiles.push({ ...item, ...stored, status: 'stored' });
+      setComposerUploads((current) => current.map((candidate) => (
+        candidate.id === item.id ? { ...candidate, ...stored, status: 'stored' } : candidate
+      )));
+    }
+    return storedFiles;
+  };
+
+  const closeMentionPicker = () => {
+    setMentionContext(null);
+    setActiveMentionIndex(0);
+  };
+
+  const syncMentionPicker = (value, caretPosition) => {
+    if (!isGroupChat) {
+      closeMentionPicker();
+      return;
+    }
+
+    const nextContext = getActiveMentionContext(value, caretPosition);
+    if (!nextContext) {
+      closeMentionPicker();
+      return;
+    }
+
+    setMentionContext(nextContext);
+    setActiveMentionIndex(0);
+  };
+
+  const handleChatInputChange = (event) => {
+    const nextValue = event.target.value;
+    setChatInput(nextValue);
+    setChatUploadError('');
+    syncMentionPicker(nextValue, event.target.selectionStart ?? nextValue.length);
+  };
+
+  const handleChatInputSelect = (event) => {
+    syncMentionPicker(event.target.value, event.target.selectionStart ?? event.target.value.length);
+  };
+
+  const insertMentionSuggestion = (suggestion) => {
+    if (!mentionContext) {
+      return;
+    }
+
+    const replacement = suggestion.type === 'all'
+      ? (activeGroup?.members || []).map((member) => `@${member.name}`).join(' ')
+      : `@${suggestion.name}`;
+    const trailingContent = chatInput.slice(mentionContext.end).replace(/^\s*/, '');
+    const nextValue = `${chatInput.slice(0, mentionContext.start)}${replacement} ${trailingContent}`;
+    const nextCaretPosition = chatInput.slice(0, mentionContext.start).length + replacement.length + 1;
+
+    setChatInput(nextValue);
+    closeMentionPicker();
+
+    requestAnimationFrame(() => {
+      if (chatInputRef.current) {
+        chatInputRef.current.focus();
+        chatInputRef.current.setSelectionRange(nextCaretPosition, nextCaretPosition);
+      }
+    });
+  };
+
+  const appendGroupSystemMessage = async (text, metaData = {}) => {
+    if (!activeGroup?.id) {
+      return null;
+    }
+
+    const createdAt = new Date().toISOString();
+    const nextMessage = {
+      type: 'router',
+      text,
+      createdAt,
+      metaData,
+    };
+
+    setMessages((prev) => [...prev, nextMessage]);
+    await saveMessage('assistant', text, null, 'group_router', {
+      is_group_chat: true,
+      group_id: activeGroup.id,
+      group_name: activeGroup.name,
+      sender_name: '系统',
+      ...metaData,
+    });
+    return nextMessage;
+  };
+
+  const syncWorkflowStateFromHistory = async (historyMessages) => {
+    const workflowMessages = [...historyMessages]
+      .filter((msg) => (msg.message_type || '').startsWith('workflow_') && resolveWorkflowRunId(msg.meta_data))
+      .sort((left, right) => {
+        const leftTime = new Date(left.created_at || 0).getTime();
+        const rightTime = new Date(right.created_at || 0).getTime();
+        return rightTime - leftTime;
+      });
+
+    if (workflowMessages.length === 0) {
+      setActiveWorkflowRun(null);
+      setLatestWorkflowRun(null);
+      return null;
+    }
+
+    return await fetchWorkflowRun(resolveWorkflowRunId(workflowMessages[0].meta_data));
+  };
+
+  const appendAssistantMessage = (text, metaData = null) => {
+    setMessages((prev) => [...prev, { type: 'ai', text, createdAt: new Date().toISOString(), metaData }]);
+  };
+
+  const appendWorkflowStepMessages = (workflowRun) => {
+    const candidateMessages = buildWorkflowStepMessages(workflowRun);
+    if (candidateMessages.length === 0) {
+      return 0;
+    }
+
+    const unseenMessages = candidateMessages.filter((message) => !displayedWorkflowMessageKeysRef.current.has(message.key));
+    if (unseenMessages.length === 0) {
+      return 0;
+    }
+
+    unseenMessages.forEach((message) => {
+      displayedWorkflowMessageKeysRef.current.add(message.key);
+    });
+
+    setMessages((prev) => [
+      ...prev,
+      ...unseenMessages.map(({ key, ...message }) => message),
+    ]);
+
+    return unseenMessages.length;
+  };
+
+  const syncAgentPlanProgress = (workflowRun) => {
+    if (!isAgentPlanRun(workflowRun)) {
+      return;
+    }
+
+    setPlanExecutionContext(workflowRun?.context_data || { step_outputs: {} });
+
+    if (Array.isArray(workflowRun?.steps) && workflowRun.steps.length > 0) {
+      setTodos((prev) => prev.map((todo, index) => {
+        const workflowStep = workflowRun.steps[index];
+        if (!workflowStep) {
+          return todo;
+        }
+        return {
+          ...todo,
+          status: mapWorkflowStepStatusToTodo(workflowStep.status),
+        };
+      }));
+    }
+
+    if (Number.isInteger(workflowRun?.current_step_index)) {
+      setCurrentStepIndex(Math.max(0, workflowRun.current_step_index - 1));
+    }
+  };
+
+  const settleAgentPlanRun = async (initialWorkflowRun) => {
+    let workflowRun = initialWorkflowRun;
+
+    while (workflowRun) {
+      setLatestWorkflowRun(workflowRun || null);
+      setActiveWorkflowRun(workflowRun.status === 'paused' ? workflowRun : null);
+      appendWorkflowStepMessages(workflowRun);
+      syncAgentPlanProgress(workflowRun);
+
+      if (workflowRun.status !== 'running') {
+        return workflowRun;
+      }
+
+      workflowRun = await reasonerRef.current.client.executeWorkflowRun(workflowRun.id);
+    }
+
+    return workflowRun;
+  };
+
+  const advancePlanAfterWorkflowStep = async (stepIndex, completionText, workflowRun) => {
+    setStepResult(completionText);
+    updatePlanExecutionContext(stepIndex, {
+      summary: completionText,
+      workflow_run_id: workflowRun.id,
+      workflow_name: workflowRun.workflow_name,
+      outputs: workflowRun?.context_data?.step_outputs || {},
+      status: 'completed',
+    });
+
+    setMessages((prev) => [...prev, {
+      type: 'ai',
+      text: completionText,
+    }]);
+
+    saveMessage('assistant', completionText, activeMember === 'aria' ? null : activeMember, 'workflow_step_result', {
+      stepIndex,
+      stepContent: workflowRun?.context_data?.parent_step_content || workflowRun.workflow_name,
+      result: completionText,
+      workflow_run_id: workflowRun.id,
+      workflow_name: workflowRun.workflow_name,
+      awaiting_confirmation: false,
+    });
+
+    setTodos((prev) => prev.map((todo, index) => (
+      index === stepIndex ? { ...todo, status: 'completed' } : todo
+    )));
+
+    const nextIndex = stepIndex + 1;
+    setCurrentStepIndex(nextIndex);
+    await executeNextStep(currentPlanRef.current, nextIndex);
+  };
+
+  const advancePlanAfterCompletedStep = async (stepIndex, completionText, stepContent, step, result = null) => {
+    setStepResult(completionText);
+    updatePlanExecutionContext(stepIndex, {
+      status: 'completed',
+      summary: completionText,
+      skill_key: typeof step === 'string' ? null : step?.selected_skill_key || null,
+      artifacts: Array.isArray(result?.artifacts) ? result.artifacts : [],
+    });
+
+    setMessages((prev) => [...prev, {
+      type: 'ai',
+      text: completionText,
+      metaData: Array.isArray(result?.artifacts) && result.artifacts.length > 0 ? { artifacts: result.artifacts } : null,
+    }]);
+    saveMessage('assistant', completionText, activeMember === 'aria' ? null : activeMember, 'ai', Array.isArray(result?.artifacts) && result.artifacts.length > 0 ? { artifacts: result.artifacts } : null);
+
+    setTodos((prev) => prev.map((todo, index) => (
+      index === stepIndex ? { ...todo, status: 'completed' } : todo
+    )));
+
+    const nextIndex = stepIndex + 1;
+    setCurrentStepIndex(nextIndex);
+    await executeNextStep(currentPlanRef.current, nextIndex);
+  };
+
+  const completeSyntheticFinalDeliveryStep = async (stepIndex, stepContent, step) => {
+    const outputs = planExecutionContext?.step_outputs || {};
+    const previousEntries = Object.entries(outputs)
+      .filter(([key]) => {
+        const matched = /^step_(\d+)$/.exec(key);
+        return matched && Number(matched[1]) < stepIndex + 1;
+      })
+      .sort((a, b) => Number(a[0].slice(5)) - Number(b[0].slice(5)));
+
+    const fallbackSummary = [...previousEntries]
+      .reverse()
+      .map(([, value]) => value?.summary)
+      .find((summary) => typeof summary === 'string' && summary.trim());
+
+    const completionText = fallbackSummary || '已基于前序步骤结果完成最终交付。';
+
+    setStepResult(completionText);
+    updatePlanExecutionContext(stepIndex, {
+      status: 'completed',
+      summary: completionText,
+      skill_key: typeof step === 'string' ? null : step?.selected_skill_key || null,
+    });
+
+    setTodos((prev) => prev.map((todo, index) => (
+      index === stepIndex ? { ...todo, status: 'completed' } : todo
+    )));
+
+    const nextIndex = stepIndex + 1;
+    setCurrentStepIndex(nextIndex);
+    await executeNextStep(currentPlanRef.current, nextIndex);
+  };
+
+  const startWorkflowRun = async ({ workflowSkillKey, workflowSkillName, userMessage }) => {
+    const memberId = activeMember === 'aria' ? null : activeMember;
+    setWorkflowActionLoading(true);
+    setWorkflowActionError('');
+
+    try {
+      const workflowRun = await reasonerRef.current.client.startWorkflowRun({
+        chat_id: chatIdRef.current,
+        employee_id: memberId ? parseInt(memberId, 10) : null,
+        workflow_skill_key: workflowSkillKey,
+        user_message: userMessage,
+      });
+      setLatestWorkflowRun(workflowRun || null);
+      setActiveWorkflowRun(workflowRun.status === 'paused' ? workflowRun : null);
+      setTodosCollapsed(false);
+
+      appendAssistantMessage(`已选择工作流：${workflowSkillName || workflowRun.workflow_name}。`);
+      const appendedCount = appendWorkflowStepMessages(workflowRun);
+
+      if (workflowRun.status === 'paused') {
+        const prompt = workflowRun.current_step?.pause_payload?.prompt || `工作流“${workflowRun.workflow_name}”已暂停，等待你的输入。`;
+        appendAssistantMessage(prompt);
+      } else if (workflowRun.status === 'completed') {
+        const summary = getWorkflowSummaryText(workflowRun);
+        if (!summary && appendedCount === 0) {
+          appendAssistantMessage(`工作流“${workflowRun.workflow_name}”已完成。`);
+        }
+      } else {
+        appendAssistantMessage(`工作流“${workflowRun.workflow_name}”已启动。`);
+      }
+    } catch (error) {
+      const detail = error?.response?.data?.detail || error.message || '启动 workflow 失败';
+      setWorkflowActionError(detail);
+      setMessages((prev) => [...prev, { type: 'ai', text: `启动工作流失败：${detail}` }]);
+    } finally {
+      setWorkflowActionLoading(false);
+      setIsProcessing(false);
+    }
+  };
+
+  const resumePausedWorkflow = async ({ approved = null, text = '' } = {}) => {
+    if (!activeWorkflowRun?.id) {
+      return;
+    }
+
+    const currentStep = activeWorkflowRun.current_step;
+    const requiresInput = false;
+    const trimmedText = (text || '').trim();
+
+    if (requiresInput && !trimmedText) {
+      setWorkflowActionError('当前步骤需要先填写内容才能继续。');
+      return;
+    }
+
+    if (currentStep?.step_type === 'feedback_step' && approved !== true && !trimmedText) {
+      setWorkflowActionError('请直接确认，或填写反馈后再提交。');
+      return;
+    }
+
+    if (trimmedText) {
+      setMessages((prev) => [...prev, { type: 'user', text: trimmedText }]);
+      saveMessage('user', trimmedText, activeMember === 'aria' ? null : activeMember);
+    }
+
+    setWorkflowActionLoading(true);
+    setWorkflowActionError('');
+
+    try {
+      const workflowRun = isAgentPlanRun(activeWorkflowRun)
+        ? await reasonerRef.current.client.continueWorkflowRun(activeWorkflowRun.id, {
+            approved,
+            user_input: approved === true ? '' : trimmedText,
+            feedback: approved === true ? '' : trimmedText,
+          })
+        : await reasonerRef.current.client.resumeWorkflowRun(activeWorkflowRun.id, {
+            approved,
+            user_input: approved === true ? '' : trimmedText,
+            feedback: approved === true ? '' : trimmedText,
+          });
+
+      const settledWorkflowRun = isAgentPlanRun(workflowRun)
+        ? await settleAgentPlanRun(workflowRun)
+        : workflowRun;
+
+      setLatestWorkflowRun(settledWorkflowRun || null);
+      setActiveWorkflowRun(settledWorkflowRun.status === 'paused' ? settledWorkflowRun : null);
+      setChatInput('');
+      const appendedCount = appendWorkflowStepMessages(settledWorkflowRun);
+
+      if (settledWorkflowRun.status === 'paused') {
+        const prompt = settledWorkflowRun.current_step?.pause_payload?.prompt || `工作流“${settledWorkflowRun.workflow_name}”进入了新的暂停节点。`;
+        appendAssistantMessage(prompt);
+      } else if (settledWorkflowRun.status === 'completed') {
+        const parentStepIndex = settledWorkflowRun?.context_data?.parent_plan_step_index;
+        const completionText = getWorkflowStepCompletionText(settledWorkflowRun);
+
+        if (isAgentPlanRun(settledWorkflowRun)) {
+          const completionMeta = {
+            workflow_run_id: settledWorkflowRun.id,
+            workflow_name: settledWorkflowRun.workflow_name,
+            run_kind: settledWorkflowRun?.context_data?.run_kind || 'agent_plan',
+            artifacts: getWorkflowArtifacts(settledWorkflowRun),
+          };
+          setPlanExecutionContext(settledWorkflowRun?.context_data || { step_outputs: {} });
+          setTodos((prev) => prev.map((todo, index) => ({
+            ...todo,
+            status: settledWorkflowRun?.steps?.[index]?.status === 'completed' ? 'completed' : todo.status,
+          })));
+          setPendingPlanContext(null);
+          setExecutionState('completed');
+          appendAssistantMessage(completionText, completionMeta);
+          saveMessage('assistant', completionText, activeMember === 'aria' ? null : activeMember, 'ai', completionMeta);
+        } else if (Number.isInteger(parentStepIndex)) {
+          await advancePlanAfterWorkflowStep(parentStepIndex, completionText, settledWorkflowRun);
+        } else {
+          appendAssistantMessage(completionText);
+        }
+      } else {
+        appendAssistantMessage(`工作流“${settledWorkflowRun.workflow_name}”已继续执行。`);
+      }
+    } catch (error) {
+      const detail = error?.response?.data?.detail || error.message || '继续执行 workflow 失败';
+      setWorkflowActionError(detail);
+    } finally {
+      setWorkflowActionLoading(false);
+    }
+  };
+
+  const cancelPausedWorkflow = async () => {
+    if (!activeWorkflowRun?.id) {
+      return;
+    }
+
+    setWorkflowActionLoading(true);
+    setWorkflowActionError('');
+
+    try {
+      const workflowRun = await reasonerRef.current.client.cancelWorkflowRun(activeWorkflowRun.id);
+      setActiveWorkflowRun(null);
+      setChatInput('');
+      appendAssistantMessage(`工作流“${workflowRun.workflow_name}”已取消。`);
+    } catch (error) {
+      const detail = error?.response?.data?.detail || error.message || '取消 workflow 失败';
+      setWorkflowActionError(detail);
+    } finally {
+      setWorkflowActionLoading(false);
+    }
+  };
+
+  const getChatHistoryList = () => {
+    if (isGroupChat) {
+      return chatHistoryEntries.filter((entry) => (
+        entry?.type === 'group'
+        && String(entry.groupId || '') === String(activeGroup?.id || '')
+      ));
+    }
+
+    const activeEmployeeMatches = activeEmployee?.id !== undefined
+      && String(activeEmployee.id) === String(activeMember || '');
+
+    return chatHistoryEntries.filter((entry) => (
+      entry?.type === 'member'
+      && String(entry.activeMember || '') === String(activeMember || '')
+    )).map((entry) => (
+      activeEmployeeMatches && activeEmployee?.name
+        ? { ...entry, title: activeEmployee.name }
+        : entry
+    ));
+  }
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Load chat history
+  const loadChatHistory = async (chatId) => {
+    try {
+      const [messagesRes, todosRes] = await Promise.all([
+        axios.get(`${API_BASE}/chats/${chatId}/messages/`),
+        axios.get(`${API_BASE}/todos/list/${chatId}`)
+      ]);
+      if (chatIdRef.current !== chatId) {
+        return;
+      }
+
+      const targetExecutionId = pendingExecutionTargetRef.current;
+      const hasTargetExecution = Boolean(targetExecutionId)
+        && Array.isArray(messagesRes.data)
+        && messagesRes.data.some((message) => message?.meta_data?.execution_id === targetExecutionId);
+
+      let restoredPlan = [];
+      let lastStepIndex = -1;
+      let lastUserMessage = '';
+      let lastPlanApprovalMeta = null;
+      let lastStepConfirmationMeta = null;
+
+      if (messagesRes.data && messagesRes.data.length > 0) {
+        displayedWorkflowMessageKeysRef.current = new Set();
+
+        const history = messagesRes.data.map(msg => {
+          if (msg.sender_role === 'user' && typeof msg.content === 'string' && msg.content.trim()) {
+            lastUserMessage = msg.content.trim();
+          }
+
+          // Try to find the plan
+           if (msg.message_type === 'plan_approval' && (msg.meta_data?.plan_steps || msg.meta_data?.plan)) {
+             restoredPlan = msg.meta_data.plan_steps || msg.meta_data.plan;
+             lastPlanApprovalMeta = msg.meta_data || null;
+          }
+          // Try to find the last executed step
+          if (msg.message_type === 'step_confirmation' && msg.meta_data?.stepIndex !== undefined) {
+             lastStepIndex = Math.max(lastStepIndex, msg.meta_data.stepIndex);
+             lastStepConfirmationMeta = msg.meta_data || null;
+          }
+
+          if (HIDDEN_WORKFLOW_MESSAGE_TYPES.has(msg.message_type)) {
+            return null;
+          }
+
+          if (msg.message_type === 'workflow_step_result') {
+            displayedWorkflowMessageKeysRef.current.add(buildWorkflowStepMessageKey({
+              workflowRunId: msg.meta_data?.workflow_run_id,
+              stepId: msg.meta_data?.step_id,
+              text: msg.content,
+              awaitingConfirmation: Boolean(msg.meta_data?.awaiting_confirmation),
+            }));
+          }
+
+          return mapStoredMessageToUiMessage(msg, activeGroup, isGroupChat);
+        }).filter(Boolean);
+        setMessages(history);
+        setShowWelcome(false);
+        updateCurrentChatHistory({
+          summary: lastUserMessage || history[history.length - 1]?.text || '继续上次会话',
+          updatedAt: messagesRes.data[messagesRes.data.length - 1]?.created_at || new Date().toISOString(),
+        });
+        if (!isGroupChat) {
+          const workflowRun = await syncWorkflowStateFromHistory(messagesRes.data);
+          if (workflowRun) {
+            appendWorkflowStepMessages(workflowRun);
+
+            if (workflowRun.status === 'completed') {
+              const hasCompletionMessage = history.some((message) => (
+                message.type === 'ai'
+                && message.metaData?.workflow_run_id === workflowRun.id
+                && Array.isArray(message.metaData?.artifacts)
+              ));
+
+              if (!hasCompletionMessage) {
+                const completionText = getWorkflowStepCompletionText(workflowRun);
+                const completionMeta = {
+                  workflow_run_id: workflowRun.id,
+                  workflow_name: workflowRun.workflow_name,
+                  run_kind: workflowRun?.context_data?.run_kind || 'agent_plan',
+                  artifacts: getWorkflowArtifacts(workflowRun),
+                };
+                setMessages((prev) => [...prev, {
+                  type: 'ai',
+                  text: completionText,
+                  createdAt: new Date().toISOString(),
+                  metaData: completionMeta,
+                }]);
+              }
+            }
+          }
+        }
+        
+        // Restore execution state if we found a plan
+        if (restoredPlan.length > 0) {
+            setCurrentPlan(restoredPlan);
+            setCurrentStepIndex(lastStepIndex + 1);
+
+            const lastHistoryMessage = history[history.length - 1];
+            if (lastHistoryMessage?.type === 'plan_approval') {
+              setPendingPlanContext({
+                mode: lastPlanApprovalMeta?.approval_mode || (lastPlanApprovalMeta?.conversation_mode === GROUP_CHAT_MODES.COLLABORATION ? 'group-collaboration' : 'single'),
+                plan: restoredPlan,
+                is_task: lastPlanApprovalMeta?.is_task,
+                task_summary: lastPlanApprovalMeta?.task_summary,
+                user_message: lastPlanApprovalMeta?.user_message || lastUserMessage,
+                workflow_run_id: lastPlanApprovalMeta?.workflow_run_id || null,
+                workflow_run: lastPlanApprovalMeta?.workflow_run || null,
+                group_id: lastPlanApprovalMeta?.group_id || activeGroup?.id || null,
+                group_name: lastPlanApprovalMeta?.group_name || activeGroup?.name || null,
+                participant_ids: lastPlanApprovalMeta?.participant_ids || [],
+                collaboration_id: lastPlanApprovalMeta?.collaboration_id || null,
+              });
+              setExecutionState('waiting_for_plan_approval');
+            } else if (lastHistoryMessage?.type === 'step_confirmation') {
+              setExecutionState('waiting_for_feedback');
+              setCurrentStepIndex(lastStepConfirmationMeta?.stepIndex ?? (lastStepIndex >= 0 ? lastStepIndex : 0));
+            } else {
+              setExecutionState('idle');
+            }
+        } else {
+          setExecutionState('idle');
+        }
+      } else {
+        setMessages([]);
+        setShowWelcome(true);
+        setActiveWorkflowRun(null);
+        setExecutionState('idle');
+      }
+
+      if (targetExecutionId && !hasTargetExecution) {
+        showNavigationToast(resolveExecutionNavigationFailureMessage({
+          hasAnyMessages: Boolean(messagesRes.data && messagesRes.data.length > 0),
+          executionStatus: pendingExecutionStatusRef.current,
+          taskName: pendingExecutionTaskNameRef.current,
+        }));
+        pendingExecutionTargetRef.current = null;
+        pendingExecutionStatusRef.current = null;
+        pendingExecutionTaskNameRef.current = '';
+      }
+
+      if (!isGroupChat && todosRes.data && todosRes.data.length > 0) {
+        const loadedTodos = todosRes.data.map(t => ({
+          id: t.id,
+          text: t.title,
+          status: t.status
+        }));
+        setTodos(loadedTodos);
+        setTodosCollapsed(true);
+      } else {
+        setTodos([]);
+      }
+
+    } catch (error) {
+      if (chatIdRef.current !== chatId) {
+        return;
+      }
+
+      console.error("Failed to load chat history:", error);
+      setMessages([]);
+      setTodos([]);
+      setShowWelcome(true);
+      setExecutionState('idle');
+      if (pendingExecutionTargetRef.current) {
+        showNavigationToast('加载数字员工对话失败，暂时无法定位到该任务执行记录。');
+        pendingExecutionTargetRef.current = null;
+        pendingExecutionStatusRef.current = null;
+        pendingExecutionTaskNameRef.current = '';
+      }
+    }
+  };
+
+  // Save message to backend
+  const saveMessage = async (role, content, employeeId = null, messageType = 'text', metaData = null) => {
+    if (!chatIdRef.current) return;
+    
+    // Ensure employeeId is an integer or null
+    let safeEmployeeId = null;
+    if (employeeId !== null && !isNaN(parseInt(employeeId))) {
+      safeEmployeeId = parseInt(employeeId);
+    }
+
+    try {
+      await axios.post(`${API_BASE}/chats/messages/`, {
+        chat_id: chatIdRef.current,
+        sender_role: role,
+        content: content,
+        employee_id: safeEmployeeId,
+        message_type: messageType,
+        meta_data: metaData
+      });
+    } catch (error) {
+      console.error("Failed to save message:", error);
+    }
+  };
+
+  const handleImageGeneration = async ({ message, memberId }) => {
+    const size = resolveImageSizeFromPrompt(message);
+
+    setMessages(prev => [...prev, {
+      type: 'ai',
+      text: '正在生成图片，请稍候...',
+      metaData: { generation_status: 'pending' },
+    }]);
+
+    try {
+      const response = await reasonerRef.current.generateImage({
+        prompt: message,
+        width: size.width,
+        height: size.height,
+        steps: 30,
+        cfg_scale: 5,
+        seed: 0,
+        mode: 'text-to-image',
+      });
+
+      const metaData = {
+        prompt: response?.prompt || message,
+        image_base64: response?.image_base64 || null,
+        mime_type: response?.mime_type || 'image/jpeg',
+        provider: response?.provider || 'nvidia',
+        model: response?.model || 'stable-diffusion-3-medium',
+        finish_reason: response?.finish_reason || 'SUCCESS',
+        seed: response?.seed || 0,
+        width: response?.width || size.width,
+        height: response?.height || size.height,
+      };
+      const imageUrl = response?.image_data_url || (metaData.image_base64 ? `data:${metaData.mime_type};base64,${metaData.image_base64}` : null);
+
+      const imageMessage = {
+        type: 'image_generation_result',
+        text: response?.prompt || message,
+        createdAt: new Date().toISOString(),
+        imageUrl,
+        imageBase64: metaData.image_base64,
+        mimeType: metaData.mime_type,
+        metaData,
+      };
+
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = imageMessage;
+        return newMessages;
+      });
+
+      await saveMessage('assistant', response?.prompt || message, memberId, 'image_generation_result', metaData);
+      updateCurrentChatHistory({ summary: `已生成图片：${message}`, updatedAt: imageMessage.createdAt });
+      clearTransientTodoState();
+      setExecutionState('idle');
+    } catch (error) {
+      const detail = getErrorDetail(error, '图片生成失败');
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = { type: 'ai', text: `Error: ${detail}` };
+        return newMessages;
+      });
+      await saveMessage('assistant', `Error: ${detail}`, memberId, 'ai');
+    }
+  };
+
+  // Save todos to backend
+  const saveTodos = async (newTodos) => {
+    if (!chatIdRef.current) return;
+    try {
+      const todosToSave = newTodos.map((t, index) => ({
+        chat_id: chatIdRef.current,
+        title: t.text,
+        status: t.status,
+        step_index: index
+      }));
+      await axios.post(`${API_BASE}/todos/batch/`, todosToSave);
+    } catch (error) {
+      console.error("Failed to save todos:", error);
+    }
+  };
+
+  const clearTransientTodoState = () => {
+    setTodos([]);
+    setTodosCollapsed(true);
+    setCurrentPlan([]);
+    setCurrentStepIndex(0);
+    setPendingPlanContext(null);
+    setPlanExecutionContext({ step_outputs: {} });
+  };
+
+  const getErrorDetail = (error, fallbackText) => {
+    return error?.response?.data?.detail || error?.message || fallbackText;
+  };
+
+  const updateRuntimeProgressMessage = (runtimeRun) => {
+    setMessages((prev) => {
+      const nextMessages = [...prev];
+      const progressIndex = nextMessages.findLastIndex((message) => message?.metaData?.runtime_progress);
+      if (progressIndex < 0) {
+        return prev;
+      }
+      nextMessages[progressIndex] = {
+        ...nextMessages[progressIndex],
+        text: runtimeRun.status === 'awaiting_approval'
+          ? 'Codex 请求用户批准'
+          : runtimeRun.status === 'queued' ? '已排队，准备执行' : 'Codex 正在处理',
+        metaData: {
+          ...nextMessages[progressIndex].metaData,
+          runtime_progress: true,
+          runtime_run_id: runtimeRun.id,
+          runtime_status: runtimeRun.status,
+          runtime_events: runtimeRun.events || [],
+        },
+      };
+      return nextMessages;
+    });
+  };
+
+  const approveRuntimeRun = async (runId, approved) => {
+    const run = await reasonerRef.current.client.approveAnswerDirectRun(runId, approved);
+    updateRuntimeProgressMessage(run);
+  };
+
+  const resolveDirectAnswer = async (prompt, memberId, fallbackText = null, automationSetup = false, uploadIds = [], fullAccess = false) => {
+    try {
+      const run = await reasonerRef.current.client.startAnswerDirectRun(
+        prompt,
+        memberId,
+        chatIdRef.current,
+        automationSetup,
+        uploadIds,
+        fullAccess,
+      );
+      updateRuntimeProgressMessage(run);
+      let directResult = run;
+      while (['queued', 'running', 'awaiting_approval'].includes(directResult.status)) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        directResult = await reasonerRef.current.client.getAnswerDirectRun(run.id);
+        updateRuntimeProgressMessage(directResult);
+      }
+      if (directResult.status === 'failed') {
+        throw new Error(directResult.error || 'Codex 执行失败');
+      }
+      const response = directResult.result || {};
+      return {
+        ...response,
+        text: response?.result || fallbackText || '我已经收到你的请求，并已直接完成答复。',
+        artifacts: Array.isArray(response?.artifacts) ? response.artifacts : [],
+      };
+    } catch (error) {
+      if (fallbackText) {
+        return {
+          text: fallbackText,
+          artifacts: [],
+        };
+      }
+      throw error;
+    }
+  };
+
+  const clearChatHistory = async () => {
+    if (!chatIdRef.current || isClearingHistory) return;
+
+    const confirmed = window.confirm('确认清空当前助手的聊天记录吗？这会删除数据库里的聊天消息、待办和相关执行记录，且无法恢复。');
+    if (!confirmed) return;
+
+    setIsClearingHistory(true);
+    try {
+      await axios.delete(`${API_BASE}/chats/${chatIdRef.current}/messages/`);
+      removeChatHistoryEntry(activeHistoryEntryId);
+      refreshChatHistoryEntries();
+      resetChatWorkspaceState();
+      setShowHistoryModal(false);
+    } catch (error) {
+      console.error('Failed to clear chat history:', error);
+      alert('清空聊天记录失败，请稍后重试。');
+    } finally {
+      setIsClearingHistory(false);
+    }
+  };
+
+  const startNewConversation = () => {
+    resetChatWorkspaceState();
+    if (!isGroupChat && activeMember && activeMember !== 'aria') {
+      const nextChatId = createChatSessionId();
+      chatIdRef.current = nextChatId;
+      requestedChatIdRef.current = nextChatId;
+    }
+    setChatInput('');
+    clearComposerUploads();
+    setOpenFiles({});
+    setActiveFileId(null);
+    setWorkspaceFileError('');
+    setHighlightedExecutionId(null);
+    setShowHistoryModal(false);
+  };
+
+
+  // Auto-disable automationSetupMode after task is created
+  useEffect(() => {
+    if (automationSetupMode) {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage?.type === 'ai' && (lastMessage?.text?.includes('任务已创建') || lastMessage?.text?.includes('创建成功'))) {
+        setAutomationSetupMode(false)
+        reasonerRef.current?.setAutomationSetupMode(false)
+      }
+    }
+  }, [messages, automationSetupMode])
+
+  // Handle initial navigation state from Home
+  useEffect(() => {
+    let forcedSession = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = window.sessionStorage.getItem(FORCE_OPEN_TASK_SESSION_KEY);
+        forcedSession = raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        forcedSession = null;
+      }
+    }
+
+    const hasNavigationTarget = Boolean(location.state && (
+      location.state.targetExecutionId ||
+      location.state.requestedChatId ||
+      location.state.activeMember ||
+      location.state.message ||
+      location.state.prefillInput ||
+      location.state.automationSetup
+    ));
+
+    const routeState = forcedSession || location.state;
+    if ((!initialLoadRef.current || hasNavigationTarget || forcedSession) && routeState) {
+      const { message, prefillInput, automationSetup, activeMember: incomingMember, activeGroup: incomingGroup, requestedChatId, targetExecutionId, targetExecutionStatus, targetTaskName } = routeState;
+
+      if (forcedSession) {
+        automationTaskSessionRef.current = Boolean(forcedSession.taskId);
+        requestedChatIdRef.current = resolveRequestedChatId(forcedSession.requestedChatId) || createChatSessionId();
+        pendingExecutionTargetRef.current = forcedSession.targetExecutionId ?? null;
+        pendingExecutionStatusRef.current = forcedSession.targetExecutionStatus ?? null;
+        pendingExecutionTaskNameRef.current = forcedSession.targetTaskName ?? '';
+      } else {
+        automationTaskSessionRef.current = false;
+        requestedChatIdRef.current = requestedChatId ?? null;
+        pendingExecutionTargetRef.current = targetExecutionId ?? null;
+        pendingExecutionStatusRef.current = targetExecutionStatus ?? null;
+        pendingExecutionTaskNameRef.current = targetTaskName ?? '';
+      }
+
+      if (automationSetup) {
+        setAutomationSetupMode(true)
+        reasonerRef.current?.setAutomationSetupMode(true)
+      }
+
+      if (incomingGroup?.id) {
+        selectGroupChat(incomingGroup);
+        if (message) {
+          setPendingMessage(message);
+        }
+        if (prefillInput) {
+          setTimeout(() => setChatInput(prefillInput), 300);
+        }
+        initialLoadRef.current = true;
+        return;
+      }
+
+      if (incomingMember && incomingMember !== activeMember) {
+        selectSingleMember(incomingMember);
+        if (message) {
+          setPendingMessage(message);
+        }
+        if (prefillInput) {
+          setTimeout(() => setChatInput(prefillInput), 300);
+        }
+      } else if (message) {
+        setTimeout(() => sendMessage(message), 100);
+      } else if (prefillInput) {
+        setTimeout(() => setChatInput(prefillInput), 100);
+      }
+
+      const resolvedChatId = resolveRequestedChatId(requestedChatIdRef.current) || resolveRequestedChatId(forcedSession?.requestedChatId);
+      if (resolvedChatId && incomingMember) {
+        chatIdRef.current = resolvedChatId;
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem(FORCE_OPEN_TASK_SESSION_KEY)
+        }
+        resetChatWorkspaceState();
+        setTimeout(() => loadChatHistory(resolvedChatId), 20);
+        setTimeout(() => {
+          if (pendingExecutionTargetRef.current) {
+            locateExecutionMessage(pendingExecutionTargetRef.current)
+          }
+        }, 220);
+      }
+
+      initialLoadRef.current = true;
+    }
+  }, [location]);
+
+  // Handle pending message after member switch
+  useEffect(() => {
+    if (pendingMessage && (activeEmployee || activeGroup)) {
+      // Wait a brief moment to ensure UI is updated
+      const timer = setTimeout(() => {
+        sendMessage(pendingMessage);
+        setPendingMessage(null);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeEmployee, activeGroup, pendingMessage]);
+
+  useEffect(() => {
+    if (!messages.length || !pendingExecutionTargetRef.current) {
+      return;
+    }
+
+    const targetExecutionId = pendingExecutionTargetRef.current;
+    const matched = messages.some((message) => message?.metaData?.execution_id === targetExecutionId);
+    if (!matched) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (locateExecutionMessage(targetExecutionId)) {
+        pendingExecutionTargetRef.current = null;
+      }
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [messages]);
+
+  // Load employee details and chat history when activeMember changes
+  useEffect(() => {
+    if (activeGroup) {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(LAST_ACTIVE_GROUP_KEY, activeGroup.id);
+      }
+    } else {
+      localStorage.setItem('lastActiveMember', activeMember);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(LAST_ACTIVE_GROUP_KEY);
+      }
+    }
+
+    // Update Chat ID based on active member to persist history per employee
+    // Use a numeric hash or mapping for chat_id since backend expects integer
+    // For simplicity, if activeMember is 'aria', use 0. If it's a number (employee id), use that.
+    let newChatId;
+    const forcedTaskSession = typeof window !== 'undefined'
+      ? (() => {
+          try {
+            const raw = window.sessionStorage.getItem(FORCE_OPEN_TASK_SESSION_KEY);
+            return raw ? JSON.parse(raw) : null;
+          } catch (error) {
+            return null;
+          }
+        })()
+      : null;
+
+    if (activeGroup) {
+      newChatId = buildGroupChatId(activeGroup.id);
+    } else if (requestedChatIdRef.current !== null && requestedChatIdRef.current !== undefined) {
+      newChatId = resolveRequestedChatId(requestedChatIdRef.current);
+    } else if (forcedTaskSession?.requestedChatId) {
+      newChatId = resolveRequestedChatId(forcedTaskSession.requestedChatId);
+      requestedChatIdRef.current = newChatId;
+    } else if (activeMember === 'aria') {
+      newChatId = 0;
+    } else {
+      const latestEntry = getLatestSingleHistoryEntryForMember(activeMember);
+      newChatId = normalizeChatId(latestEntry?.chatId) || createChatSessionId();
+    }
+
+    if (!newChatId || newChatId <= 0) {
+      newChatId = createChatSessionId();
+    }
+
+    const hasExplicitRequestedChatId = Boolean(
+      resolveRequestedChatId(requestedChatIdRef.current)
+      || resolveRequestedChatId(forcedTaskSession?.requestedChatId)
+    );
+
+    chatIdRef.current = newChatId;
+    if (!hasExplicitRequestedChatId) {
+      requestedChatIdRef.current = null;
+    }
+
+    // Reset messages and todos before loading new ones to avoid flashing old content
+    setMessages([]);
+    setTodos([]);
+    setShowWelcome(true);
+    setActiveWorkflowRun(null);
+    setOpenFiles({});
+    setActiveFileId(null);
+    setWorkspaceFileError('');
+    setWorkflowActionError('');
+    setHighlightedExecutionId(null);
+    setPlanExecutionContext({ step_outputs: {} });
+    clearComposerUploads();
+
+    if (activeGroup) {
+      setActiveEmployee(null);
+    } else if (activeMember === 'aria') {
+      setActiveEmployee({
+        name: 'Aria',
+        role_title: 'Super Assistant',
+        avatar_url: '/Pic/2.JPG',
+        persona_prompt: 'You are an all-around super assistant who can help users with various tasks.'
+      });
+    } else {
+      const fetchEmployee = async () => {
+        setActiveEmployee(null);
+        try {
+          const response = await fetch(`${API_BASE}/ai-employees/${activeMember}`);
+          if (response.ok) {
+            const data = await response.json();
+            setActiveEmployee(data);
+          }
+        } catch (error) {
+          console.error('Failed to fetch employee details:', error);
+        }
+      };
+      fetchEmployee();
+    }
+
+    loadChatHistory(newChatId);
+  }, [activeMember, activeGroup]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const selectedEmployeeId = !activeGroup && activeMember !== 'aria' ? String(activeMember) : '';
+
+    if (!selectedEmployeeId) {
+      setTaskResultsUnreadCount(0);
+      return undefined;
+    }
+
+    const loadTaskResultsUnreadCount = async () => {
+      try {
+        const summary = await getAutomationTaskResultSummary({
+          user_id: DEFAULT_AUTOMATION_USER_ID,
+          employee_id: selectedEmployeeId,
+          unread_only: true,
+          limit: 1,
+        });
+
+        if (!cancelled) {
+          setTaskResultsUnreadCount(Number(summary.unreadCount || 0));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to load task results unread count:', error);
+        }
+      }
+    };
+
+    const handleResultsRead = (event) => {
+      if (String(event?.detail?.employeeId || '') !== selectedEmployeeId) {
+        return;
+      }
+      setTaskResultsUnreadCount(Number(event?.detail?.unreadCount || 0));
+    };
+
+    loadTaskResultsUnreadCount();
+    window.addEventListener(AUTOMATION_RESULTS_READ_EVENT, handleResultsRead);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(AUTOMATION_RESULTS_READ_EVENT, handleResultsRead);
+    };
+  }, [activeMember, activeGroup]);
+
+  const sendGroupMessage = async (overrideMessage = null) => {
+    const rawInput = typeof overrideMessage === 'string' ? overrideMessage : chatInput.trim();
+    const uploadedFilesPayload = parsedComposerUploads.map(normalizeComposerUploadForMessage);
+    const rawMessage = buildOutgoingMessageText(rawInput, uploadedFilesPayload);
+    if (hasPendingComposerUploads) {
+      setChatUploadError('Please wait until files finish parsing.');
+      return;
+    }
+    if ((!rawMessage && uploadedFilesPayload.length === 0) || !activeGroup?.members?.length) return;
+
+    const mentionedMembers = resolveMentionedMembers(activeGroup.members, rawMessage);
+    const cleanedMessage = stripMentionNames(rawMessage) || rawMessage;
+    const sentAt = new Date().toISOString();
+    const userMessageMeta = uploadedFilesPayload.length > 0 ? { uploaded_files: uploadedFilesPayload } : null;
+
+    if (isDebateMode) {
+      setWorkflowActionError('');
+      setShowWelcome(false);
+      const baseMessageId = Math.max(
+        0,
+        ...messages
+          .map((message) => Number(message.messageId))
+          .filter((value) => Number.isFinite(value) && value > 0)
+      );
+      const groupSnapshot = activeGroup;
+
+      setMessages((prev) => [
+        ...prev,
+        { type: 'user', text: rawMessage, senderName: '你', createdAt: sentAt, metaData: userMessageMeta },
+        {
+          type: 'router',
+          text: '群内辩论已开启，成员将依次发言...',
+          createdAt: sentAt,
+          metaData: { isPendingDebate: true },
+        },
+      ]);
+      updateCurrentChatHistory({ summary: rawMessage, updatedAt: sentAt });
+
+      if (!overrideMessage) {
+        setChatInput('');
+        clearComposerUploads();
+      }
+
+      setIsProcessing(true);
+      startDebateMessageSync({ baseMessageId, groupSnapshot });
+      try {
+        const response = await reasonerRef.current.groupDebate({
+          chat_id: chatIdRef.current,
+          user_message: rawMessage,
+          group_id: activeGroup.id,
+          group_name: activeGroup.name,
+          participants: activeGroup.members.map((member) => ({
+            id: member.id,
+            name: member.name,
+            role_title: member.role_title || null,
+            avatar_url: member.avatar_url || null,
+            persona_prompt: member.persona_prompt || null,
+          })),
+          mentioned_member_ids: mentionedMembers.map((member) => member.id),
+          round_count: debateRoundCount,
+        });
+        stopDebateMessageSync();
+        await syncDebateMessages({ finalSync: true, groupSnapshot });
+        setMessages((prev) => prev.filter((message) => !message.metaData?.isPendingDebate));
+        updateCurrentChatHistory({
+          summary: response?.result || rawMessage,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        stopDebateMessageSync();
+        const detail = getErrorDetail(error, '群聊辩论失败');
+        setMessages((prev) => [
+          ...prev.filter((message) => !message.metaData?.isPendingDebate),
+          { type: 'ai', text: `Error: ${detail}`, senderName: activeGroup.name, createdAt: new Date().toISOString() },
+        ]);
+      } finally {
+        setIsProcessing(false);
+      }
+
+      return;
+    }
+
+    if (isCollaborationMode) {
+      const collaborationMembers = selectCollaborationParticipants(activeGroup.members, cleanedMessage, mentionedMembers);
+
+      if (collaborationMembers.length < 2) {
+        setWorkflowActionError('合作模式至少需要 2 名可参与的群成员。');
+        return;
+      }
+
+      setWorkflowActionError('');
+      setShowWelcome(false);
+      setMessages((prev) => [...prev, { type: 'user', text: rawMessage, senderName: '你', createdAt: sentAt, metaData: userMessageMeta }]);
+      updateCurrentChatHistory({ summary: rawMessage, updatedAt: sentAt });
+
+      if (!overrideMessage) {
+        setChatInput('');
+        clearComposerUploads();
+      }
+
+      setIsProcessing(true);
+      try {
+        const response = await reasonerRef.current.groupCollaboration({
+          chat_id: chatIdRef.current,
+          user_message: rawMessage,
+          group_id: activeGroup.id,
+          group_name: activeGroup.name,
+          participants: collaborationMembers.map((member) => ({
+            id: member.id,
+            name: member.name,
+            role_title: member.role_title || null,
+            avatar_url: member.avatar_url || null,
+            persona_prompt: member.persona_prompt || null,
+          })),
+          mentioned_member_ids: mentionedMembers.map((member) => member.id),
+          max_participants: Math.max(2, Math.min(collaborationMembers.length, 3)),
+        });
+
+        const responseMessages = Array.isArray(response?.messages)
+          ? response.messages
+              .filter((message, index) => !(index === 0 && message?.sender_role === 'user' && message?.content === rawMessage))
+              .map((message) => mapGroupApiMessageToUiMessage(message, activeGroup))
+          : [];
+
+        setMessages((prev) => [...prev, ...responseMessages]);
+        updateCurrentChatHistory({
+          summary: response?.result || rawMessage,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        const detail = getErrorDetail(error, '群聊合作执行失败');
+        setMessages((prev) => [...prev, { type: 'ai', text: `Error: ${detail}`, senderName: activeGroup.name, createdAt: new Date().toISOString() }]);
+      } finally {
+        setIsProcessing(false);
+      }
+
+      return;
+    }
+
+    const responderMembers = mentionedMembers.length > 0
+      ? mentionedMembers
+      : selectAutoResponders(activeGroup.members, cleanedMessage);
+
+    if (responderMembers.length === 0) {
+      setWorkflowActionError('当前群组没有可用的回复成员。');
+      return;
+    }
+
+    setWorkflowActionError('');
+    setShowWelcome(false);
+    setMessages(prev => [...prev, { type: 'user', text: rawMessage, senderName: '你', createdAt: sentAt, metaData: userMessageMeta }]);
+    await saveMessage('user', rawMessage, null, 'text', {
+      is_group_chat: true,
+      group_id: activeGroup.id,
+      group_name: activeGroup.name,
+      participant_ids: responderMembers.map((member) => member.id),
+      mentioned_member_ids: mentionedMembers.map((member) => member.id),
+      routing_mode: mentionedMembers.length > 0 ? 'mention' : 'intent_auto',
+      conversation_mode: GROUP_CHAT_MODES.NORMAL,
+      ...(userMessageMeta || {}),
+    });
+    updateCurrentChatHistory({ summary: rawMessage, updatedAt: sentAt });
+
+    if (!overrideMessage) {
+      setChatInput('');
+      clearComposerUploads();
+    }
+
+    setIsProcessing(true);
+    try {
+      if (mentionedMembers.length === 0 && responderMembers.length > 0) {
+        const routedSummary = responderMembers.map((member) => member.name).join('、');
+        await appendGroupSystemMessage(`已根据问题意图分配给 ${routedSummary} 回复`, {
+          conversation_mode: 'normal',
+        });
+      }
+
+      const replies = await Promise.all(responderMembers.map(async (member) => {
+        const repliedAt = new Date().toISOString();
+        const response = await reasonerRef.current.answerDirectly(
+          buildGroupReplyPrompt({ group: activeGroup, member, userMessage: cleanedMessage }),
+          member.id,
+          chatIdRef.current,
+        );
+
+        const replyText = response?.result || `${member.name} 已收到。`;
+        await saveMessage('assistant', replyText, member.id, 'group_reply', {
+          is_group_chat: true,
+          group_id: activeGroup.id,
+          group_name: activeGroup.name,
+          sender_name: member.name,
+        });
+
+        return {
+          type: 'ai',
+          text: replyText,
+          createdAt: repliedAt,
+          employeeId: member.id,
+          senderName: member.name,
+          senderAvatar: member.avatar_url || null,
+        };
+      }));
+
+      setMessages(prev => [...prev, ...replies]);
+      if (replies[replies.length - 1]?.text) {
+        updateCurrentChatHistory({ summary: replies[replies.length - 1].text, updatedAt: replies[replies.length - 1].createdAt });
+      }
+    } catch (error) {
+      const detail = getErrorDetail(error, '群聊回复失败');
+      setMessages(prev => [...prev, { type: 'ai', text: `Error: ${detail}`, senderName: activeGroup.name, createdAt: new Date().toISOString() }]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const sendMessage = async (overrideMessage = null) => {
+    if (sendingMessageRef.current || isProcessing) return;
+
+    const rawInput = typeof overrideMessage === 'string' ? overrideMessage : chatInput.trim();
+    let uploadedFilesPayload = parsedComposerUploads.map(normalizeComposerUploadForMessage);
+    let message = buildOutgoingMessageText(rawInput, uploadedFilesPayload);
+    let userMessageMeta = uploadedFilesPayload.length > 0 ? { uploaded_files: uploadedFilesPayload } : null;
+    if (hasPendingComposerUploads) {
+      setChatUploadError('Please wait until files finish parsing.');
+      return;
+    }
+    if (!message && !allowsEmptySubmit(executionState, activeWorkflowRun)) return;
+
+    sendingMessageRef.current = true;
+    setIsProcessing(true);
+
+    try {
+      if (parsedComposerUploads.length > 0) {
+        const storedFiles = await persistComposerUploads(parsedComposerUploads);
+        uploadedFilesPayload = storedFiles.map(normalizeComposerUploadForMessage);
+        message = buildOutgoingMessageText(rawInput, uploadedFilesPayload);
+        userMessageMeta = { uploaded_files: uploadedFilesPayload };
+      }
+    } catch (error) {
+      const detail = getErrorDetail(error, '文件上传失败');
+      setChatUploadError(detail);
+      setMessages((prev) => [...prev, { type: 'ai', text: `文件上传失败：${detail}` }]);
+      setIsProcessing(false);
+      sendingMessageRef.current = false;
+      return;
+    }
+
+    if (executionState === 'waiting_for_plan_approval' && pendingPlanContext?.mode === 'group-collaboration') {
+      setMessages(prev => [...prev, { type: 'user', text: message, senderName: '你', createdAt: new Date().toISOString(), metaData: userMessageMeta }]);
+      setChatInput('');
+      clearComposerUploads();
+
+      const lowerMsg = message.toLowerCase();
+      const isApproval = ['ok', 'yes', 'confirm', 'approve', '确认', '没问题', '继续', '好', 'proceed', 'go ahead'].includes(lowerMsg) || lowerMsg === '';
+
+      setIsProcessing(true);
+      try {
+        if (isApproval) {
+          const executeResponse = await reasonerRef.current.groupCollaborationExecute({
+            chat_id: chatIdRef.current,
+            user_message: pendingPlanContext.user_message,
+            group_id: pendingPlanContext.group_id || activeGroup?.id,
+            group_name: pendingPlanContext.group_name || activeGroup?.name,
+            plan_steps: pendingPlanContext.plan || [],
+            participant_ids: pendingPlanContext.participant_ids || [],
+            participants: (activeGroup?.members || []).map((member) => ({
+              id: member.id,
+              name: member.name,
+              role_title: member.role_title || null,
+              avatar_url: member.avatar_url || null,
+              persona_prompt: member.persona_prompt || null,
+            })),
+            collaboration_id: pendingPlanContext.collaboration_id || null,
+          });
+
+          const executeMessages = Array.isArray(executeResponse?.messages)
+            ? executeResponse.messages.map((item) => mapGroupApiMessageToUiMessage(item, activeGroup))
+            : [];
+          setMessages((prev) => [...prev, ...executeMessages]);
+          updateCurrentChatHistory({
+            summary: executeResponse?.result || pendingPlanContext.user_message,
+            updatedAt: new Date().toISOString(),
+          });
+          setPendingPlanContext(null);
+          setExecutionState('idle');
+        } else {
+          const replanPrompt = `原始请求：${pendingPlanContext.user_message}\n用户对合作计划的调整意见：${message}`;
+          const replanResponse = await reasonerRef.current.groupCollaborationPlan({
+            chat_id: chatIdRef.current,
+            user_message: replanPrompt,
+            group_id: pendingPlanContext.group_id || activeGroup?.id,
+            group_name: pendingPlanContext.group_name || activeGroup?.name,
+            participants: (activeGroup?.members || []).map((member) => ({
+              id: member.id,
+              name: member.name,
+              role_title: member.role_title || null,
+              avatar_url: member.avatar_url || null,
+              persona_prompt: member.persona_prompt || null,
+            })),
+            mentioned_member_ids: [],
+            max_participants: Math.max(2, Math.min((activeGroup?.members || []).length || 2, 3)),
+          });
+
+          const replanMessages = Array.isArray(replanResponse?.messages)
+            ? replanResponse.messages
+                .filter((item, index) => !(index === 0 && item?.sender_role === 'user'))
+                .map((item) => mapGroupApiMessageToUiMessage(item, activeGroup))
+            : [];
+          setMessages((prev) => [...prev, ...replanMessages]);
+          const nextPlanSteps = normalizePlanSteps({ plan_steps: replanResponse?.plan_steps || [] });
+          setPendingPlanContext({
+            mode: 'group-collaboration',
+            plan: nextPlanSteps,
+            is_task: true,
+            task_summary: pendingPlanContext.user_message,
+            user_message: pendingPlanContext.user_message,
+            group_id: pendingPlanContext.group_id || activeGroup?.id,
+            group_name: pendingPlanContext.group_name || activeGroup?.name,
+            participant_ids: replanResponse?.participant_ids || [],
+            collaboration_id: replanResponse?.collaboration_id || null,
+          });
+          setExecutionState('waiting_for_plan_approval');
+          updateCurrentChatHistory({
+            summary: pendingPlanContext.user_message,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        const detail = getErrorDetail(error, '合作计划处理失败');
+        setMessages(prev => [...prev, { type: 'ai', text: `Error: ${detail}`, senderName: activeGroup?.name || '群组', createdAt: new Date().toISOString() }]);
+        setExecutionState('idle');
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    if (isGroupChat) {
+      await sendGroupMessage(overrideMessage);
+      return;
+    }
+
+    if (activeWorkflowRun?.status === 'paused') {
+      await resumePausedWorkflow({
+        approved: activeWorkflowRun.current_step?.step_type === 'feedback_step' && isApprovalReply(message) ? true : null,
+        text: message,
+      });
+      return;
+    }
+
+    // 1. Handle Feedback Mode
+    if (executionState === 'waiting_for_feedback') {
+      setMessages(prev => [...prev, { type: 'user', text: message, metaData: userMessageMeta }]);
+        setChatInput('');
+      clearComposerUploads();
+
+      const isApproval = isApprovalReply(message) || (message || '').trim() === '';
+
+        if (isApproval) {
+            await handleConfirmStep(currentStepIndex, null);
+        } else {
+            await handleConfirmStep(currentStepIndex, message);
+        }
+        return;
+    }
+
+    // 2. Handle Plan Approval Mode
+    if (executionState === 'waiting_for_plan_approval' && pendingPlanContext) {
+      setMessages(prev => [...prev, { type: 'user', text: message, metaData: userMessageMeta }]);
+        setChatInput('');
+      clearComposerUploads();
+
+        const memberId = activeMember === 'aria' ? null : activeMember;
+        setIsProcessing(true);
+
+        try {
+          const approvalResponse = await reasonerRef.current.client.approvePlan({
+            chat_id: chatIdRef.current,
+            employee_id: memberId,
+            user_message: message,
+            workflow_run_id: resolveWorkflowRunId(pendingPlanContext),
+          });
+
+          if (approvalResponse.decision === 'approved') {
+            const workflowRun = approvalResponse.workflow_run;
+
+            if (workflowRun) {
+              setLatestWorkflowRun(workflowRun || null);
+              setActiveWorkflowRun(workflowRun.status === 'paused' ? workflowRun : null);
+              appendWorkflowStepMessages(workflowRun);
+
+              if (workflowRun.status === 'paused') {
+                setPendingPlanContext(null);
+                setExecutionState('idle');
+                const prompt = workflowRun.current_step?.pause_payload?.prompt || '任务计划已暂停，等待继续。';
+                appendAssistantMessage(prompt);
+                return;
+              }
+
+              if (workflowRun.status === 'completed') {
+                const summary = getWorkflowSummaryText(workflowRun) || '任务计划已执行完成。';
+                const completionMeta = {
+                  workflow_run_id: workflowRun.id,
+                  workflow_name: workflowRun.workflow_name,
+                  run_kind: workflowRun?.context_data?.run_kind || 'agent_plan',
+                  artifacts: getWorkflowArtifacts(workflowRun),
+                };
+                appendAssistantMessage(summary, completionMeta);
+                saveMessage('assistant', summary, memberId, 'ai', completionMeta);
+                saveMessage('assistant', summary, memberId, 'workflow_completed', {
+                  workflow_run_id: workflowRun.id,
+                  workflow_name: workflowRun.workflow_name,
+                  run_kind: workflowRun?.context_data?.run_kind || 'agent_plan',
+                  artifacts: completionMeta.artifacts,
+                });
+                setPlanExecutionContext(workflowRun?.context_data || { step_outputs: {} });
+                setTodos((prev) => prev.map((todo) => ({ ...todo, status: 'completed' })));
+                setPendingPlanContext(null);
+                setExecutionState('completed');
+                return;
+              }
+            }
+
+            await handleExecutePlan(
+              pendingPlanContext.plan,
+              pendingPlanContext.is_task,
+              pendingPlanContext.task_summary,
+              pendingPlanContext.user_message,
+              workflowRun,
+            );
+          } else {
+            setExecutionState('idle');
+            setPendingPlanContext(null);
+            setShowWelcome(false);
+            saveMessage('user', message, memberId);
+
+            setMessages(prev => [...prev, { type: 'ai', text: '思考中... 正在根据您的反馈重新规划。' }]);
+
+            const combinedMessage = `之前的计划需要调整。用户的反馈意见是：${message}。请根据反馈为原始请求重新制定计划：${pendingPlanContext.user_message}。务必使用中文输出计划步骤。`;
+            const response = await reasonerRef.current.thinkSequentially(combinedMessage, memberId, chatIdRef.current);
+
+            const clarifyingQuestion = getClarifyingQuestionText(response);
+            if (clarifyingQuestion && !hasProposedPlan(response)) {
+              setMessages(prev => {
+                const newMsgs = [...prev];
+                newMsgs[newMsgs.length - 1] = { type: 'ai', text: clarifyingQuestion };
+                return newMsgs;
+              });
+              saveMessage('assistant', clarifyingQuestion, memberId, 'text');
+              setExecutionState('idle');
+              return;
+            }
+
+            const planSteps = normalizePlanSteps(response);
+            const executionMode = getExecutionMode(response);
+            const directResponseText = getDirectResponseText(response);
+            const planText = planSteps.length > 0
+              ? planSteps.map((step, idx) => `${idx + 1}. ${formatPlanStepText(step, idx)}`).join('\n')
+              : '未生成明确的步骤。';
+
+            if (executionMode === 'direct') {
+              const directPrompt = `原始请求：${pendingPlanContext.user_message}\n用户最新反馈：${message}`;
+              const directOutcome = directResponseText
+                ? { text: directResponseText, artifacts: Array.isArray(response?.artifacts) ? response.artifacts : [] }
+                : await resolveDirectAnswer(directPrompt, memberId, directResponseText || null, false, [], codexAccessMode === 'full');
+              setMessages(prev => {
+                const newMsgs = [...prev];
+                newMsgs[newMsgs.length - 1] = {
+                  type: 'ai',
+                  text: directOutcome.text,
+                  metaData: directOutcome.artifacts.length > 0 ? { artifacts: directOutcome.artifacts } : null,
+                };
+                return newMsgs;
+              });
+              saveMessage('assistant', directOutcome.text, memberId, 'ai', directOutcome.artifacts.length > 0 ? { artifacts: directOutcome.artifacts } : null);
+              clearTransientTodoState();
+              setExecutionState('idle');
+              return;
+            }
+
+            const aiResponseText = `这是我更新后的计划：\n\n${planText}\n\n我们是否继续？（回复“好的”、“ok”确认，或者提出修改意见）`;
+            setMessages(prev => [...prev, {
+              type: 'ai',
+              text: aiResponseText
+            }]);
+
+            setPendingPlanContext({
+              plan: planSteps,
+              is_task: response.is_task,
+              task_summary: response.task_summary,
+              user_message: pendingPlanContext.user_message,
+              workflow_run_id: resolveWorkflowRunId(response),
+              workflow_run: response.workflow_run || null,
+            });
+            setExecutionState('waiting_for_plan_approval');
+
+            if (planSteps.length > 0) {
+              const proposedTodos = planSteps.map((step, index) => ({
+                  id: Date.now() + index,
+                  text: formatPlanStepText(step, index),
+                  status: 'pending'
+              }));
+              setTodos(proposedTodos);
+              setTodosCollapsed(false);
+            }
+
+            saveMessage('assistant', aiResponseText, memberId, 'ai');
+          }
+        } catch (error) {
+          const detail = getErrorDetail(error, '计划确认失败');
+          setMessages(prev => [...prev, { type: 'ai', text: `Error: ${detail}` }]);
+          setExecutionState('idle');
+        } finally {
+          setIsProcessing(false);
+        }
+        return;
+    }
+
+    setShowWelcome(false);
+    setMessages(prev => [...prev, { type: 'user', text: message, metaData: userMessageMeta }]);
+    updateCurrentChatHistory({ summary: message, updatedAt: new Date().toISOString() });
+
+    const memberId = activeMember === 'aria' ? null : activeMember;
+    saveMessage('user', message, memberId, 'text', userMessageMeta); // Save user message
+
+    if (!overrideMessage) {
+      setChatInput('');
+      clearComposerUploads();
+    }
+    setIsProcessing(true);
+
+    try {
+      if (shouldGenerateImageFromPrompt(message)) {
+        await handleImageGeneration({ message, memberId });
+        return;
+      }
+
+      // Automation setup uses the direct answer path with an injected prompt.
+      if (automationSetupMode) {
+        setMessages(prev => [...prev, {
+          type: 'ai',
+          text: '正在启动 Codex...',
+          metaData: { runtime_progress: true, runtime_status: 'queued', runtime_events: [] },
+        }]);
+        const response = await resolveDirectAnswer(message, memberId, null, true, uploadedFilesPayload.map((item) => item.upload_id).filter(Boolean), codexAccessMode === 'full');
+        const replyText = response?.result || '任务创建引导已完成。';
+        const replyMeta = getAutomationDraftMeta(response);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1] = { type: 'ai', text: replyText, metaData: replyMeta };
+          return newMsgs;
+        });
+        await saveMessage('assistant', replyText, memberId, 'ai', replyMeta);
+        setIsProcessing(false);
+        return;
+      }
+
+      setMessages(prev => [...prev, {
+        type: 'ai',
+        text: '正在启动 Codex...',
+        metaData: { runtime_progress: true, runtime_status: 'queued', runtime_events: [] },
+      }]);
+        const response = await resolveDirectAnswer(message, memberId, null, false, uploadedFilesPayload.map((item) => item.upload_id).filter(Boolean), codexAccessMode === 'full');
+      
+      // Check if it's a clarification question
+      const clarifyingQuestion = getClarifyingQuestionText(response);
+      if (clarifyingQuestion && !hasProposedPlan(response)) {
+        const clarifyMeta = getAutomationDraftMeta(response);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1] = { type: 'ai', text: clarifyingQuestion, metaData: clarifyMeta };
+          return newMsgs;
+        });
+        await saveMessage('assistant', clarifyingQuestion, memberId, 'text', clarifyMeta);
+        setExecutionState('idle');
+        setIsProcessing(false);
+        return;
+      }
+
+      const replyText = response?.result || '已完成。';
+      const replyMeta = getAutomationDraftMeta(response);
+      setMessages(prev => {
+        const newMsgs = [...prev];
+        newMsgs[newMsgs.length - 1] = { type: 'ai', text: replyText, metaData: replyMeta };
+        return newMsgs;
+      });
+      await saveMessage('assistant', replyText, memberId, 'ai', replyMeta);
+      clearTransientTodoState();
+      setExecutionState('idle');
+
+    } catch (error) {
+      const errorText = `Error: ${getErrorDetail(error, '请求失败')}`;
+      setMessages((prev) => {
+        const nextMessages = [...prev];
+        const progressIndex = nextMessages.findLastIndex((item) => item?.metaData?.runtime_progress);
+        if (progressIndex >= 0) {
+          nextMessages[progressIndex] = { type: 'ai', text: errorText };
+          return nextMessages;
+        }
+        return [...nextMessages, { type: 'ai', text: errorText }];
+      });
+      saveMessage('assistant', errorText, activeMember === 'aria' ? null : activeMember);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const executeNextStep = async (plan, index, feedback = "") => {
+    if (index >= plan.length) {
+      setExecutionState('completed');
+      setMessages(prev => [...prev, { type: 'ai', text: '所有待办步骤已执行完成。' }]);
+      saveMessage('assistant', '所有待办步骤已执行完成。', activeMember === 'aria' ? null : activeMember);
+      return;
+    }
+
+    const step = plan[index];
+    const stepContent = typeof step === 'string' ? step : formatPlanStepText(step, index);
+
+    if (isSyntheticFinalDeliveryStep(step)) {
+      await completeSyntheticFinalDeliveryStep(index, stepContent, step);
+      return;
+    }
+    
+    setExecutionState('executing');
+    setIsProcessing(true);
+    
+    // Update Todo status
+    setTodos(prev => prev.map((t, i) => 
+      i === index ? { ...t, status: 'in-progress' } : t
+    ));
+
+    try {
+      const result = await reasonerRef.current.client.executeStep(
+        stepContent,
+        chatIdRef.current,
+        feedback,
+        index,
+        typeof step === 'string' ? null : step,
+        planExecutionContext,
+        codexAccessMode === 'full',
+      );
+
+      if (result.status === 'workflow_paused') {
+        setLatestWorkflowRun(result.workflow_run || null);
+        setActiveWorkflowRun(result.workflow_run || null);
+        setCurrentStepIndex(index);
+        updatePlanExecutionContext(index, {
+          status: 'workflow_paused',
+          workflow_run_id: result.workflow_run?.id,
+          workflow_name: result.workflow_run?.workflow_name,
+          summary: result.result,
+        });
+        setExecutionState('idle');
+        const appendedCount = appendWorkflowStepMessages(result.workflow_run);
+        const prompt = result.workflow_run?.current_step?.pause_payload?.prompt;
+        if (prompt) {
+          setMessages(prev => [...prev, {
+            type: 'ai',
+            text: prompt,
+          }]);
+        } else if (appendedCount === 0 && result.result) {
+          setMessages(prev => [...prev, {
+            type: 'ai',
+            text: result.result,
+          }]);
+        }
+        return;
+      }
+
+      if (result.status === 'workflow_completed' && result.workflow_run) {
+        setLatestWorkflowRun(result.workflow_run || null);
+        appendWorkflowStepMessages(result.workflow_run);
+      }
+
+      if (result.status === 'confirmation_required') {
+        setStepResult(result.result);
+        updatePlanExecutionContext(index, {
+          status: result.status || 'completed',
+          summary: result.result,
+          skill_key: typeof step === 'string' ? null : step?.selected_skill_key || null,
+          artifacts: Array.isArray(result?.artifacts) ? result.artifacts : [],
+        });
+        setExecutionState('waiting_for_feedback');
+
+        setMessages(prev => [...prev, {
+          type: 'step_confirmation',
+          text: result.result,
+          result: result.result,
+          stepIndex: index,
+          task: stepContent,
+          confirmationId: index,
+          metaData: Array.isArray(result?.artifacts) && result.artifacts.length > 0 ? { artifacts: result.artifacts } : null,
+        }]);
+
+        saveMessage('assistant', result.result, activeMember === 'aria' ? null : activeMember, 'step_confirmation', {
+          stepIndex: index,
+          stepContent: stepContent,
+          result: result.result,
+          artifacts: Array.isArray(result?.artifacts) ? result.artifacts : [],
+        });
+        return;
+      }
+
+      if (result.status === 'action_required') {
+        setStepResult(result.result);
+        updatePlanExecutionContext(index, {
+          status: 'action_required',
+          summary: result.result,
+          skill_key: typeof step === 'string' ? null : step?.selected_skill_key || null,
+          artifacts: Array.isArray(result?.artifacts) ? result.artifacts : [],
+        });
+        setExecutionState('idle');
+        setMessages(prev => [...prev, {
+          type: 'ai',
+          text: result.result,
+          metaData: Array.isArray(result?.artifacts) && result.artifacts.length > 0 ? { artifacts: result.artifacts } : null,
+        }]);
+        saveMessage('assistant', result.result, activeMember === 'aria' ? null : activeMember, 'ai', Array.isArray(result?.artifacts) && result.artifacts.length > 0 ? { artifacts: result.artifacts } : null);
+        setTodos(prev => prev.map((todo, todoIndex) => (
+          todoIndex === index ? { ...todo, status: 'pending' } : todo
+        )));
+        return;
+      }
+
+      await advancePlanAfterCompletedStep(index, result.result, stepContent, step, result);
+
+    } catch (error) {
+      console.error("Step execution failed:", error);
+      const detail = getErrorDetail(error, '步骤执行失败');
+      setMessages(prev => [...prev, { type: 'ai', text: `Step execution failed: ${detail}` }]);
+      setExecutionState('idle'); 
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmStep = async (stepIndex, feedback) => {
+    // If feedback is null/undefined, it's an approval
+    const approved = !feedback;
+    
+    if (approved) {
+      // Mark current todo as completed
+      setTodos(prev => prev.map((t, i) => 
+        i === stepIndex ? { ...t, status: 'completed' } : t
+      ));
+      
+      const nextIndex = stepIndex + 1;
+      setCurrentStepIndex(nextIndex);
+
+      await executeNextStep(currentPlanRef.current, nextIndex);
+    } else {
+      // Retry current step with feedback
+      setMessages(prev => [...prev, { type: 'user', text: `Feedback: ${feedback}` }]);
+      await executeNextStep(currentPlanRef.current, stepIndex, feedback);
+    }
+  };
+
+  const handleExecutePlan = async (planToExecute, isTask, taskSummary, userMessage, initialWorkflowRun = null) => {
+    const workflowRunId = resolveWorkflowRunId(pendingPlanContext);
+
+    if (workflowRunId) {
+      setExecutionState('executing');
+      setIsProcessing(true);
+      currentPlanRef.current = planToExecute || [];
+      setCurrentPlan(planToExecute || []);
+      setCurrentStepIndex(0);
+      setPlanExecutionContext({ step_outputs: {} });
+
+      try {
+        const workflowRun = await settleAgentPlanRun(
+          initialWorkflowRun || await reasonerRef.current.client.executeWorkflowRun(workflowRunId)
+        );
+
+        if (workflowRun.status === 'paused') {
+          setPendingPlanContext(null);
+          setExecutionState('idle');
+          const prompt = workflowRun.current_step?.pause_payload?.prompt || '任务计划已暂停，等待继续。';
+          appendAssistantMessage(prompt);
+          return;
+        }
+
+        if (workflowRun.status === 'completed') {
+          const summary = getWorkflowSummaryText(workflowRun) || '任务计划已执行完成。';
+          const completionMeta = {
+            workflow_run_id: workflowRun.id,
+            workflow_name: workflowRun.workflow_name,
+            run_kind: workflowRun?.context_data?.run_kind || 'agent_plan',
+            artifacts: getWorkflowArtifacts(workflowRun),
+          };
+          appendAssistantMessage(summary, completionMeta);
+          saveMessage('assistant', summary, activeMember === 'aria' ? null : activeMember, 'ai', completionMeta);
+          saveMessage('assistant', summary, activeMember === 'aria' ? null : activeMember, 'workflow_completed', {
+            workflow_run_id: workflowRun.id,
+            workflow_name: workflowRun.workflow_name,
+            run_kind: workflowRun?.context_data?.run_kind || 'agent_plan',
+            artifacts: completionMeta.artifacts,
+          });
+          setPlanExecutionContext(workflowRun?.context_data || { step_outputs: {} });
+          setTodos((prev) => prev.map((todo) => ({ ...todo, status: 'completed' })));
+          setPendingPlanContext(null);
+          setExecutionState('completed');
+          return;
+        }
+      } catch (error) {
+        const detail = getErrorDetail(error, '计划执行失败');
+        setMessages(prev => [...prev, { type: 'ai', text: `Error: ${detail}` }]);
+        setExecutionState('idle');
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
+    if (!planToExecute || !Array.isArray(planToExecute)) {
+      console.error("Invalid plan to execute:", planToExecute);
+      return;
+    }
+    
+    currentPlanRef.current = planToExecute;
+    setCurrentPlan(planToExecute);
+    setCurrentStepIndex(0);
+    setPlanExecutionContext({ step_outputs: {} });
+
+    // Update To-dos based on the plan
+    try {
+      const newTodos = planToExecute.map((step, index) => ({
+        id: Date.now() + index, 
+        text: typeof step === 'string' ? step : formatPlanStepText(step, index),
+        status: index === 0 ? 'pending' : 'pending'
+      }));
+      setTodos(newTodos);
+      setTodosCollapsed(false);
+      saveTodos(newTodos); 
+
+      setTodos(newTodos);
+    } catch (e) {
+      console.error("Error creating todos:", e);
+    }
+
+    // Execute first step
+    await executeNextStep(planToExecute, 0);
+  };
+
+  const handleKeyDown = (e) => {
+    if (mentionContext && mentionSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveMentionIndex((prev) => (prev + 1) % mentionSuggestions.length);
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveMentionIndex((prev) => (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length);
+        return;
+      }
+
+      if ((e.key === 'Enter' || e.key === 'Tab') && !e.shiftKey) {
+        e.preventDefault();
+        insertMentionSuggestion(mentionSuggestions[activeMentionIndex]);
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMentionPicker();
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const openFile = async (artifact) => {
+    if (!artifact?.relativePath) {
+      return;
+    }
+
+    setWorkspaceOpen(true);
+
+    const fileId = artifact.id || artifact.relativePath;
+    const existingFile = openFiles[fileId];
+    if (existingFile) {
+      setActiveFileId(fileId);
+      if (existingFile.content || existingFile.excelSheets || existingFile.isLoading) {
+        return;
+      }
+    }
+
+    setWorkspaceFileError('');
+    const previewMode = getWorkspacePreviewMode(artifact.format);
+    const previewUrl = reasonerRef.current.client.getWorkspaceFileDownloadUrl(artifact.relativePath);
+    const downloadUrl = reasonerRef.current.client.getWorkspaceFileDownloadUrl(artifact.relativePath, { download: true });
+    const initialTextContent = artifact.previewText || '文件内容加载中...';
+    setOpenFiles(prev => ({
+      ...prev,
+      [fileId]: {
+        id: fileId,
+        name: artifact.name,
+        path: artifact.relativePath,
+        format: artifact.format,
+        mimeType: artifact.mimeType,
+        sizeBytes: artifact.sizeBytes,
+        createdAt: artifact.createdAt,
+        previewText: artifact.previewText,
+        previewMode,
+        previewUrl,
+        downloadUrl,
+        content: previewMode === 'text' ? initialTextContent : artifact.previewText,
+        excelSheets: null,
+        activeSheetName: null,
+        isLoading: previewMode === 'text' || previewMode === 'spreadsheet',
+        error: '',
+      }
+    }));
+    setActiveFileId(fileId);
+
+    if (previewMode === 'spreadsheet') {
+      try {
+        const response = await axios.get(previewUrl, { responseType: 'arraybuffer' });
+        const excelSheets = parseSpreadsheetPreview(response.data);
+        setOpenFiles(prev => ({
+          ...prev,
+          [fileId]: {
+            ...prev[fileId],
+            excelSheets,
+            activeSheetName: excelSheets[0]?.name || null,
+            isLoading: false,
+          }
+        }));
+      } catch (error) {
+        const detail = getErrorDetail(error, 'Excel 文件预览加载失败');
+        setWorkspaceFileError(detail);
+        setOpenFiles(prev => ({
+          ...prev,
+          [fileId]: {
+            ...prev[fileId],
+            isLoading: false,
+            error: detail,
+          }
+        }));
+      }
+      return;
+    }
+
+    if (previewMode !== 'text') {
+      setOpenFiles(prev => ({
+        ...prev,
+        [fileId]: {
+          ...prev[fileId],
+          isLoading: false,
+        }
+      }));
+      return;
+    }
+
+    try {
+      const fileContent = await reasonerRef.current.client.getWorkspaceFileContent(artifact.relativePath);
+      setOpenFiles(prev => ({
+        ...prev,
+        [fileId]: {
+          ...prev[fileId],
+          content: fileContent.content,
+          isLoading: false,
+        }
+      }));
+    } catch (error) {
+      const detail = getErrorDetail(error, '文件内容加载失败');
+      setWorkspaceFileError(detail);
+      setOpenFiles(prev => ({
+        ...prev,
+        [fileId]: {
+          ...prev[fileId],
+          content: artifact.previewText || detail,
+          isLoading: false,
+          error: detail,
+        }
+      }));
+    }
+  };
+
+  const closeFile = (fileId, e) => {
+    e?.stopPropagation();
+    
+    const newOpenFiles = { ...openFiles };
+    delete newOpenFiles[fileId];
+    setOpenFiles(newOpenFiles);
+    
+    const remainingFiles = Object.keys(newOpenFiles);
+    if (remainingFiles.length === 0) {
+      setActiveFileId(null);
+    } else if (activeFileId === fileId) {
+      setActiveFileId(remainingFiles[0]);
+    }
+  };
+
+  const updateActiveSpreadsheetSheet = (fileId, sheetName) => {
+    setOpenFiles(prev => ({
+      ...prev,
+      [fileId]: {
+        ...prev[fileId],
+        activeSheetName: sheetName,
+      }
+    }));
+  };
+
+  const renderMessageArtifactCards = (message) => {
+    const artifacts = getMessageArtifacts(message);
+    if (artifacts.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-4 flex flex-wrap gap-3">
+        {artifacts.map((artifact) => (
+          <button
+            key={artifact.id}
+            type="button"
+            onClick={() => openFile(artifact)}
+            className="flex min-w-[220px] max-w-[320px] items-center gap-3 rounded-[20px] border border-[#dfe5ec] bg-white px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#cbd5e1] hover:shadow-md"
+          >
+            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-[#f3f4f6] text-lg">
+              <span>{getWorkspaceArtifactIcon(artifact.format)}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="break-all text-[13px] font-medium leading-5 text-[#111827]">{artifact.name}</div>
+              <div className="mt-1 flex items-center gap-2 text-[11px] text-[#6b7280]">
+                <span className="uppercase">{artifact.format}</span>
+                <span>{formatWorkspaceFileSize(artifact.sizeBytes)}</span>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderMessageUploadedFileCards = (message, isInverse = false) => {
+    const uploadedFiles = getMessageUploadedFiles(message);
+    if (uploadedFiles.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3 flex flex-wrap gap-2">
+        {uploadedFiles.map((file) => (
+          <div
+            key={file.id || file.name}
+            className={`flex min-w-[180px] items-center gap-3 rounded-2xl border px-3 py-2.5 ${isInverse ? 'border-white/15 bg-white/10 text-white' : 'border-[#e5e7eb] bg-[#f8fafc] text-[#111827]'}`}
+          >
+            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl text-[11px] font-semibold ${isInverse ? 'bg-white/15 text-white' : 'bg-white text-[#475467]'}`}>
+              {file.fileType}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">{file.name}</div>
+              <div className={`mt-0.5 text-xs ${isInverse ? 'text-white/70' : 'text-[#667085]'}`}>{file.sizeLabel}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const formatJsonContent = (content) => {
+    try {
+      const parsed = JSON.parse(content);
+      return JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      return content;
+    }
+  };
+
+  return (
+    <div className="flex h-screen min-w-0 bg-gray-50">
+      {navigationToast && (
+        <div className="fixed left-1/2 top-5 z-[80] -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-sm text-white shadow-2xl">
+          {navigationToast.message}
+        </div>
+      )}
+
+      {/* 左侧导航栏 */}
+      <Sidebar 
+        activeMember={activeMember}
+        activeGroupId={activeGroup?.id || null}
+        onSelectMember={selectSingleMember}
+        onSelectGroup={selectGroupChat}
+      />
+
+      {/* 中间对话区 */}
+      <div className={`${(workspaceOpen && !isGroupChat && isMaximized) || (showTaskResults && !isGroupChat && isTaskResultsMaximized) ? 'hidden' : 'flex-1'} min-w-0 min-h-0 flex flex-col bg-white`}>
+        {/* 对话区头部 */}
+        <div className={`bg-white border-b border-gray-200 px-6 ${(workspaceOpen && !isGroupChat) || (showTaskResults && !isGroupChat) ? 'py-4' : 'py-5'} flex items-center gap-4`}>
+          <div 
+            className={`w-12 h-12 rounded-full overflow-hidden transition-transform ${isGroupChat ? '' : 'cursor-pointer hover:scale-105'}`}
+            onClick={() => {
+              if (!isGroupChat && activeMember !== 'aria') {
+                if (activeEmployee?.dify_url) {
+                  navigate('/connect-silicon-worker')
+                } else {
+                  navigate(`/add-silicon-worker?mode=edit&id=${activeMember}`)
+                }
+              }
+            }}
+          >
+            {isGroupChat ? (
+              <div className="flex h-full w-full items-center justify-center bg-[#eef2f7] text-lg font-semibold text-[#667085]">组</div>
+            ) : (
+              <img 
+                src={activeEmployee?.avatar_url || "/Pic/2.JPG"} 
+                alt={activeEmployee?.name || "Aria"} 
+                className="w-full h-full object-cover" 
+              />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-semibold text-black mb-1">{isGroupChat ? activeGroup?.name : (activeEmployee?.name || "Aria")}</h1>
+            <p className="text-sm text-black">{isGroupChat ? (activeGroup?.members || []).map((member) => member.name).join('、') : (activeEmployee?.role_title || "Your super assistant, ready to serve you anytime")}</p>
+            {isGroupChat ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#111827] px-3 py-1 text-xs font-medium text-white">{groupConversationCopy.title}</span>
+                <span className="text-xs text-black">{groupConversationCopy.description}</span>
+              </div>
+            ) : null}
+          </div>
+          {(workspaceOpen && !isGroupChat) || (showTaskResults && !isGroupChat) ? null : (
+            <>
+              {isGroupChat ? (
+                <>
+                  <button
+                    onClick={() => setIsGroupMembersModalOpen(true)}
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-2 text-black"
+                  >
+                    <span>👥</span>
+                    <span>{t('chat.viewMembers')}</span>
+                  </button>
+                  <button
+                    onClick={openAddMembersModal}
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-2 text-black"
+                  >
+                    <span>➕</span>
+                    <span>{t('chat.addMembers')}</span>
+                  </button>
+                </>
+              ) : null}
+              <button 
+                onClick={startNewConversation}
+                className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors flex items-center justify-center text-gray-700"
+                title={t('chat.newConversation')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => setShowHistoryModal(true)}
+                className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors flex items-center justify-center text-gray-700"
+                title={t('chat.history')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3.75h6l4 4V20.25a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M13 3.75v4h4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6M9 16h6" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => { setShowTaskResults(true); setWorkspaceOpen(false); }}
+                className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors flex items-center justify-center text-gray-700 relative"
+                title={t('taskResults.scheduledTasks', '定时任务')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
+                </svg>
+                {taskResultsUnreadCount > 0 ? (
+                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#d94841] ring-2 ring-white" />
+                ) : null}
+              </button>
+              {!isGroupChat && (
+                <button 
+                  onClick={() => { setWorkspaceOpen(!workspaceOpen); setShowTaskResults(false); }}
+                  className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors flex items-center justify-center text-gray-700"
+                  title={t('chat.workspace')}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        <GroupMembersModal
+          isOpen={isGroupMembersModalOpen}
+          group={activeGroup}
+          onClose={() => setIsGroupMembersModalOpen(false)}
+        />
+
+        <AddGroupMembersModal
+          isOpen={isAddMembersModalOpen}
+          group={activeGroup}
+          searchTerm={groupMemberSearchTerm}
+          onSearchChange={setGroupMemberSearchTerm}
+          candidateEmployees={addableGroupEmployees}
+          selectedMemberIds={selectedGroupAddMemberIds}
+          onToggleMember={toggleGroupAddMember}
+          onClose={() => {
+            setIsAddMembersModalOpen(false);
+            setSelectedGroupAddMemberIds([]);
+            setGroupMembersActionError('');
+          }}
+          onSave={handleSaveGroupMembers}
+          isSaving={isGroupMembersSaving}
+          error={groupMembersActionError}
+        />
+
+        {/* 聊天消息区域 */}
+        <div ref={chatMessagesRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-6 flex flex-col gap-4">
+          {showWelcome ? (
+            <div className="flex items-center justify-center h-full text-center">
+              <div className="max-w-md">
+                {isGroupChat ? (
+                  <>
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#eef2f7] text-2xl font-semibold text-[#667085]">组</div>
+                    <h2 className="text-2xl font-semibold text-black mb-4">{isZh ? `进入 ${activeGroup?.name} 群聊` : t('chat.welcome.group.title', '', { name: activeGroup?.name || 'Group' })}</h2>
+                    <p className="text-base text-black mb-3 leading-relaxed">{activeGroup?.description || (isZh ? '这是一个多数字员工协作群聊。' : t('chat.welcome.group.descriptionFallback'))}</p>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {(activeGroup?.members || []).map((member) => (
+                        <span key={member.id} className="rounded-full border border-[#dbe3ee] bg-white px-3 py-1 text-sm text-black">{member.name}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      onClick={() => {
+                        if (activeEmployee?.dify_url) navigate('/connect-silicon-worker')
+                      }}
+                      className={`w-20 h-20 mx-auto mb-6 rounded-full overflow-hidden ${activeEmployee?.dify_url ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
+                      title={activeEmployee?.dify_url ? (isZh ? '配置连接' : 'Configure connection') : undefined}
+                    >
+                      <img 
+                        src={activeEmployee?.avatar_url || "/Pic/2.JPG"} 
+                        alt={activeEmployee?.name || "Aria"} 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    <h2 className="text-2xl font-semibold text-black mb-4">{isZh ? `你好，我是 ${activeEmployee?.name || 'Aria'}！` : t('chat.welcome.single.title', '', { name: activeEmployee?.name || 'Aria' })}</h2>
+                    <p className="text-base text-black mb-3 leading-relaxed">
+                      {activeEmployee?.persona_prompt 
+                        ? (isZh ? `${activeEmployee.role_title || '数字员工'}：${activeEmployee.persona_prompt.slice(0, 50)}...` : `As a ${activeEmployee.role_title}, ${activeEmployee.persona_prompt.slice(0, 50)}...`) 
+                        : t('chat.welcome.single.descriptionFallback')}
+                    </p>
+                      <p className="text-base text-black leading-relaxed">{t('chat.welcome.single.prompt')}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <div key={index} className="contents">
+                {shouldRenderTimeDivider(messages, index) && (
+                  <div className="self-center rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-black">
+                    {formatMessageTimeLabel(msg.createdAt)}
+                  </div>
+                )}
+                {msg.type === 'router' ? (
+                  <div className="self-center rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 text-xs text-black shadow-sm">
+                    {msg.text}
+                  </div>
+                ) : isGroupChat && msg.type !== 'user' ? (
+                  <div className="self-start flex max-w-[88%] items-start gap-3">
+                    {(() => {
+                      const senderExternal = msg.employee_id
+                        ? Boolean((activeGroup?.members || []).find((m) => m.id === msg.employee_id)?.dify_url)
+                        : false
+                      return (
+                        <div
+                          onClick={senderExternal ? () => navigate('/connect-silicon-worker') : undefined}
+                          title={senderExternal ? (isZh ? '配置连接' : 'Configure connection') : undefined}
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#eef2f7] text-sm font-semibold text-[#667085] ${senderExternal ? 'cursor-pointer transition-opacity hover:opacity-80' : ''}`}
+                        >
+                          {msg.senderAvatar ? (
+                            <img src={msg.senderAvatar} alt={msg.senderName || '数字员工'} className="h-full w-full object-cover" />
+                          ) : (
+                            <span>{(msg.senderName || '组').slice(0, 1)}</span>
+                          )}
+                        </div>
+                      )
+                    })()}
+                    <div className="min-w-0">
+                      <div className="mb-1 flex items-center gap-2 text-xs font-medium text-black">
+                        <span>{msg.senderName || '数字员工'}</span>
+                        {getGroupMessageStageLabel(msg.metaData) ? (
+                          <span className="rounded-full bg-[#ecfdf3] px-2 py-0.5 text-[11px] font-medium text-[#027a48]">
+                            {getGroupMessageStageLabel(msg.metaData)}
+                          </span>
+                        ) : null}
+                        {Number.isInteger(msg.metaData?.collaboration_step_index) ? (
+                          <span className="rounded-full bg-[#eff6ff] px-2 py-0.5 text-[11px] font-medium text-[#1d4ed8]">
+                            第 {msg.metaData.collaboration_step_index + 1}/{msg.metaData.collaboration_step_total || 1} 棒
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="rounded-[24px] rounded-tl-[8px] border border-[#e7ebf0] bg-white px-5 py-4 text-sm leading-relaxed text-gray-900 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
+                        {msg.metaData?.collaboration_responsibility ? (
+                          <div className="mb-2 rounded-2xl bg-white/80 px-3 py-2 text-xs leading-relaxed text-black">
+                            当前职责：{msg.metaData.collaboration_responsibility}
+                            {msg.metaData?.source_member_name ? ` | 上一步来自 ${msg.metaData.source_member_name}` : ''}
+                          </div>
+                        ) : null}
+                        <MarkdownContent className="chat-markdown-body" content={msg.text} />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    data-execution-id={msg.metaData?.execution_id || undefined}
+                    className={`max-w-[86%] rounded-[24px] text-sm leading-relaxed ${
+                      msg.type === 'user'
+                        ? 'self-end bg-gray-900 px-4 py-3 text-white'
+                        : highlightedExecutionId && msg.metaData?.execution_id === highlightedExecutionId
+                          ? 'self-start border border-[#f97316] bg-[#fff7ed] px-5 py-4 text-gray-900 shadow-[0_10px_28px_rgba(15,23,42,0.06)] ring-2 ring-[#fdba74]/60'
+                          : 'self-start border border-[#e7ebf0] bg-white px-5 py-4 text-gray-900 shadow-[0_10px_28px_rgba(15,23,42,0.06)]'
+                    }`}
+                  >
+                    {msg.type === 'image_generation_result' ? (
+                      <div className="space-y-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700">
+                          Image Result
+                        </div>
+                        {msg.imageUrl ? (
+                          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                            <img
+                              src={msg.imageUrl}
+                              alt={msg.metaData?.prompt || 'Generated image'}
+                              className="block max-h-[70vh] w-full object-contain bg-white"
+                            />
+                          </div>
+                        ) : null}
+                        <div className="whitespace-pre-wrap text-black">{msg.metaData?.prompt || msg.text}</div>
+                        <div className="flex flex-wrap gap-2 text-xs text-black">
+                          {msg.metaData?.model ? <span className="rounded-full bg-white px-2.5 py-1">{msg.metaData.model}</span> : null}
+                          {msg.metaData?.width && msg.metaData?.height ? <span className="rounded-full bg-white px-2.5 py-1">{msg.metaData.width} x {msg.metaData.height}</span> : null}
+                          {msg.metaData?.seed !== undefined ? <span className="rounded-full bg-white px-2.5 py-1">seed {msg.metaData.seed}</span> : null}
+                        </div>
+                      </div>
+                    ) : msg.type === 'step_confirmation' ? (
+                      <div>
+                        <MarkdownContent className="chat-markdown-body" content={msg.text} />
+                        {index === messages.length - 1 && executionState === 'waiting_for_feedback' && (
+                            <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-indigo-600 font-medium flex items-center gap-1">
+                                <span>⏳ Waiting for confirmation... (Reply 'confirm' to continue, or enter feedback directly)</span>
+                            </div>
+                        )}
+                      </div>
+                    ) : msg.type === 'workflow_step_result' ? (
+                      <div>
+                        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-700">
+                          {msg.metaData?.step_name || 'Workflow Result'}
+                        </div>
+                        <MarkdownContent className="chat-markdown-body" content={msg.text} />
+                        {renderMessageArtifactCards(msg)}
+                        {msg.metaData?.awaiting_confirmation ? (
+                          <div className="mt-2 text-xs text-black">等待确认或补充反馈</div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div>
+                        {msg.metaData?.runtime_progress ? (
+                          <div className="min-w-[240px] space-y-2">
+                            <div className="flex items-center gap-2 font-medium text-[#1d4ed8]">
+                              <span className="h-2 w-2 animate-pulse rounded-full bg-[#2563eb]" />
+                              <span>{msg.text}</span>
+                            </div>
+                            {msg.metaData.runtime_status === 'awaiting_approval' ? (
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  className="rounded-lg bg-[#2563eb] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1d4ed8]"
+                                  onClick={() => approveRuntimeRun(msg.metaData.runtime_run_id, true)}
+                                >
+                                  批准执行
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded-lg border border-[#d0d5dd] px-3 py-1.5 text-xs font-medium text-[#475467] hover:bg-[#f8fafc]"
+                                  onClick={() => approveRuntimeRun(msg.metaData.runtime_run_id, false)}
+                                >
+                                  拒绝并取消
+                                </button>
+                              </div>
+                            ) : null}
+                            {msg.metaData.runtime_status === 'approval_submitting' ? (
+                              <div className="flex gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  disabled={msg.metaData.runtime_status === 'approval_submitting'}
+                                  className="rounded-lg bg-[#2563eb] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#1d4ed8]"
+                                  onClick={() => approveRuntimeRun(msg.metaData.runtime_run_id, true)}
+                                >
+                                  批准执行
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={msg.metaData.runtime_status === 'approval_submitting'}
+                                  className="rounded-lg border border-[#d0d5dd] px-3 py-1.5 text-xs font-medium text-[#475467] hover:bg-[#f8fafc]"
+                                  onClick={() => approveRuntimeRun(msg.metaData.runtime_run_id, false)}
+                                >
+                                  拒绝
+                                </button>
+                              </div>
+                            ) : null}
+                            {(msg.metaData.runtime_events || []).length > 0 ? (
+                              <div className="space-y-1 border-l-2 border-[#bfdbfe] pl-3 text-xs text-[#475467]">
+                                {msg.metaData.runtime_events.slice(-5).map((event, eventIndex) => (
+                                  <div key={`${event.type || 'event'}-${eventIndex}`}>
+                                    <div>{event.label || event.type || '正在推进任务'}</div>
+                                    {event.action && event.target ? (
+                                      <div className="mt-0.5 break-all text-[11px] text-[#667085]">
+                                        {event.action}：{event.target}
+                                      </div>
+                                    ) : null}
+                                    {event.reason ? (
+                                      <div className="mt-0.5 text-[11px] text-[#667085]">原因：{event.reason}</div>
+                                    ) : null}
+                                    {Array.isArray(event.artifacts) && event.artifacts.length > 0 ? (
+                                      <div className="mt-0.5 text-[11px] text-[#166534]">
+                                        最终产物：{event.artifacts.map((artifact) => `${artifact.name || '文件'}${artifact.format ? ` (${artifact.format.toUpperCase()})` : ''}`).join('、')}
+                                      </div>
+                                    ) : null}
+                                    {event.approval_required ? (
+                                      <div className="mt-0.5 text-[11px] font-medium text-[#b54708]">需要你判断是否允许此操作</div>
+                                    ) : null}
+                                    {Array.isArray(event.generated_files) && event.generated_files.length > 0
+                                      ? `：${event.generated_files.join('、')}`
+                                      : ''}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : msg.type === 'user' ? (
+                          <MarkdownContent className="chat-markdown-body chat-markdown-body-inverse" content={msg.text} />
+                        ) : (
+                          <StructuredFormMessageContent className="chat-markdown-body" content={msg.text} />
+                        )}
+                        {renderMessageUploadedFileCards(msg, msg.type === 'user')}
+                        {renderMessageArtifactCards(msg)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* TO-DOS 模块 */}
+        {!isGroupChat && displayTodos.length > 0 && (
+          <TodoListManager 
+            todos={displayTodos} 
+            collapsed={todosCollapsed} 
+            onToggleCollapse={() => setTodosCollapsed(!todosCollapsed)} 
+          />
+        )}
+
+        {/* 输入区域 */}
+        <div className="px-6 py-5 bg-white border-t border-gray-200">
+          {workflowActionError ? (
+            <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {workflowActionError}
+            </div>
+          ) : null}
+          {chatUploadError ? (
+            <div className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {chatUploadError}
+            </div>
+          ) : null}
+          {composerUploads.length > 0 ? (
+            <div className="mb-3 flex flex-wrap gap-3">
+              {composerUploads.map((item) => (
+                <div
+                  key={item.id}
+                  className="group relative flex min-w-[220px] max-w-[320px] items-center gap-3 rounded-[22px] border border-[#e5e7eb] bg-[#f8fafc] px-4 py-3 shadow-sm"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[11px] font-semibold text-[#475467] shadow-sm">
+                    {item.fileType}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-[#111827]">{item.name}</div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-[#667085]">
+                      <span>{item.sizeLabel}</span>
+                      {item.status === 'processing' ? (
+                        <span className="inline-flex items-center gap-1 text-[#2563eb]">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#bfdbfe] border-t-[#2563eb]" />
+                          {isZh ? '解析中' : 'Parsing'}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  {item.status === 'parsed' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveComposerUpload(item.id)}
+                      className="absolute right-2 top-2 hidden h-7 w-7 items-center justify-center rounded-full bg-white text-[#475467] shadow-sm transition hover:bg-[#111827] hover:text-white group-hover:flex"
+                      title={isZh ? '移除文件' : 'Remove file'}
+                    >
+                      <span className="text-base leading-none">×</span>
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex flex-1 flex-wrap items-end gap-3">
+            <input
+              ref={chatFileInputRef}
+              type="file"
+              multiple
+              accept={CHAT_UPLOAD_ACCEPT}
+              onChange={(event) => {
+                queueComposerUploads(event.target.files);
+                event.target.value = '';
+              }}
+              className="hidden"
+            />
+            <div className="flex min-w-0 flex-1 items-end gap-3 rounded-[999px] bg-[#f7f8fb] px-3 py-1.5">
+              <button
+                type="button"
+                onClick={() => chatFileInputRef.current?.click()}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-transparent text-[#4b5563] transition-all hover:bg-[#eef2f7] hover:text-[#111827]"
+                title={t('chat.addFiles')}
+                aria-label={t('chat.addFiles')}
+              >
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path strokeLinecap="round" d="M10 4.5v11" />
+                  <path strokeLinecap="round" d="M4.5 10h11" />
+                </svg>
+              </button>
+              {!isGroupChat ? (
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCodexAccessMenuOpen((open) => !open)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-[#111827] transition hover:bg-[#eef2f7]"
+                    title={isZh ? '设置 Codex 权限' : 'Set Codex permissions'}
+                    aria-label={isZh ? '设置 Codex 权限' : 'Set Codex permissions'}
+                    aria-expanded={isCodexAccessMenuOpen}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 5 6v5c0 4.6 2.9 8.8 7 10 4.1-1.2 7-5.4 7-10V6l-7-3Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.5 12 2.2 2.2 4.8-4.8" />
+                    </svg>
+                    <span>{codexAccessMode === 'full' ? (isZh ? '允许全部访问' : 'Full access') : (isZh ? '默认权限' : 'Default')}</span>
+                    <svg className={`h-3.5 w-3.5 transition-transform ${isCodexAccessMenuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.51a.75.75 0 0 1-1.08 0l-4.25-4.51a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  {isCodexAccessMenuOpen ? (
+                    <div className="absolute bottom-[calc(100%+10px)] left-0 z-30 w-64 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.16)]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodexAccessMode('default');
+                          setIsCodexAccessMenuOpen(false);
+                        }}
+                        className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${codexAccessMode === 'default' ? 'bg-[#f1f5f9]' : 'hover:bg-[#f8fafc]'}`}
+                      >
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#cbd5e1] text-[11px] text-[#475569]">1</span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-[#111827]">{isZh ? '默认权限' : 'Default permissions'}</span>
+                          <span className="mt-0.5 block text-xs leading-5 text-[#667085]">{isZh ? '需要执行敏感操作时向你请求批准' : 'Ask before sensitive operations'}</span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCodexAccessMode('full');
+                          setIsCodexAccessMenuOpen(false);
+                        }}
+                        className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${codexAccessMode === 'full' ? 'bg-[#eff6ff]' : 'hover:bg-[#f8fafc]'}`}
+                      >
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#60a5fa] text-[11px] text-[#2563eb]">A</span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-[#111827]">{isZh ? '允许全部访问' : 'Allow full access'}</span>
+                          <span className="mt-0.5 block text-xs leading-5 text-[#667085]">{isZh ? 'Codex 执行请求自动批准' : 'Automatically approve Codex requests'}</span>
+                        </span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              <div className="relative flex-1">
+                {isGroupChat && mentionContext ? (
+                  <div className="absolute bottom-[calc(100%+12px)] left-0 z-20 w-full max-w-[360px] overflow-hidden rounded-[22px] border border-[#dbe3ee] bg-white shadow-[0_18px_50px_rgba(15,23,42,0.16)]">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => insertMentionSuggestion(mentionSuggestions[0])}
+                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${activeMentionIndex === 0 ? 'bg-[#eef4ff]' : 'bg-white hover:bg-[#f8fafc]'}`}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2f80ed] text-white shadow-sm">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 11c1.657 0 3-1.79 3-4s-1.343-4-3-4-3 1.79-3 4 1.343 4 3 4Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 13c2.21 0 4-2.015 4-4.5S10.21 4 8 4 4 6.015 4 8.5 5.79 13 8 13Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 20H3.5c0-2.485 2.015-4.5 4.5-4.5S12.5 17.515 12.5 20" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20.5 20c0-2.21-1.79-4-4-4h-1" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-semibold text-black">{t('chat.mentionAll')}</div>
+                      <div className="text-xs text-black">{isZh ? '让全部成员都收到这次点名' : 'Notify every member in the group'}</div>
+                    </div>
+                  </button>
+                  <div className="px-4 pb-1 pt-2 text-xs font-medium text-black">{t('chat.groupMembers')}</div>
+                  <div className="max-h-64 overflow-y-auto px-2 pb-2">
+                    {mentionableMembers.length > 0 ? mentionableMembers.map((member, index) => {
+                      const suggestionIndex = index + 1;
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => insertMentionSuggestion(member)}
+                          className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition ${activeMentionIndex === suggestionIndex ? 'bg-[#eef4ff]' : 'hover:bg-[#f8fafc]'}`}
+                        >
+                          <div className="h-10 w-10 overflow-hidden rounded-xl bg-[#eef2f7] text-sm font-semibold text-[#667085]">
+                            {member.avatar_url ? (
+                              <img src={member.avatar_url} alt={member.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">{member.name.slice(0, 1)}</div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium text-black">{member.name}</div>
+                            <div className="truncate text-xs text-black">{member.role_title || t('chat.digitalWorker')}</div>
+                          </div>
+                        </button>
+                      );
+                    }) : (
+                      <div className="px-3 py-4 text-sm text-black">{isZh ? '没有匹配的群成员' : t('chat.noMatchedMembers')}</div>
+                    )}
+                  </div>
+                  </div>
+                ) : null}
+                <textarea
+                  ref={chatInputRef}
+                  className="min-h-[24px] w-full resize-none border-0 bg-transparent px-1 py-2 text-[15px] leading-6 text-[#111827] outline-none placeholder:text-[#98a2b3] focus:ring-0 max-h-[120px]"
+                  placeholder={activeWorkflowRun?.status === 'paused'
+                    ? (isZh ? '当前步骤已暂停，直接回复“继续/确认”，或输入修改建议' : t('chat.placeholder.paused'))
+                    : executionState === 'waiting_for_feedback'
+                      ? (isZh ? '请输入反馈，或回复“confirm/确认”继续...' : t('chat.placeholder.feedback'))
+                      : isGroupChat
+                        ? (isDebateMode
+                          ? (isZh ? '输入需求后，群成员会先辩论再给出综合结论；也可以先用 @ 指定重点参与成员...' : 'Describe the task. Members will debate first and then produce a synthesized conclusion. You can also @ priority members first...')
+                          : isCollaborationMode
+                            ? (isZh ? '输入任务目标后，系统会自动分配员工并串行接力执行；也可以先用 @ 指定优先参与成员...' : 'Describe the goal. The system will auto-assign members and execute in relay. You can also @ priority members first...')
+                            : (isZh ? '在群里发消息；输入 @ 调出成员面板，或直接输入 @Nova 点名某人...' : 'Send a message to the group. Type @ to open members, or mention someone directly like @Nova...'))
+                        : t('chat.placeholder.default')}
+                  rows="1"
+                  value={chatInput}
+                  onChange={handleChatInputChange}
+                  onClick={handleChatInputSelect}
+                  onKeyUp={handleChatInputSelect}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+              <button 
+                type="button"
+                onClick={() => sendMessage()}
+                disabled={!canSendCurrentMessage}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d1d5db] text-white transition-all hover:bg-[#9ca3af] disabled:cursor-not-allowed disabled:bg-[#d1d5db] disabled:text-[#f8fafc] enabled:bg-[#cfd5df] enabled:hover:bg-[#b8c0cc]"
+                title={workflowActionLoading ? (isZh ? '处理中...' : t('chat.processing')) : t('chat.send')}
+                aria-label={workflowActionLoading ? (isZh ? '处理中...' : t('chat.processing')) : t('chat.send')}
+              >
+                {workflowActionLoading ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
+                ) : (
+                  <svg className="h-4 w-4 -translate-x-[1px] translate-y-[-1px]" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.167 10h10.833" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m9.167 5 5 5-5 5" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {isGroupChat && isDebateMode ? (
+              <label className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm text-black">
+                <span className="whitespace-nowrap text-xs font-medium text-black">{isZh ? '轮数' : t('chat.rounds')}</span>
+                <select
+                  value={debateRoundCount}
+                  onChange={(event) => setDebateRoundCount(Number(event.target.value) || 2)}
+                  className="bg-transparent text-sm font-medium outline-none"
+                >
+                  <option value={1}>1 轮</option>
+                  <option value={2}>2 轮</option>
+                  <option value={3}>3 轮</option>
+                  <option value={4}>4 轮</option>
+                </select>
+              </label>
+            ) : null}
+            {isGroupChat ? (
+              <div className="flex items-center rounded-[20px] border border-gray-200 bg-white p-1 shadow-sm">
+                {chatModeOptions.map((mode) => (
+                  <button
+                    key={mode.key}
+                    type="button"
+                    onClick={() => setGroupConversationMode(mode.key)}
+                    className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${groupConversationMode === mode.key ? 'bg-[#111827] text-white shadow-sm' : 'text-black hover:bg-gray-50'}`}
+                    title={mode.title}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* 右侧功能区 */}
+      {workspaceOpen && !isGroupChat && (
+        <div
+          className="h-full min-w-0 border-l border-gray-200 bg-white shadow-xl transition-all duration-300 z-50 flex flex-col"
+          style={isMaximized ? { width: '100%' } : { width: 'clamp(360px, 52vw, 960px)' }}
+        >
+          {/* 功能区头部 */}
+          <div className="bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between rounded-t-2xl">
+            <h3 className="text-sm font-semibold text-black">{isZh ? `${activeEmployee?.name || 'Aria'} 的 Workspace` : t('chat.workspace.title', '', { name: activeEmployee?.name || 'Aria' })}</h3>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsMaximized(!isMaximized)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 text-black transition-all flex items-center justify-center"
+                title={isMaximized ? t('chat.workspace.restore') : t('chat.workspace.maximize')}
+              >
+                {isMaximized ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 14h6m0 0v6m0-6L3 21m17-11H14m0 0V3m0 6l7-7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                )}
+              </button>
+              <button 
+                onClick={() => setWorkspaceOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 text-black transition-all flex items-center justify-center"
+                title={t('chat.workspace.close')}
+              >
+                <span className="text-xl leading-none">×</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Workspace 主体 */}
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            {/* 左侧：文件列表 */}
+            <div className={`${isWorkspaceStorageCollapsed ? 'w-[92px]' : 'w-[280px]'} flex flex-col border-r border-gray-200 bg-gray-50 transition-[width] duration-300`}>
+              <div className="flex-1 overflow-y-auto p-3">
+                <div className={`mb-2 flex items-center ${isWorkspaceStorageCollapsed ? 'justify-center' : 'justify-between'} gap-2 px-2`}>
+                  {isWorkspaceStorageCollapsed ? (
+                    <div className="text-base" title={t('chat.workspace.fileStorage')}>📁</div>
+                  ) : (
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-black">📁 {t('chat.workspace.fileStorage')}</div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsWorkspaceStorageCollapsed((prev) => !prev)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-black transition-colors hover:bg-gray-200"
+                    title={isWorkspaceStorageCollapsed ? (isZh ? '展开文件列表' : t('chat.workspace.expandFiles')) : (isZh ? '折叠文件列表' : t('chat.workspace.collapseFiles'))}
+                  >
+                    <svg className={`h-4 w-4 transition-transform ${isWorkspaceStorageCollapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
+                {isWorkspaceStorageCollapsed ? null : workspaceArtifacts.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-[12px] leading-6 text-black">
+                    {isZh ? '当前对话还没有生成可查看的文件。' : t('chat.workspace.emptyArtifacts')}
+                  </div>
+                ) : workspaceArtifacts.map((artifact) => (
+                  <div
+                    key={artifact.id}
+                    className="mb-1 flex cursor-pointer items-center gap-2 rounded px-3 py-2 transition-colors hover:bg-indigo-50"
+                    onClick={() => openFile(artifact)}
+                    title={artifact.name}
+                  >
+                    <div className="w-5 text-base text-center">{getWorkspaceArtifactIcon(artifact.format)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] text-black">{artifact.name}</div>
+                      <div className="mt-0.5 text-[11px] text-black">{formatWorkspaceFileSize(artifact.sizeBytes)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 右侧：文件查看器 */}
+            <div className="flex min-w-0 flex-1 flex-col bg-white">
+              {Object.keys(openFiles).length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-black text-[13px] gap-2">
+                  <div className="text-5xl opacity-30">📄</div>
+                  <div>{t('chat.workspace.selectFile')}</div>
+                </div>
+              ) : (
+                <>
+                  {/* 文件标签栏 */}
+                  <div className="flex h-9 items-center gap-0 overflow-x-auto border-b border-gray-200 bg-gray-100">
+                    {Object.entries(openFiles).map(([fileId, file]) => (
+                      <div
+                        key={fileId}
+                        onClick={() => setActiveFileId(fileId)}
+                        className={`flex items-center gap-2 border-r border-gray-200 px-3 py-2 text-xs whitespace-nowrap cursor-pointer transition-colors ${
+                          activeFileId === fileId 
+                            ? 'bg-white text-black' 
+                            : 'bg-gray-100 text-black hover:bg-gray-200'
+                        }`}
+                      >
+                        <span>📄</span>
+                        <span className="max-w-[220px] truncate">{file.name}</span>
+                        <span 
+                          onClick={(e) => closeFile(fileId, e)}
+                          className="ml-1 text-black px-1 text-sm"
+                        >
+                          ×
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 文件内容区域 */}
+                  {Object.entries(openFiles).map(([fileId, file]) => (
+                    <div
+                      key={fileId}
+                      className={`flex-1 flex flex-col overflow-hidden ${activeFileId === fileId ? '' : 'hidden'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2">
+                        <div className="min-w-0 truncate text-[11px] text-black" title={file.path}>{file.path}</div>
+                        <a
+                          href={file.downloadUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex shrink-0 items-center gap-1 rounded px-2 py-1 text-xs text-black transition-colors hover:bg-gray-200"
+                        >
+                          <span>⬇️</span> {t('chat.workspace.download')}
+                        </a>
+                      </div>
+                      {file.previewMode === 'embedded' ? (
+                        <iframe title={file.name} src={file.previewUrl || file.downloadUrl} className="h-full w-full flex-1 border-0 bg-white" />
+                      ) : file.previewMode === 'image' ? (
+                        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#f8fafc] p-4 sm:p-8">
+                          <img src={file.previewUrl || file.downloadUrl} alt={file.name} className="max-h-full max-w-full object-contain shadow-sm" />
+                        </div>
+                      ) : file.previewMode === 'spreadsheet' ? (
+                        <div className="flex min-h-0 flex-1 flex-col bg-white">
+                          <div className="border-b border-gray-200 px-3 py-2">
+                            <div className="mb-2 text-xs text-gray-500">
+                              {isZh ? 'Excel 附件预览会展示前 200 行、前 26 列；完整内容请下载原始文件。' : 'Spreadsheet preview shows the first 200 rows and 26 columns. Download the original file for full content.'}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {(file.excelSheets || []).map((sheet) => (
+                                <button
+                                  key={sheet.name}
+                                  type="button"
+                                  onClick={() => updateActiveSpreadsheetSheet(file.id, sheet.name)}
+                                  className={`rounded-full px-3 py-1 text-xs transition-colors ${file.activeSheetName === sheet.name ? 'bg-[#111827] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                >
+                                  {sheet.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          {file.error ? (
+                            <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-xs text-red-600">{file.error}</div>
+                          ) : null}
+                          <div className="min-h-0 flex-1 overflow-auto bg-[#f8fafc] p-3">
+                            {file.isLoading ? (
+                              <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                                {isZh ? 'Excel 内容加载中...' : 'Loading spreadsheet preview...'}
+                              </div>
+                            ) : (() => {
+                              const activeSheet = (file.excelSheets || []).find((sheet) => sheet.name === file.activeSheetName) || file.excelSheets?.[0];
+                              const rows = activeSheet?.rows || [];
+                              if (!activeSheet || rows.length === 0) {
+                                return (
+                                  <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                                    {isZh ? '这个 Excel 暂无可展示的表格内容。' : 'No previewable spreadsheet content was found.'}
+                                  </div>
+                                );
+                              }
+                              const headerRow = rows[0] || [];
+                              const bodyRows = rows.slice(1);
+                              return (
+                                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                                  <div className="overflow-auto">
+                                    <table className="min-w-full border-collapse text-left text-xs text-gray-700">
+                                      <thead className="sticky top-0 z-10 bg-[#f3f4f6] text-[12px] text-gray-900">
+                                        <tr>
+                                          {headerRow.map((cell, index) => (
+                                            <th key={`${activeSheet.name}_head_${index}`} className="border-b border-r border-gray-200 px-3 py-2 font-semibold last:border-r-0">
+                                              {cell || `Column ${index + 1}`}
+                                            </th>
+                                          ))}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {bodyRows.map((row, rowIndex) => (
+                                          <tr key={`${activeSheet.name}_row_${rowIndex}`} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-[#fcfcfd]'}>
+                                            {headerRow.map((_, columnIndex) => (
+                                              <td key={`${activeSheet.name}_${rowIndex}_${columnIndex}`} className="max-w-[280px] border-b border-r border-gray-100 px-3 py-2 align-top text-gray-700 last:border-r-0">
+                                                {row[columnIndex] || ''}
+                                              </td>
+                                            ))}
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      ) : file.previewMode === 'preview' ? (
+                        <div className="flex-1 overflow-auto p-5 bg-white">
+                          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            {isZh ? '当前文件类型会作为附件在 Workspace 中展示，暂不支持浏览器内原样渲染。你可以直接下载原始文件；如果生成时保存了预览文本，会在下面显示。' : t('chat.workspace.previewNotice')}
+                          </div>
+                          <pre className="whitespace-pre-wrap font-mono text-xs leading-6 text-black">{file.previewText || (isZh ? '暂无预览内容。' : t('chat.workspace.noPreview'))}</pre>
+                        </div>
+                      ) : (
+                        <>
+                          {workspaceFileError || file.error ? (
+                            <div className="px-4 py-3 text-xs text-red-600 border-b border-red-100 bg-red-50">{file.error || workspaceFileError}</div>
+                          ) : null}
+                          {isMarkdownArtifactFormat(file.format) ? (
+                            <div className="workspace-markdown-shell flex-1 overflow-auto px-3 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-7">
+                              <div className="workspace-doc-body mx-auto w-full max-w-[1100px] bg-white px-2 py-2 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+                                <MarkdownContent
+                                  className="workspace-markdown mx-auto max-w-[920px]"
+                                  content={file.isLoading ? (file.content || file.previewText || (isZh ? '文件内容加载中...' : t('chat.workspace.loadingContent'))) : (file.content || file.previewText || (isZh ? '暂无内容。' : t('chat.workspace.noContent')))}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <textarea
+                              className="flex-1 p-3 font-mono text-xs leading-relaxed border-none resize-none bg-white text-gray-800 overflow-auto focus:outline-none"
+                              value={file.isLoading ? (file.content || file.previewText || (isZh ? '文件内容加载中...' : t('chat.workspace.loadingContent'))) : formatJsonContent(file.content || file.previewText || (isZh ? '暂无内容。' : t('chat.workspace.noContent')))}
+                              readOnly
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Minimized Workspace Trigger has been removed */}
+
+      {/* 右侧定时任务结果面板 */}
+      {showTaskResults && !isGroupChat && (
+        <TaskResultsPanel
+          isOpen={showTaskResults}
+          onClose={() => setShowTaskResults(false)}
+          employeeId={activeMember !== 'aria' ? activeMember : ''}
+          employeeName={activeEmployee?.name || ''}
+        />
+      )}
+
+      {/* Profile 模态框已移除 */}
+      {/* History Modal */}
+      {showHistoryModal && (
+        <>
+          <div className="fixed inset-0 z-[880] bg-black/35" onClick={() => setShowHistoryModal(false)} />
+          <div
+            className="fixed inset-y-0 right-0 z-[900] h-full min-w-0 border-l border-gray-200 bg-white shadow-xl transition-all duration-300 flex flex-col"
+            style={{ width: 'clamp(360px, 38vw, 520px)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#f3f4f6] text-[#6b7280]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3.75h6l4 4V20.25a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M13 3.75v4h4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6M9 16h6" />
+                  </svg>
+                </span>
+                <h3 className="text-sm font-semibold text-black truncate">
+                  {t('chat.history.title', '聊天记录')}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={startNewConversation}
+                  className="px-2.5 py-1 rounded-lg text-[11px] text-gray-500 hover:text-black hover:bg-gray-50 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  {t('chat.newSession', isZh ? '新建会话' : 'New session')}
+                </button>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="w-8 h-8 rounded-lg hover:bg-gray-100 text-black transition-all flex items-center justify-center"
+                  title={t('chat.workspace.close', '关闭')}
+                >
+                  <span className="text-xl leading-none">×</span>
+                </button>
+              </div>
+            </div>
+            <div className="px-5 pb-4 overflow-y-auto flex-1 mt-3">
+              {getChatHistoryList().length === 0 ? (
+                <div className="text-center py-[60px] px-5 text-muted">
+                  <div className="text-[40px] mb-3.5">📭</div>
+                  <p>{t('chat.history.empty')}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {getChatHistoryList().map((chat) => (
+                    <div 
+                      key={chat.id}
+                      className={`group cursor-pointer rounded-xl px-4 py-3 transition-all duration-200 ${chat.id === activeHistoryEntryId ? 'bg-slate-50 ring-1 ring-inset ring-slate-200' : 'bg-white hover:bg-slate-50 hover:shadow-sm'}`}
+                      onClick={() => selectHistoryEntry(chat)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[#6b7280] group-hover:bg-slate-200/70">
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3.75h6l4 4V20.25a1 1 0 01-1 1H7a1 1 0 01-1-1V4.75a1 1 0 011-1z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M13 3.75v4h4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6M9 16h6" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="text-[13px] font-semibold text-gray-900 truncate">
+                              {chat.title}
+                            </div>
+                            <span className="ml-auto flex-shrink-0 text-[11px] text-gray-400">
+                              {formatHistoryDateTime(chat.updatedAt)}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 text-[11px] text-gray-500 leading-[1.5] line-clamp-2">
+                            {chat.summary || '暂无摘要'}
+                          </div>
+                          <div className="mt-1 text-[10px] text-gray-400">
+                            {chat.type === 'group' ? (isZh ? '群组会话' : 'Group chat') : (isZh ? '员工会话' : 'Member chat')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default ChatWorkspace;

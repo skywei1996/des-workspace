@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Factory 交付能力建设</title>
+  <style>
+    :root {
+      --red: #e60012;
+      --red-deep: #c90010;
+      --ink: #121826;
+      --muted: #4b5565;
+      --line: #eceff5;
+      --panel: #ffffff;
+      --soft-red: #fff2f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #f4f5f8;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+
+    .slide {
+      width: 1440px;
+      height: 810px;
+      padding: 22px 30px 28px;
+      background: linear-gradient(180deg, #ffffff 0%, #fffefe 60%, #fff8f8 100%);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(20, 30, 55, 0.12);
+    }
+
+    .brand {
+      position: absolute;
+      top: 18px;
+      right: 38px;
+      text-align: center;
+      color: #181d2a;
+      font-size: 13px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      font-size: 29px;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -1.2px;
+    }
+
+    .brand-mark span {
+      color: var(--red);
+    }
+
+    .headline {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin: 0 0 4px;
+      padding-right: 230px;
+    }
+
+    .title-bar {
+      width: 8px;
+      height: 48px;
+      background: var(--red);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.08;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0 0 24px 26px;
+      color: #1e2531;
+      font-size: 18px;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
+    .subtitle strong {
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .stage-row {
+      display: grid;
+      grid-template-columns: 1fr 1.27fr 1.36fr 1.3fr 1.13fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stage {
+      height: 78px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 26px 12px 30px;
+      color: #fff;
+      background: linear-gradient(90deg, #f40016 0%, #d90012 100%);
+      clip-path: polygon(0 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 0 100%, 18px 50%);
+      box-shadow: 0 10px 18px rgba(217, 0, 18, 0.18);
+    }
+
+    .stage:first-child,
+    .stage:last-child {
+      color: #141a24;
+      background: linear-gradient(90deg, #fff4f5 0%, #fde9eb 100%);
+      box-shadow: none;
+    }
+
+    .stage:first-child {
+      clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 50%, calc(100% - 30px) 100%, 0 100%);
+    }
+
+    .stage:last-child {
+      clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 50%, 100% 100%, 0 100%, 22px 50%);
+    }
+
+    .stage svg {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .stage-copy {
+      display: grid;
+      gap: 2px;
+      font-weight: 900;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .stage-copy span {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.38fr 1.38fr 1.38fr 1.13fr;
+      gap: 12px;
+    }
+
+    .cap-card {
+      height: 358px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 24px rgba(31, 42, 68, 0.08);
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cap-card::after {
+      content: "";
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 18px;
+      height: 116px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(230, 0, 18, 0.08), rgba(230, 0, 18, 0.01));
+      opacity: 0.62;
+      pointer-events: none;
+    }
+
+    .cap-card.visual-right::after {
+      left: auto;
+      right: 18px;
+      bottom: 46px;
+      width: 170px;
+      height: 190px;
+      border-radius: 18px;
+      transform: rotate(-14deg);
+    }
+
+    .cap-card h2 {
+      margin: 0 0 18px;
+      color: var(--red);
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 900;
+      position: relative;
+    }
+
+    .cap-card h2::after {
+      content: "";
+      display: block;
+      width: 112px;
+      height: 1px;
+      margin-top: 12px;
+      background: #f0a4aa;
+    }
+
+    .check-list,
+    .dot-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .check-list li,
+    .dot-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 11px;
+      color: #1c2330;
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .check-list li::before {
+      content: "✓";
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 900;
+      margin-top: 1px;
+    }
+
+    .dot-list li::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      flex: 0 0 auto;
+    }
+
+    .value-title {
+      margin: 54px 0 8px;
+      color: var(--red);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 900;
+      position: relative;
+      z-index: 1;
+    }
+
+    .value-copy {
+      margin: 0;
+      color: #252d39;
+      font-size: 14px;
+      line-height: 1.48;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen-stack {
+      position: absolute;
+      right: 20px;
+      top: 48px;
+      width: 134px;
+      display: grid;
+      gap: 10px;
+      z-index: 1;
+    }
+
+    .mini-screen {
+      height: 74px;
+      border-radius: 8px;
+      border: 1px solid #dfe6f2;
+      background: linear-gradient(135deg, #f6fbff, #d9eefb);
+      box-shadow: 0 8px 16px rgba(31, 42, 68, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-screen:nth-child(2) {
+      background: linear-gradient(135deg, #e8f8ff, #aee2ef);
+    }
+
+    .mini-screen:nth-child(3) {
+      background: linear-gradient(135deg, #edf3f7, #7fb3c6);
+    }
+
+    .mini-screen::before {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .template-note {
+      position: absolute;
+      left: 64px;
+      bottom: 50px;
+      color: var(--red);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 900;
+      z-index: 1;
+    }
+
+    .ops-value {
+      margin-top: 26px;
+    }
+
+    .watermark-figure {
+      position: absolute;
+      right: 20px;
+      bottom: 18px;
+      width: 132px;
+      height: 92px;
+      opacity: 0.24;
+      color: var(--red);
+      z-index: 1;
+    }
+
+    .summary-card {
+      margin-top: 22px;
+      min-height: 132px;
+      border-radius: 18px;
+      border: 1.6px solid rgba(230, 0, 18, 0.18);
+      background: linear-gradient(90deg, #fff7f7 0%, #ffffff 52%, #f8fbff 100%);
+      box-shadow: 0 14px 34px rgba(31, 42, 68, 0.08);
+      padding: 24px 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .summary-card h2 {
+      margin: 0 0 14px;
+      color: var(--red-deep);
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .summary-card p {
+      margin: 0;
+      color: #111827;
+      font-size: 20px;
+      line-height: 1.52;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+  </style>
+</head>
+<body>
+  <main class="slide" aria-label="研发总结：AI Factory 交付能力建设">
+    <header>
+      <div class="brand">
+        <div class="brand-mark"><span>i</span>SoftStone</div>
+        <div>软通动力</div>
+      </div>
+      <div class="headline">
+        <div class="title-bar"></div>
+        <h1>研发总结：AI Factory 交付能力建设（2026 上半年）</h1>
+      </div>
+      <p class="subtitle">完成两大核心平台建设，初步形成 <strong>“模型管理 + Agent开发 + 行业应用 + 持续运营”</strong> 的一体化AI Factory交付能力</p>
+    </header>
+
+    <section class="stage-row" aria-label="交付链路">
+      <article class="stage">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 19a9 9 0 0 1 18 0v4a9 9 0 0 1-18 0z"/><path d="M10 43c2-8 8-12 14-12s12 4 14 12"/><path d="M16 17c2-6 14-6 16 0"/></svg>
+        <div class="stage-copy">AI Consulting<span>咨询规划</span></div>
+      </article>
+      <article class="stage">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l10 6v12l-10 6-10-6V11z"/><path d="M10 25l10 6v12l-10-6-10-6z" transform="translate(4 -1)"/><path d="M28 31l10-6 10 6-10 6z" transform="translate(-4 6)"/><path d="M24 5v12l10 6"/><path d="M24 17l-10 6"/></svg>
+        <div class="stage-copy">AI Foundation<span>AI基础平台</span></div>
+      </article>
+      <article class="stage">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5a15 15 0 0 0-9 27v8h18v-8A15 15 0 0 0 24 5z"/><path d="M24 14v13"/><path d="M24 27h8"/><path d="M17 40h14"/></svg>
+        <div class="stage-copy">AI WorkMate<span>Agent平台</span></div>
+      </article>
+      <article class="stage">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="12" height="12" rx="2"/><rect x="29" y="8" width="12" height="12" rx="2"/><rect x="7" y="29" width="12" height="12" rx="2"/><rect x="29" y="29" width="12" height="12" rx="2"/><path d="M11 14l3 3 6-7"/><path d="M33 35l3 3 6-7"/></svg>
+        <div class="stage-copy">Industry AI Solutions<span>行业解决方案</span></div>
+      </article>
+      <article class="stage">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 40h32"/><rect x="10" y="24" width="6" height="16"/><rect x="22" y="14" width="6" height="26"/><rect x="34" y="6" width="6" height="34"/></svg>
+        <div class="stage-copy">AI Operations<span>持续运营</span></div>
+      </article>
+    </section>
+
+    <section class="card-grid" aria-label="交付能力明细">
+      <article class="cap-card">
+        <h2>业务价值</h2>
+        <ul class="dot-list">
+          <li>深入理解业务场景</li>
+          <li>梳理AI机会点</li>
+          <li>制定AI蓝图与路线图</li>
+          <li>评估算力与模型需求</li>
+          <li>设计交付方案</li>
+        </ul>
+      </article>
+
+      <article class="cap-card">
+        <h2>上半年完成</h2>
+        <ul class="check-list">
+          <li>模型生命周期管理</li>
+          <li>NIM模型管理</li>
+          <li>模型打包</li>
+          <li>License治理</li>
+          <li>企业模型市场</li>
+        </ul>
+        <div class="value-title">交付价值</div>
+        <p class="value-copy">建立企业级模型运营体系，为AI Factory提供统一AI基础平台。</p>
+      </article>
+
+      <article class="cap-card visual-right">
+        <h2>上半年完成</h2>
+        <ul class="check-list">
+          <li>Knowledge Base</li>
+          <li>MCP</li>
+          <li>Skill</li>
+          <li>数字员工配置</li>
+          <li>模型配置</li>
+          <li>文件上传</li>
+        </ul>
+        <div class="value-title">交付价值</div>
+        <p class="value-copy">建立企业Agent平台，实现数字员工快速开发、配置与运营。</p>
+      </article>
+
+      <article class="cap-card">
+        <h2>完成</h2>
+        <ul class="check-list">
+          <li>Agent开发</li>
+          <li>Agent配置</li>
+          <li>Agent编排</li>
+          <li>Agent运行</li>
+          <li>VOC</li>
+          <li>医疗Agent</li>
+          <li>制造Agent</li>
+        </ul>
+        <div class="screen-stack" aria-hidden="true"><div class="mini-screen"></div><div class="mini-screen"></div><div class="mini-screen"></div></div>
+        <div class="template-note">形成行业模板。</div>
+      </article>
+
+      <article class="cap-card">
+        <h2>建立</h2>
+        <ul class="check-list">
+          <li>模型运营</li>
+          <li>Agent运营</li>
+          <li>License运营</li>
+          <li>GPU运营</li>
+          <li>监控与告警</li>
+          <li>数据与日志分析</li>
+        </ul>
+        <div class="value-title ops-value">交付价值</div>
+        <p class="value-copy">形成持续运营体系，保障平台稳定、高效、可持续。</p>
+      </article>
+    </section>
+
+    <section class="summary-card" aria-label="关键成果">
+      <h2>关键成果（2026 上半年）</h2>
+      <p>上半年围绕 AI Factory 交付能力建设，完成 AI Foundation 与 AI WorkMate 两大核心平台，沉淀 VOC、医疗、制造 3 类行业场景模板，初步建立模型、Agent、License、GPU、监控数据 5 大运营体系，形成“模型管理 + Agent开发 + 行业应用 + 持续运营”的一体化交付能力。</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silicon WorkMate - Chat (Empty State)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #FAFAFA;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-[200px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <!-- Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-gray-100 flex-shrink-0">
+            <div class="flex items-center font-extrabold tracking-tight whitespace-nowrap">
+                <span class="text-[#E8000C] text-xl mr-1">AI</span>
+                <span class="text-black text-xl">WorkMate</span>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav class="flex-1 py-4 px-3 space-y-1">
+            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium bg-red-50 text-red-600 rounded-md">
+                <svg class="mr-3 h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Team
+            </a>
+            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md">
+                <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-gray-200 flex-shrink-0">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full bg-purple-200 flex items-center justify-center overflow-hidden">
+                    <svg class="h-6 w-6 text-purple-600 mt-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content (Chat Area) -->
+    <main class="flex-1 flex flex-col min-w-0 bg-white border-l border-gray-200 relative shadow-[0_0_15px_rgba(0,0,0,0.05)] ml-4 my-4 mr-4 rounded-xl overflow-hidden border">
+        
+        <!-- Header -->
+        <header class="h-16 flex items-center px-6 bg-white border-b border-gray-200 flex-shrink-0">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden mr-3">
+                    <svg class="h-6 w-6 text-purple-600 mt-2" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900 leading-tight">API架构设计助手</h2>
+                    <p class="text-[11px] text-gray-500 leading-tight">专业的API设计和架构顾问，提供RESTful、GraphQL等API设计最佳实践</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Chat Container (Empty State) -->
+        <div class="flex-1 flex items-center justify-center bg-[#FAFAFA]">
+            <h1 class="text-2xl text-gray-700 font-medium">Hi, Admin</h1>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-white border-t border-gray-200">
+            <div class="relative flex items-center border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm focus-within:ring-1 focus-within:ring-red-500 focus-within:border-red-500">
+                <input type="text" class="w-full bg-transparent focus:outline-none text-sm text-gray-700 placeholder-gray-400" placeholder="Tell me what you want to do...">
+                <!-- Send Button -->
+                <button class="flex-shrink-0 p-1.5 bg-gray-200 rounded-full text-white hover:bg-gray-300 transition-colors ml-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V6m0 0l-7 7m7-7l7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

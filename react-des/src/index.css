@@ -1,0 +1,456 @@
+.object-type-wizard .border-\[\#2f73d1\] {
+  border-color: #e3473c !important;
+}
+
+.object-type-wizard .bg-\[\#f5f9ff\] {
+  background-color: #fff5f3 !important;
+}
+
+.object-type-wizard .ring-\[\#2f73d1\] {
+  --tw-ring-color: #e3473c !important;
+}
+
+.object-type-wizard input[type='radio'],
+.object-type-wizard input[type='checkbox'] {
+  accent-color: #e3473c;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f7f7fb;
+  color: #000000;
+  height: 100vh;
+  overflow: hidden;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.workspace-markdown-shell {
+  background:
+    linear-gradient(180deg, #f7f7fa 0%, #f3f4f7 100%);
+}
+
+.workspace-doc-frame {
+  backdrop-filter: blur(10px);
+}
+
+.workspace-doc-toolbar {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfd 100%);
+}
+
+.workspace-doc-name {
+  letter-spacing: -0.01em;
+}
+
+.workspace-doc-body {
+  background: #ffffff;
+}
+
+.workspace-markdown {
+  color: #000000;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  letter-spacing: -0.005em;
+}
+
+.workspace-markdown > :first-child {
+  margin-top: 0;
+}
+
+.workspace-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.workspace-markdown h1,
+.workspace-markdown h2,
+.workspace-markdown h3,
+.workspace-markdown h4 {
+  color: #000000;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.24;
+  margin-top: 1.7em;
+  margin-bottom: 0.7em;
+}
+
+.workspace-markdown h1 {
+  font-size: 1.9rem;
+  font-weight: 750;
+  margin-top: 0;
+  padding-bottom: 0.8em;
+  border-bottom: 1px solid #ebecef;
+}
+
+.workspace-markdown h2 {
+  font-size: 1.45rem;
+}
+
+.workspace-markdown h3 {
+  font-size: 1.12rem;
+}
+
+.workspace-markdown h4 {
+  font-size: 1rem;
+}
+
+.workspace-markdown p,
+.workspace-markdown ul,
+.workspace-markdown ol,
+.workspace-markdown blockquote,
+.workspace-markdown table,
+.workspace-markdown pre {
+  margin: 0 0 1.05em;
+}
+
+.workspace-markdown strong {
+  color: #000000;
+  font-weight: 700;
+}
+
+.workspace-markdown em {
+  color: #000000;
+}
+
+.workspace-markdown ul,
+.workspace-markdown ol {
+  padding-left: 1.35em;
+}
+
+.workspace-markdown li {
+  margin: 0.28em 0;
+}
+
+.workspace-markdown li::marker {
+  color: #000000;
+  font-weight: 600;
+}
+
+.workspace-markdown a {
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.workspace-markdown hr {
+  border: 0;
+  border-top: 1px solid #ebecef;
+  margin: 2em 0;
+}
+
+.workspace-markdown blockquote {
+  border-left: 3px solid #d7dbe2;
+  background: #f8fafc;
+  color: #000000;
+  padding: 0.9em 1.05em;
+  border-radius: 0 12px 12px 0;
+}
+
+.workspace-markdown code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.88em;
+  background: #f3f4f6;
+  color: #000000;
+  padding: 0.12em 0.35em;
+  border-radius: 6px;
+}
+
+.workspace-markdown pre {
+  overflow-x: auto;
+  background: #161b22;
+  color: #f8fafc;
+  padding: 1.1em 1.2em;
+  border-radius: 16px;
+}
+
+.workspace-markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.workspace-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+}
+
+.workspace-markdown thead {
+  background: #f8fafc;
+}
+
+.workspace-markdown th,
+.workspace-markdown td {
+  padding: 0.8em 0.95em;
+  border-bottom: 1px solid #eceff3;
+  text-align: left;
+  vertical-align: top;
+}
+
+.workspace-markdown th {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.workspace-markdown tr:last-child td {
+  border-bottom: 0;
+}
+
+.chat-markdown-body {
+  color: #000000;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 13px;
+  line-height: 1.75;
+  letter-spacing: -0.005em;
+}
+
+.chat-markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.chat-markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown-body h1,
+.chat-markdown-body h2,
+.chat-markdown-body h3,
+.chat-markdown-body h4 {
+  color: #000000;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.28;
+  margin-top: 1.25em;
+  margin-bottom: 0.65em;
+}
+
+.chat-markdown-body h1 {
+  font-size: 1.65rem;
+  margin-top: 0;
+  padding-bottom: 0.75em;
+  border-bottom: 1px solid #eceff3;
+}
+
+.chat-markdown-body h2 {
+  font-size: 1.22rem;
+}
+
+.chat-markdown-body h3 {
+  font-size: 1rem;
+}
+
+.chat-markdown-body h4 {
+  font-size: 0.92rem;
+}
+
+.chat-markdown-body p,
+.chat-markdown-body ul,
+.chat-markdown-body ol,
+.chat-markdown-body blockquote,
+.chat-markdown-body table,
+.chat-markdown-body pre {
+  margin: 0 0 0.95em;
+}
+
+.chat-markdown-body ul,
+.chat-markdown-body ol {
+  padding-left: 1.3em;
+}
+
+.chat-markdown-body li {
+  margin: 0.24em 0;
+}
+
+.chat-markdown-body li::marker {
+  color: #000000;
+}
+
+.chat-markdown-body strong {
+  color: #000000;
+  font-weight: 700;
+}
+
+.chat-markdown-body-inverse,
+.chat-markdown-body-inverse h1,
+.chat-markdown-body-inverse h2,
+.chat-markdown-body-inverse h3,
+.chat-markdown-body-inverse h4,
+.chat-markdown-body-inverse strong,
+.chat-markdown-body-inverse em,
+.chat-markdown-body-inverse li::marker,
+.chat-markdown-body-inverse a,
+.chat-markdown-body-inverse blockquote,
+.chat-markdown-body-inverse code,
+.chat-markdown-body-inverse th,
+.chat-markdown-body-inverse td {
+  color: #ffffff;
+}
+
+.chat-markdown-body-inverse a {
+  text-decoration-color: rgba(255, 255, 255, 0.7);
+}
+
+.chat-markdown-body-inverse blockquote {
+  background: rgba(255, 255, 255, 0.08);
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+.chat-markdown-body-inverse code {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.chat-markdown-body-inverse thead {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chat-markdown-body a {
+  color: #000000;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.chat-markdown-body hr {
+  border: 0;
+  border-top: 1px solid #eceff3;
+  margin: 1.5em 0;
+}
+
+.chat-markdown-body blockquote {
+  border-left: 3px solid #d7dbe2;
+  background: #f8fafc;
+  color: #000000;
+  padding: 0.85em 1em;
+  border-radius: 0 12px 12px 0;
+}
+
+.chat-markdown-body code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.88em;
+  background: #f3f4f6;
+  color: #000000;
+  padding: 0.12em 0.35em;
+  border-radius: 6px;
+}
+
+.chat-markdown-pre {
+  overflow-x: auto;
+  background: #101828;
+  color: #f8fafc;
+  padding: 1em 1.1em;
+  border-radius: 16px;
+}
+
+.chat-markdown-pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.chat-markdown-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 1em;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.chat-markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.chat-markdown-body thead {
+  background: #f8fafc;
+}
+
+.chat-markdown-body th,
+.chat-markdown-body td {
+  padding: 0.78em 0.9em;
+  border-bottom: 1px solid #eceff3;
+  text-align: left;
+  vertical-align: top;
+}
+
+.chat-markdown-body tr:last-child td {
+  border-bottom: 0;
+}
+
+.chat-markdown-image {
+  width: 100%;
+  margin: 1em 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.chat-mermaid-loading,
+.chat-mermaid-error {
+  margin: 0 0 0.8em;
+  font-size: 13px;
+  color: #000000;
+}
+
+.chat-mermaid-block {
+  margin: 1em 0;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
+  padding: 16px;
+}
+
+.chat-mermaid-block svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.chat-mermaid-fallback {
+  margin: 1em 0;
+}

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容安全与大模型落地工程（Moderation Engineering）演进蓝图</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090a0f',
+                        panelBg: '#11131e',
+                        borderClr: '#1e2336',
+                        accentPrompt: '#3b82f6', // Ocean Blue
+                        accentContext: '#8b5cf6', // Deep Purple
+                        accentHarness: '#10b981', // Safe Emerald
+                        accentLoop: '#f59e0b', // Fire Amber
+                        textLight: '#f3f4f6',
+                        textMuted: '#9ca3af'
+                    },
+                    boxShadow: {
+                        glowPrompt: '0 0 20px rgba(59, 130, 246, 0.15)',
+                        glowContext: '0 0 20px rgba(139, 92, 246, 0.15)',
+                        glowHarness: '0 0 20px rgba(16, 185, 129, 0.15)',
+                        glowLoop: '0 0 20px rgba(245, 158, 11, 0.15)',
+                        poster: '0 30px 70px rgba(0, 0, 0, 0.6)'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            background-color: #050609;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 90%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
+                linear-gradient(rgba(30, 41, 59, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
+        }
+
+        /* custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090a0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e2336;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        /* dotted link curve styling */
+        .connector-line {
+            background-image: radial-gradient(circle, #2a314d 30%, transparent 31%);
+            background-size: 8px 8px;
+        }
+
+        /* heartbeat animation */
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        .pulse-element {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-textLight min-h-screen py-8 px-4 flex flex-col items-center">
+    
+    <!-- Outer Container -->
+    <div class="w-full max-w-[1536px] bg-panelBg/70 border border-borderClr rounded-2xl shadow-poster p-6 backdrop-blur-md">
+        
+        <!-- TOP HEADER: TITLE & META BRANDING -->
+        <header class="border-b border-borderClr pb-6 mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div>
+                <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-accentPrompt mb-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-accentPrompt animate-ping"></span>
+                    <span>Content Moderation Series · Engineering Architecture Blueprint</span>
+                </div>
+                <h1 class="text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+                    内容安全与大模型对抗工程：四大落地进化阵图
+                </h1>
+                <p class="text-sm text-textMuted mt-2 max-w-[850px]">
+                    大模型内容判定与过滤在工业界的实际落地决不仅是“好 prompts”的编写，而是一场从 Prompt 优化、RAG 向量及上下文扩充、工程安全套件加固（Harness），到数据飞轮反馈优化（Loop Engineering）的长期系统演进。
+                </p>
+            </div>
+            
+            <!-- Dashboard Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-darkBg/90 border border-borderClr p-3 rounded-xl w-full lg:w-auto">
+                <div class="px-3 py-1">
+                    <div class="text-[10px] text-textMuted uppercase tracking-wider">系统准确率</div>
+                    <div class="text-lg font-bold text-accentHarness">99.85%</div>
+                    <div class="text-[9px] text-textMuted">演进最高水位</div>
+                </div>
+                <div class="px-3 py-1 border-l border-borderClr/50">
+                    <div class="text-[10px] text-textMuted uppercase tracking-wider">分流吞吐比</div>
+                    <div class="text-lg font-bold text-accentPrompt">95% : 5%</div>
+                    <div class="text-[9px] text-textMuted">本地过滤与大模型</div>
+                </div>
+                <div class="px-3 py-1 border-l border-borderClr/50">
+                    <div class="text-[10px] text-textMuted uppercase tracking-wider">交互延时</div>
+                    <div class="text-lg font-bold text-accentContext">&lt; 150ms</div>
+                    <div class="text-[9px] text-textMuted">多级缓存命中</div>
+                </div>
+                <div class="px-3 py-1 border-l border-borderClr/50">
+                    <div class="text-[10px] text-textMuted uppercase tracking-wider">人工复核占比</div>
+                    <div class="text-lg font-bold text-accentLoop">0.02%</div>
+                    <div class="text-[9px] text-textMuted">漂移自动兜底</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- STAGE NAVIGATION PIPELINE CARDS -->
+        <section class="mb-10">
+            <h2 class="text-md font-semibold tracking-wider uppercase mb-5 text-textMuted border-l-2 border-accentPrompt pl-3">
+                四阶段演进流水线关系 (Moderation Pipeline Workflow)
+            </h2>
+            
+            <!-- Horizontal / Vertical Flow Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+                
+                <!-- STAGE 1 CARD BUTTON -->
+                <div class="border border-borderClr hover:border-accentPrompt bg-darkBg/60 p-4 rounded-xl shadow-inner group transition-all duration-300 relative cursor-pointer" onclick="scrollToStage('stage01')">
+                    <div class="absolute -top-3 left-4 bg-accentPrompt text-black font-extrabold text-[10px] px-2 py-0.5 rounded uppercase tracking-widest shadow-glowPrompt">
+                        STAGE 01
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 mb-3">
+                        <span class="w-10 h-10 rounded-lg flex items-center justify-center bg-accentPrompt/10 text-accentPrompt border border-accentPrompt/20 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-feather-pointed text-base"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-sm font-semibold group-hover:text-accentPrompt transition-colors">Prompt Engineering</h3>
+                            <p class="text-[11px] text-textMuted">Prompt / 提示词工程</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-textMuted leading-relaxed line-clamp-2">
+                        利用少样本(Few-shot)、结构化指令和温度调节突破初级判定，解决大模型冷启动中的格式和基本意图理解。
+                    </p>
+                    <div class="mt-4 border-t border-borderClr/40 pt-2 flex items-center justify-between text-[10px] text-textMuted">
+                        <span>原子执行复杂度: <strong class="text-accentPrompt">低</strong></span>
+                        <span>准确率天花板: 80%</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 2 CARD BUTTON -->
+                <div class="border border-borderClr hover:border-accentContext bg-darkBg/60 p-4 rounded-xl shadow-inner group transition-all duration-300 relative cursor-pointer" onclick="scrollToStage('stage02')">
+                    <div class="absolute -top-3 left-4 bg-accentContext text-white font-extrabold text-[10px] px-2 py-0.5 rounded uppercase tracking-widest shadow-glowContext">
+                        STAGE 02
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 mb-3">
+                        <span class="w-10 h-10 rounded-lg flex items-center justify-center bg-accentContext/10 text-accentContext border border-accentContext/20 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-bezier-curve text-base"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-sm font-semibold group-hover:text-accentContext transition-colors">Context Engineering</h3>
+                            <p class="text-[11px] text-textMuted">Context / 上下文注入</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-textMuted leading-relaxed line-clamp-2">
+                        基于会话历史(Session State)、高维检索(RAG)和用户背景注入，消除与场景剥离造成的幻觉与误判。
+                    </p>
+                    <div class="mt-4 border-t border-borderClr/40 pt-2 flex items-center justify-between text-[10px] text-textMuted">
+                        <span>外部依赖复杂度: <strong class="text-accentContext">中</strong></span>
+                        <span>准确率天花板: 92%</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 3 CARD BUTTON -->
+                <div class="border border-borderClr hover:border-accentHarness bg-darkBg/60 p-4 rounded-xl shadow-inner group transition-all duration-300 relative cursor-pointer" onclick="scrollToStage('stage03')">
+                    <div class="absolute -top-3 left-4 bg-accentHarness text-black font-extrabold text-[10px] px-2 py-0.5 rounded uppercase tracking-widest shadow-glowHarness">
+                        STAGE 03
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 mb-3">
+                        <span class="w-10 h-10 rounded-lg flex items-center justify-center bg-accentHarness/10 text-accentHarness border border-accentHarness/20 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-user-shield text-base"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-sm font-semibold group-hover:text-accentHarness transition-colors">Harness Engineering</h3>
+                            <p class="text-[11px] text-textMuted">Harness / 多级阻断防护罩</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-textMuted leading-relaxed line-clamp-2">
+                        使用结构化强路由机制、两层拦截阻断、确定性字典以及并发控制，让大模型变成确定、鲁棒的安全引擎。
+                    </p>
+                    <div class="mt-4 border-t border-borderClr/40 pt-2 flex items-center justify-between text-[10px] text-textMuted">
+                        <span>工程闭环复杂度: <strong class="text-accentHarness">高</strong></span>
+                        <span>准确率天花板: 99%</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 4 CARD BUTTON -->
+                <div class="border border-borderClr hover:border-accentLoop bg-darkBg/60 p-4 rounded-xl shadow-inner group transition-all duration-300 relative cursor-pointer" onclick="scrollToStage('stage04')">
+                    <div class="absolute -top-3 left-4 bg-accentLoop text-black font-extrabold text-[10px] px-2 py-0.5 rounded uppercase tracking-widest shadow-glowLoop">
+                        STAGE 04
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 mb-3">
+                        <span class="w-10 h-10 rounded-lg flex items-center justify-center bg-accentLoop/10 text-accentLoop border border-accentLoop/20 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-arrows-spin text-base"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-sm font-semibold group-hover:text-accentLoop transition-colors">Loop Engineering</h3>
+                            <p class="text-[11px] text-textMuted">Loop Engineering / 闭环数据飞轮</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-textMuted leading-relaxed line-clamp-2">
+                        涵盖标注校验、自动评测回归集、不一致性分析与微调/常态蒸馏蒸馏，实现模型的敏捷自进化与降本提速。
+                    </p>
+                    <div class="mt-4 border-t border-borderClr/40 pt-2 flex items-center justify-between text-[10px] text-textMuted">
+                        <span>自进化闭环复杂度: <strong class="text-accentLoop">极高</strong></span>
+                        <span>系统自愈保障率: 99.9%</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FLYWHEEL SYSTEM ARCHITECTURE FLOWCHART -->
+        <section class="border border-borderClr bg-darkBg/30 rounded-xl p-6 mb-12">
+            <h3 class="text-sm font-bold tracking-wider uppercase mb-6 text-textMuted flex items-center justify-between">
+                <span>系统高保真演进拓扑 (High fidelity evolution architecture diagram)</span>
+                <span class="text-xs text-accentPrompt normal-case font-normal"><i class="fa-solid fa-info-circle mr-1"></i>基于工程多级串联与闭环反馈环流设计</span>
+            </h3>
+            
+            <div class="flex flex-col lg:flex-row items-stretch gap-6 relative justify-center">
+                
+                <!-- STAGE 01 PANEL -->
+                <div class="flex-1 border border-borderClr hover:border-accentPrompt/40 bg-[#121422] rounded-xl p-5 flex flex-col justify-between transition-all duration-300 relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[11px] uppercase tracking-widest text-accentPrompt font-mono">Stage 01</span>
+                        <i class="fa-solid fa-feather-pointed text-accentPrompt/60 text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-textLight">提示词沙盘 (Prompt Sandbox)</h4>
+                        <div class="text-[11px] text-accentPrompt/80 tracking-wide mt-0.5">面向单次基础判定与格式矫正</div>
+                        <ul class="text-xs text-textMuted mt-4 space-y-2">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentPrompt"></i> 结构化判定 (XML & System Prompt)</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentPrompt"></i> Few-Shot 边界样本拟合</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentPrompt"></i> JSON/Dict 确定性输出契约</li>
+                        </ul>
+                    </div>
+                    <div class="mt-5 bg-darkBg/80 p-2.5 rounded border border-borderClr/40">
+                        <div class="text-[10px] text-accentPrompt font-mono mb-1">PROMPT SNIPPET</div>
+                        <code class="text-[10px] text-textMuted font-mono block leading-snug whitespace-nowrap overflow-x-auto">
+                            &lt;rules&gt;检测暴恐、政治、色情...&lt;/rules&gt;<br>
+                            &lt;format&gt;Output ONLY raw JSON&lt;/format&gt;
+                        </code>
+                    </div>
+                    
+                    <!-- Arrow to Step 2 -->
+                    <div class="hidden lg:block absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-[#121422] border border-borderClr rounded-full z-10 flex items-center justify-center text-accentPrompt border-l-transparent border-b-transparent transform rotate-45 group-hover:border-accentPrompt">
+                        <div class="transform -rotate-45 text-[9px]"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- STAGE 02 PANEL -->
+                <div class="flex-1 border border-borderClr hover:border-accentContext/40 bg-[#151226] rounded-xl p-5 flex flex-col justify-between transition-all duration-300 relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[11px] uppercase tracking-widest text-accentContext font-mono">Stage 02</span>
+                        <i class="fa-solid fa-database text-accentContext/60 text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-textLight">特征库与多模上下文 (Context Mesh)</h4>
+                        <div class="text-[11px] text-accentContext/85 tracking-wide mt-0.5">消除剥离真实语境带来的误判</div>
+                        <ul class="text-xs text-textMuted mt-4 space-y-2">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentContext"></i> 用户意图与会话生命周期 (State)</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentContext"></i> RAG 法律法规与高频变体动态注入</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentContext"></i> 行业特定专有名词/代号热加载</li>
+                        </ul>
+                    </div>
+                    <div class="mt-5 bg-darkBg/80 p-2.5 rounded border border-borderClr/40">
+                        <div class="text-[10px] text-accentContext font-mono mb-1">CONTEXT GRAPH</div>
+                        <div class="flex items-center justify-between text-[10px] text-textMuted leading-none font-mono">
+                            <span>User query</span>
+                            <span class="text-accentContext">&rarr; Vector Search &rarr;</span>
+                            <span>Prompt Context</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow to Step 3 -->
+                    <div class="hidden lg:block absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-[#151226] border border-borderClr rounded-full z-10 flex items-center justify-center text-accentContext border-l-transparent border-b-transparent transform rotate-45 group-hover:border-accentContext">
+                        <div class="transform -rotate-45 text-[9px]"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- STAGE 03 PANEL -->
+                <div class="flex-1 border border-borderClr hover:border-accentHarness/40 bg-[#121a1d] rounded-xl p-5 flex flex-col justify-between transition-all duration-300 relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[11px] uppercase tracking-widest text-accentHarness font-mono">Stage 03</span>
+                        <i class="fa-solid fa-shield-halved text-accentHarness/60 text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-textLight">工程防护网 (Moderation Harness)</h4>
+                        <div class="text-[11px] text-accentHarness/80 tracking-wide mt-0.5">确定的工程加固机制与并发安全</div>
+                        <ul class="text-xs text-textMuted mt-4 space-y-2">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentHarness"></i> DFA/AC自动机 敏感字符极速前置过滤</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentHarness"></i> 两层决策分流 (Fast-Rule > Deep-LLM)</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentHarness"></i> JSON Schema 输出约束与降级提取器</li>
+                        </ul>
+                    </div>
+                    <div class="mt-5 bg-darkBg/80 p-2.5 rounded border border-borderClr/40">
+                        <div class="text-[10px] text-accentHarness font-mono mb-1">HARNESS FLOW</div>
+                        <div class="h-5 flex items-center gap-1.5 text-[9px] font-mono text-textMuted">
+                            <span class="px-1.5 py-0.5 bg-accentHarness/10 text-accentHarness rounded">Regex Fast</span>
+                            <span>&rarr;</span>
+                            <span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded">Pydantic Validator</span>
+                            <span>&rarr;</span>
+                            <span class="px-1.5 py-0.5 bg-emerald-500/20 text-white rounded">Output</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrow to Step 4 -->
+                    <div class="hidden lg:block absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-[#121a1d] border border-borderClr rounded-full z-10 flex items-center justify-center text-accentHarness border-l-transparent border-b-transparent transform rotate-45 group-hover:border-accentHarness">
+                        <div class="transform -rotate-45 text-[9px]"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- STAGE 04 PANEL -->
+                <div class="flex-1 border border-borderClr hover:border-accentLoop/40 bg-[#1c1611] rounded-xl p-5 flex flex-col justify-between transition-all duration-300 relative group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[11px] uppercase tracking-widest text-accentLoop font-mono">Stage 04</span>
+                        <i class="fa-solid fa-rotate text-accentLoop/60 text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-textLight">闭环反馈飞轮 (Loop Engine)</h4>
+                        <div class="text-[11px] text-accentLoop/80 tracking-wide mt-0.5">基于系统全链路反馈的闭环自修复</div>
+                        <ul class="text-xs text-textMuted mt-4 space-y-2">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentLoop"></i> 人工审核(Review Workstation)数据标注回流</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentLoop"></i> 自动评测集(Evals Suite)敏捷回归阻断</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-[10px] text-accentLoop"></i> 难例蒸馏与小模型微调，实现低成本替代</li>
+                        </ul>
+                    </div>
+                    <div class="mt-5 bg-darkBg/80 p-2.5 rounded border border-borderClr/40">
+                        <div class="text-[10px] text-accentLoop font-mono mb-1">LOOP BACK FEEDBACK</div>
+                        <div class="flex items-center justify-between text-[9px] font-mono text-accentLoop text-center">
+                            <span>[Review Audit]</span>
+                            <span class="animate-pulse">&larr; Feedback Loop &larr;</span>
+                            <span>[Stage-1 sandboxed]</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Dynamic Flywheel Path visualization (Bottom Backflow Arrow) -->
+            <div class="mt-6 flex flex-col justify-center items-center">
+                <div class="h-6 w-full max-w-[1100px] border-b-2 border-dashed border-accentLoop/50 rounded-b-xl relative">
+                    <span class="absolute left-1/2 -translate-x-1/2 -bottom-3 bg-[#0d0f17] px-4 text-xs font-mono text-accentLoop flex items-center gap-2 border border-accentLoop/20 rounded-full py-0.5 shadow-glowLoop">
+                        <i class="fa-solid fa-microchip animate-spin"></i>
+                        数据持久回流闭环：Stage 04 数据回炼 &rarr; 优化 Stage 01 - 03 (持续蒸馏 & 模型泛化力补强)
+                    </span>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- STAGE DETAILED SPECIFICATION DRILLDOWN -->
+        <section class="space-y-12">
+            
+            <!-- STAGE 01 DRILLDOWN SECTION -->
+            <div id="stage01" class="border border-borderClr bg-darkBg/40 rounded-xl p-5 hover:border-accentPrompt/50 transition-all duration-300">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-[350px] shrink-0 border-r border-borderClr/40 pr-0 lg:pr-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-accentPrompt/20 text-accentPrompt text-[10px] tracking-widest font-extrabold px-2 py-0.5 rounded-sm">STAGE 01</span>
+                            <span class="text-xs text-textMuted">Prompt Level</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-accentPrompt mb-3">提示词与原子判定体系</h3>
+                        <p class="text-xs text-textMuted leading-relaxed">
+                            在冷启动阶段，由于无任何线上数据沉淀，系统处于纯文本指令匹配期。我们需要用结构化指令和温度参数精细调控，确立规则执行的无偏性。
+                        </p>
+                        
+                        <div class="mt-6 bg-panelBg/80 p-3 rounded-lg border border-borderClr">
+                            <div class="text-xs font-semibold text-textLight mb-2"><i class="fa-solid fa-flag text-accentPrompt mr-1"></i>演进痛点与瓶颈</div>
+                            <ul class="text-[11px] text-textMuted space-y-1">
+                                <li>· <strong>误杀率居高不下</strong>：词汇在不同语境意图完全不同。</li>
+                                <li>· <strong>语境泛化极差</strong>：模型极易受特殊字符或拼音形近词欺骗。</li>
+                                <li>· <strong>长文本崩坏</strong>：长上下文中规则约束力剧烈下滑。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg">
+                                <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-terminal text-accentPrompt"></i> 理想模型指令树系统 (System Prompt Hierarchy)</h4>
+                                <p class="text-[11px] text-textMuted mb-2">使用层层防御的XML架构进行规则解耦，规避由于相互嵌套导致的指令冲突和输出污染。</p>
+                                <pre class="bg-black/40 text-[10px] p-2.5 rounded font-mono text-accentPrompt/90 leading-tight block select-all overflow-x-auto">
+&lt;system_instructions&gt;
+  You are an elite, un-biased Safety Guard.
+  &lt;core_safety_rules&gt;
+     [Rule 1]: Detect terror intents...
+     [Rule 2]: Stop sexual content...
+  &lt;/core_safety_rules&gt;
+  &lt;output_contract&gt;
+     Respond with ONLY valid JSON schema. No explanation.
+  &lt;/output_contract&gt;
+&lt;/system_instructions&gt;</pre>
+                            </div>
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-dice-three text-accentPrompt"></i> Few-Shot 边界多视角演示策略</h4>
+                                    <p class="text-[11px] text-textMuted mb-3">在冷启动阶段，单向规则难以穷尽擦边灰色含义。我们需要在系统中硬编码“正例、反例、中性擦边例”的元三元组：</p>
+                                    <div class="space-y-1.5">
+                                        <div class="text-[10px] px-2 py-1 bg-green-500/10 border border-green-500/20 rounded flex justify-between">
+                                            <span class="text-textMuted">正样本：“快把那个东西射出去”（暴恐意图）</span>
+                                            <span class="text-green-400 font-semibold">[BLOCK]</span>
+                                        </div>
+                                        <div class="text-[10px] px-2 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded flex justify-between">
+                                            <span class="text-textMuted">中性样本：“我今天打靶射中了红心”（体育场景）</span>
+                                            <span class="text-indigo-400 font-semibold">[PASS]</span>
+                                        </div>
+                                        <div class="text-[10px] px-2 py-1 bg-red-500/10 border border-red-500/20 rounded flex justify-between">
+                                            <span class="text-textMuted">反安全对抗：采用异形汉字拼音进行绕过</span>
+                                            <span class="text-red-400 font-semibold">[RECONSTRUCT]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAGE 02 DRILLDOWN SECTION -->
+            <div id="stage02" class="border border-borderClr bg-darkBg/40 rounded-xl p-5 hover:border-accentContext/50 transition-all duration-300">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-[350px] shrink-0 border-r border-borderClr/40 pr-0 lg:pr-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-accentContext/20 text-accentContext text-[10px] tracking-widest font-extrabold px-2 py-0.5 rounded-sm">STAGE 02</span>
+                            <span class="text-xs text-textMuted">Context Level</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-accentContext mb-3">感知觉上下文与解构化环境</h3>
+                        <p class="text-xs text-textMuted leading-relaxed">
+                            一个原本违规的词汇，在游戏世界内、私董交流群、或者医学法涉行业里，其安全评判完全不同。单纯靠 Prompt 会陷入“只看字、不看境”的死胡同。
+                        </p>
+                        
+                        <div class="mt-6 bg-panelBg/80 p-3 rounded-lg border border-borderClr">
+                            <div class="text-xs font-semibold text-textLight mb-2"><i class="fa-solid fa-fire text-accentContext mr-1"></i>演进痛点与瓶颈</div>
+                            <ul class="text-[11px] text-textMuted space-y-1">
+                                <li>· <strong>大文本加载开销剧烈</strong>：全局上下文塞入带来吞吐暴跌。</li>
+                                <li>· <strong>时效失效</strong>：新出现的对抗话术（梗、谐音）无法做到实时理解。</li>
+                                <li>· <strong>召回噪声</strong>：传统的纯语义检索容易拉回无关的安全条例。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg">
+                                <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-code-fork text-accentContext"></i> RAG 多路混合召回流 (Hybrid Context Injection Loop)</h4>
+                                <p class="text-[11px] text-textMuted mb-3">通过引入高维向量检索 (Dense Retrieval) 与传统 BM25 正则（Sparse Retrieval）的两路混合融合框架逻辑，确保行业规则精准召回不漏判。</p>
+                                
+                                <div class="bg-black/30 p-2.5 rounded font-mono text-[10px] space-y-1">
+                                    <div class="flex justify-between items-center text-textMuted">
+                                        <span>Step 1: Raw Query Incoming</span>
+                                        <span class="text-[9px] bg-indigo-500/20 px-1 text-accentContext">Raw Text</span>
+                                    </div>
+                                    <div class="text-center text-accentContext text-xs my-0.5">&darr;</div>
+                                    <div class="flex justify-between items-center text-textMuted">
+                                        <span>Step 2: Sparse Rule Match + Dense Vector Similarity</span>
+                                        <span class="text-[9px] bg-purple-500/20 px-1 text-accentContext">BM25 + Cohere</span>
+                                    </div>
+                                    <div class="text-center text-accentContext text-xs my-0.5">&darr;</div>
+                                    <div class="flex justify-between items-center text-textLight font-semibold">
+                                        <span>Step 3: Reranker outputs Top 3 laws & slangs</span>
+                                        <span class="text-[9px] bg-green-500/20 px-1 text-accentHarness">Inject Context</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg">
+                                <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-history text-accentContext"></i> 滑动Session历史管理器 (Session Windowing Mechanism)</h4>
+                                <p class="text-[11px] text-textMuted mb-2">单句“我想宰了他”在中性射击游戏世界为正常调侃。系统必须缓存并提炼前后的交互语义轮次状态：</p>
+                                
+                                <div class="space-y-2 mt-3">
+                                    <div class="p-2 bg-[#17141f] rounded border border-borderClr/60 flex flex-col gap-1">
+                                        <div class="flex justify-between text-[9px] text-textMuted font-mono">
+                                            <span>Session ID: s_98c172a</span>
+                                            <span>Current Topic: Gaming Match</span>
+                                        </div>
+                                        <div class="text-[11px] font-semibold text-accentContext mt-0.5">
+                                            前置意图：“我们正组队匹配PUBG，对方有个狙击手老阴我”
+                                        </div>
+                                    </div>
+                                    <div class="p-2 bg-black/40 rounded border border-borderClr/30 text-[10px] leading-relaxed text-textMuted">
+                                        通过维持滑动意图缓存，将最终待审句注入到具有特定主题的上下文元数据中。降低系统对单个过激词汇的过度敏感与误杀。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAGE 03 DRILLDOWN SECTION -->
+            <div id="stage03" class="border border-borderClr bg-darkBg/40 rounded-xl p-5 hover:border-accentHarness/50 transition-all duration-300">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-[350px] shrink-0 border-r border-borderClr/40 pr-0 lg:pr-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-accentHarness/20 text-accentHarness text-[10px] tracking-widest font-extrabold px-2 py-0.5 rounded-sm">STAGE 03</span>
+                            <span class="text-xs text-textMuted">Harness Level</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-accentHarness mb-3">工程坚固套件 (LLM Harness)</h3>
+                        <p class="text-xs text-textMuted leading-relaxed">
+                            大模型本质上是一个具有不确定性的概率采样概率生成器。在没有工程 Harenss 安全网保护之前，绝对不能把模型直接作为系统上线。
+                        </p>
+                        
+                        <div class="mt-6 bg-panelBg/80 p-3 rounded-lg border border-borderClr">
+                            <div class="text-xs font-semibold text-textLight mb-2"><i class="fa-solid fa-circle-nodes text-accentHarness mr-1"></i>核心硬干涉防御</div>
+                            <ul class="text-[11px] text-textMuted space-y-1">
+                                <li>· <strong>两重断路分流</strong>：先跑轻量本地正则。非匹配项再过模型。</li>
+                                <li>· <strong>JSON Schema 强校验规则</strong>：格式崩坏时拦截并自动回退到降级默认。</li>
+                                <li>· <strong>模型超时与并发防爆</strong>：通过代码层面对调用耗时和服务限流做边界卡点。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Python guardrail code snippet -->
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg">
+                                <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-code text-accentHarness"></i> 两层防护网路由方案 (Harness Python Engine)</h4>
+                                <pre class="bg-black/50 text-[10px] p-2.5 rounded font-mono text-accentHarness/90 leading-tight block overflow-x-auto select-all max-h-[220px]">
+def conduct_secure_shield(text: str) -> dict:
+    # 第一层：零延迟确定性字符串AC过滤
+    local_hit = ac_automaton.verify_blocklist(text)
+    if local_hit:
+        return {"action": "BLOCK", "reason": "local_prefix_blocked", "confidence": 1.0}
+    
+    # 第二层：异步熔断式LLM安全套件调用
+    try:
+        with timeout(ms=150):
+            response = call_llm_with_schema_guarantees(
+                text, output_schema=SafetyVerdict
+            )
+            return response
+    except Exception as e:
+        # 降级默认判定：模型崩溃或接口挂起时，转为保守派判定不通过
+        return {"action": "BLOCK", "reason": "circuit_breaker_active", "confidence": 0.0}
+</pre>
+                            </div>
+                            <!-- Pydantic constraints -->
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h4 class="text-xs font-bold text-textLight mb-2 flex items-center gap-1.5"><i class="fa-solid fa-id-card text-accentHarness"></i> 确定性字段契约约束 (Output Conformance Gate)</h4>
+                                    <p class="text-[11px] text-textMuted mb-2">模型绝对不应当产出多余的描述，必须产出符合强类型的实体。在接收到模型吐出的字符串时，Harness 层需要做类型断言：</p>
+                                    
+                                    <div class="space-y-2 mt-4">
+                                        <div class="flex items-center gap-3 text-[11px]">
+                                            <span class="w-16 text-right font-mono text-accentHarness">Action:</span>
+                                            <span class="px-2 py-0.5 bg-darkBg text-textLight font-mono border border-borderClr rounded">"PASS" | "BLOCK" | "RECONSTRUCT"</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-[11px]">
+                                            <span class="w-16 text-right font-mono text-accentHarness">Score:</span>
+                                            <span class="px-2 py-0.5 bg-darkBg text-textLight font-mono border border-borderClr rounded">0.00 到 1.00 (float)</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-[11px]">
+                                            <span class="w-16 text-right font-mono text-accentHarness">Reason:</span>
+                                            <span class="px-2 py-0.5 bg-darkBg text-textLight font-mono border border-borderClr rounded">对应违规二级标签名称 (string)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 bg-accentHarness/5 border border-accentHarness/20 p-2 rounded text-[10px] text-textMuted">
+                                    对这部分协议不服从的数据，在工程层将发生自动重试与纠偏拦截。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAGE 04 DRILLDOWN SECTION -->
+            <div id="stage04" class="border border-borderClr bg-darkBg/40 rounded-xl p-5 hover:border-accentLoop/50 transition-all duration-300">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <div class="w-full lg:w-[350px] shrink-0 border-r border-borderClr/40 pr-0 lg:pr-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-accentLoop/20 text-accentLoop text-[10px] tracking-widest font-extrabold px-2 py-0.5 rounded-sm">STAGE 04</span>
+                            <span class="text-xs text-textMuted">Data Loop Level</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-accentLoop mb-3">数据飞轮与闭环迭代工程</h3>
+                        <p class="text-xs text-textMuted leading-relaxed">
+                            一个优秀的 AI 落地体系不是由上线那一刻决定，而是由上线后的“自我修正与修复速度”决定。通过建立数据闭环实现从不一致性分析到微调的全面飞轮模式。
+                        </p>
+                        
+                        <div class="mt-6 bg-panelBg/80 p-3 rounded-lg border border-borderClr">
+                            <div class="text-xs font-semibold text-textLight mb-2"><i class="fa-solid fa-rotate-right text-accentLoop mr-1"></i>飞轮自迭代收益</div>
+                            <ul class="text-[11px] text-textMuted space-y-1">
+                                <li>· <strong>零死角难例捕获</strong>：多轮审核下的人机结合。</li>
+                                <li>· <strong>自动退火评测集</strong>：保证每一次微调不发生核心功能衰退。</li>
+                                <li>· <strong>万倍降本提速</strong>：利用蒸馏后的小参数模型替代重载大模型。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <!-- Dual row or 3 block pipeline columns -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            
+                            <!-- LOOP PART A -->
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div class="w-8 h-8 rounded bg-accentLoop/10 text-accentLoop flex items-center justify-center font-bold text-sm mb-2">A</div>
+                                    <h4 class="text-xs font-bold text-textLight mb-1 text-accentLoop">审核难例主动标注捕获</h4>
+                                    <p class="text-[11px] text-textMuted leading-relaxed">
+                                        将大模型置信度得分在 [0.35 - 0.75] 之间的中间灰色区域（灰度判定）数据自动抛向人工审核工作台进行强制二次校验。
+                                    </p>
+                                </div>
+                                <div class="mt-3 bg-black/30 p-2 rounded text-[10px] font-mono text-accentLoop/70">
+                                    [LLM Score = 0.52] &rarr; Route to Expert Human Audit &rarr; True Label "BLOCK" Recycled!
+                                </div>
+                            </div>
+
+                            <!-- LOOP PART B -->
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div class="w-8 h-8 rounded bg-accentLoop/10 text-accentLoop flex items-center justify-center font-bold text-sm mb-2">B</div>
+                                    <h4 class="text-xs font-bold text-textLight mb-1 text-accentLoop">动态 Evals 闭环评测集</h4>
+                                    <p class="text-[11px] text-textMuted leading-relaxed">
+                                        将被业务/人工纠错纠偏的数据点，转化成高权重的系统回归测试集用例。每周自动执行 LLM-as-a-judge 与 MMLU 全量安全基准测绘。
+                                    </p>
+                                </div>
+                                <div class="mt-3 bg-black/30 p-2 rounded text-[10px] font-mono text-accentLoop/70">
+                                    Evals validation metric dashboard on Jenkins triggers a pass threshold >= 99.8% before release.
+                                </div>
+                            </div>
+
+                            <!-- LOOP PART C -->
+                            <div class="bg-darkBg/80 p-4 border border-borderClr rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <div class="w-8 h-8 rounded bg-accentLoop/10 text-accentLoop flex items-center justify-center font-bold text-sm mb-2">C</div>
+                                    <h4 class="text-xs font-bold text-textLight mb-1 text-accentLoop">难例小模型蒸馏与微调</h4>
+                                    <p class="text-[11px] text-textMuted leading-relaxed">
+                                        基于前面收集的大量含有高质量标注的多轮对抗样本，提取出来对 1.5B/3B/7B 级别的小模型进行 LoRA 微调，从而快速替换大模型。
+                                    </p>
+                                </div>
+                                <div class="mt-3 bg-black/30 p-2 rounded text-[10px] font-mono text-accentLoop/70 text-emerald-400">
+                                    99% 降本: API cost reduce $0.15 &rarr; $0.001 per call, Latency reduced by 92%.
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- FOOTER FLYWHEEL RETROSPECTIVE -->
+        <footer class="mt-12 pt-6 border-t border-borderClr flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-textMuted text-center sm:text-left">
+            <div>
+                <p>&copy; 2026 内容安全进化阵图 · 大模型落地方法论专栏图谱 (4篇大讲)</p>
+                <p class="text-[10px] text-textMuted mt-0.5">Author by Content Safety Engineering Team</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="scrollToTop()" class="px-3 py-1.5 bg-darkBg border border-borderClr rounded hover:bg-borderClr hover:text-white transition-colors flex items-center gap-1">
+                    <i class="fa-solid fa-arrow-up"></i> 回到顶部
+                </button>
+                <div class="text-[10px] text-accentHarness border border-accentHarness/20 bg-accentHarness/5 px-2.5 py-1 rounded">
+                    <i class="fa-solid fa-star animate-pulse"></i> Engineering & Loop Wins
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- SCRIPT FOR NAVIGATION SCROLLING -->
+    <script>
+        function scrollToStage(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // temporarily highlight the target element
+                const originalBorder = el.style.borderColor;
+                el.style.borderColor = 'rgba(59, 130, 246, 0.8)';
+                setTimeout(() => {
+                    el.style.borderColor = originalBorder;
+                }, 2000);
+            }
+        }
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

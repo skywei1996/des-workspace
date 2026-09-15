@@ -1,0 +1,10 @@
+# 依赖目录（可用 npm install / pip install 还原）
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# 系统文件
+.DS_Store
+Thumbs.db

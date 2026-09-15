@@ -1,0 +1,435 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-evals": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "1bde650dae08f51a705b7ad87c5e130aebacea6484d7ca23bcc75ce04446cf09"
+    },
+    "ai-product-strategy": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "e33a6e739f92c61ee988286bb55cbc2bfbaa3290db931643b9ad9d42569af123"
+    },
+    "analyzing-user-feedback": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "83a9d8e6e3f02f34df3c6d3f673ce12398a55510cd2aa01fe5038cd312e75517"
+    },
+    "behavioral-product-design": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "39ece7ec8d90815a69256ab46c87ff2103083ff6b274f34818c6139a0c057694"
+    },
+    "brand-storytelling": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "a7fdb8eee04388e74341421c5e7ed88758820b420a144a8a4f565e3c102c55c4"
+    },
+    "building-a-promotion-case": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "864ee1f075f8f3d5414cfab5cef4acf393be043100ebda4ea69fd9d3056a5d0c"
+    },
+    "building-sales-team": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "3bc8a6b347f7668408faa5e09dda171a759fc206c65a4cac5aa9823462e8da0d"
+    },
+    "building-team-culture": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "21ef8b084af0e1e4f91a1fd412312b753a2e75758d69628a8fb21c71aa532adc"
+    },
+    "building-with-llms": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "574391874b8bf15b4201aae46b34ff84c56d68a87694d97c3d1f2e412956d45b"
+    },
+    "career-transitions": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "f302d082c0f23c9af4e9f0b6b86d7ee037104308da8b6120e3bb8181fa096000"
+    },
+    "coaching-pms": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "724349e928b357d8a35d825c38e0cadd8037692dd6acf3bc6f046e04c3dd8108"
+    },
+    "community-building": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "5df082f2285f372e13e2a7f8ab1386c8fce0b4c629fcad5b4dcf9646a640a9b8"
+    },
+    "competitive-analysis": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "e42f44115e4fd930c03a314afd218d99864d6ea25a083a06e4db123e3d2efd2d"
+    },
+    "conducting-interviews": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "35573522f972a0592c4723b416576d950320fcc8fdef91bdd4d3eba19feee622"
+    },
+    "conducting-user-interviews": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "acffe24c4229869c6699ddd75b389941696cf4c9899bcc84af665a096df7b28f"
+    },
+    "content-marketing": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c30cecde78967d528d362d5d0afad32b01d7760c32cec5379f80821fbbbd99f0"
+    },
+    "cross-functional-collaboration": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c4959e282c7ea10e6aed7b0b68ebc45adfa6bb01ec82ae08773659eee49a130f"
+    },
+    "defining-product-vision": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "f9d8608e37e58ddf7a4714142659e2b4a686cc343b2bef39bba416d0ff82be94"
+    },
+    "delegating-work": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "65b1737759d9f10582d977f66caaff7f8a8fcdafd340591bf04dff9b14544338"
+    },
+    "design-engineering": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "a15d63c6908f4a02b2d1925b383bb64f2116cb64634a3a17e73d42dcb56bb15a"
+    },
+    "design-systems": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "f396a76eae3418c559e1dd5f530074127b593252a7b3ba3855c67bf40fd4937f"
+    },
+    "designing-growth-loops": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "996d945bc1b4aa51bd4853faf862e52554bfe869f8bd24ed8465b5606fe355b6"
+    },
+    "designing-surveys": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "f81060ce679c12b7414c5a935ebbe03286a5523e0a28b7594ede8eaeb1ca1956"
+    },
+    "dogfooding": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "694c67f64fe2c64509c93b9f6624628ebca92efe64f7e72b1813d56549418aa6"
+    },
+    "energy-management": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "cfc520bf2b50bedd4fd34e49cc9095b251c82354533a635e5d8c75ab19068625"
+    },
+    "engineering-culture": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "4ffb8cd80b624970b64fce51604a8fc30c224db8dd5eec212ee41a85736b42e1"
+    },
+    "enterprise-sales": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "101b06c7c998aacbdba614778c7c13dc18d5373cf6f6672aacf6330f67f89f14"
+    },
+    "evaluating-candidates": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "5033dc23b9e2633f1c0c79dcd986f4bc5acec479a703f7ace215ca08a52f05a6"
+    },
+    "evaluating-new-technology": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c4f0c343a9bc06e16e47fce4f713a0f893de5e8a15bdb5a27f8d13dd020e56b3"
+    },
+    "evaluating-trade-offs": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "6e3e67d61d755e672ae3cf42d542d39117563a268a7edbe1e20f097051193eb4"
+    },
+    "finding-mentors-sponsors": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "de3cbadb7a1d3e20316bc928213815295cf544c043d476e74f528e3371101244"
+    },
+    "founder-sales": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "1e2f6d1cdc135e25097c93d89b07b5b4e3199a7b4c78488343a91bfa6a7313b0"
+    },
+    "fundraising": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "26017017508616cf015da90839761637b56f0381fd0560448d5b25c5fe8ecdaf"
+    },
+    "giving-presentations": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "cf63f007c40471b04009b55107f2c930483bb025a6c938e1408d59fb22cb1c69"
+    },
+    "having-difficult-conversations": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "b647c6aa38e62712144127538f06386e0d1ebfa0c2df944ed772ea0d0409ac74"
+    },
+    "launch-marketing": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "472cb958a631d5dfe624685952a7c8f3ef120e3aadcb1fe5b2dafb2dad6b923c"
+    },
+    "managing-imposter-syndrome": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "064ea196cd60ed640524659263ccf228fb507dae5b3e81cbef9a256ed2c854ab"
+    },
+    "managing-tech-debt": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "dc58a593dca0b3d7b2778ccb2cde07248fbe1cb574e0c818692d42e0ebe8c590"
+    },
+    "managing-timelines": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "dafe8444d367281befe839bebf7833318d17a19b0df682a513a3bec65b58ab7d"
+    },
+    "managing-up": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "005a5af13b81af2dc8f9c23ce04aa2db6f3c9c280b4b10b28e6ee05c1d62af3b"
+    },
+    "marketplace-liquidity": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "ce1de1c69f40c8ecfff141313500b751175531f61190c989ada6b96f3ac1356e"
+    },
+    "measuring-product-market-fit": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "295ba3324121ab025139009562f245d27b1e5b2c83866a38b2d62432d889e39b"
+    },
+    "media-relations": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "68425145f35f06956eee5f94c7bcd2dd1b8700a22fc27e18ad2b39a0671a4dff"
+    },
+    "negotiating-offers": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c2b95aeefc5a67f0141d53f4faf4796c1265d80e7e10ec89f6ad0172b79569d4"
+    },
+    "onboarding-new-hires": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "e8fe9f8fbd87b54614637780f8e0bb1cf6c39306a6cf2de8f2ef96ae3bbd2fbf"
+    },
+    "organizational-design": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "edb79764aec050db766ca8bcfcc30172075ebe9f0be22568a9806df62951ca08"
+    },
+    "organizational-transformation": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "9895357d27b2e0048b952bc31f9915cd2737fe53b089e2a370f717ecc679448e"
+    },
+    "partnership-bd": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "51d6207d9bb7cecf378ea1eedd414b65fb3662924a0148f6b12da833bc3b37e0"
+    },
+    "personal-productivity": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "13ac6de90026c1c2089cd6a36b3c86c121cf8c3e67b7a02129fb392f65f8c098"
+    },
+    "planning-under-uncertainty": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "b52e0edd039ed954a3c1223d0ae6d4fb0d8c1b019947b293045d382495783f19"
+    },
+    "platform-infrastructure": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "86c0b3e09165f8202dd146d23c61a9b9e2214201956496e781644ad3788077d4"
+    },
+    "platform-strategy": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "8eacbce670e06762978c04e93de2ff68bc45ec2f1938287a7bed4d5be3f8491f"
+    },
+    "positioning-messaging": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "75a749f83c52908b835d43c0b2ad2bb8d8af65424464ac97477e7de506beab7a"
+    },
+    "post-mortems-retrospectives": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "5223131d14a81058b8dc157974a76c1bd70ee72c666348848de1587b4a2351f7"
+    },
+    "pricing-strategy": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "81d5001cbb6ae714c521bdaac49951ca834dfead80069cd6d533b9f27c4d4837"
+    },
+    "prioritizing-roadmap": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "e0e845f1e382596cb8556c8974d8e1a811b592bf336ac5dacafb7c02a97054dc"
+    },
+    "problem-definition": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "f37d7d97e9d37a6f892a5049c8004eaf22140337502bc386128154516a82cd5b"
+    },
+    "product-led-sales": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "fe1bf6e52d2eb4c7a945fea87b60d5c9fb5c02e2c8b85385ae2f40c2a22d25e7"
+    },
+    "product-operations": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "047c360f9923aa4580439cf88fd8159c5900316d3bf52bb14fad33be8b96b7cd"
+    },
+    "product-taste-intuition": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "2abca788a1a27c1b41b45e566b505a1e31cf86a12af4fc257d97d943d2186ac0"
+    },
+    "retention-engagement": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "6546e026daafcfaab7376bf8dbeda25bd956c4c7b30c51645752c3a43f5464c5"
+    },
+    "running-decision-processes": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "2a1f6654a6af7e92978ec80959bb83de3ad5b7374ba9073dde21be79cc636783"
+    },
+    "running-design-reviews": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "cc9eeb3008e755e5f7ebdae01f7cf9678b41b05fbacb1ddc0bcddd24000a5a35"
+    },
+    "running-effective-1-1s": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "d17ecb7bfe5157a1b292271995e52c07ec7f48a4b994a6be938ea50e46dce1c9"
+    },
+    "running-effective-meetings": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "d431e928bdd61cbf1e24c2f3966dd36c73b03d2b4a4f26aebd443c6b3dc189f6"
+    },
+    "running-offsites": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "ada9852025b2efa988c123e6ff98f9ac19e1ef9bad96cd714bb408113662a90b"
+    },
+    "sales-compensation": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "d81cb7d5bc5ab60770d1774835850e06db285a4ce02cefa97158a336b11287eb"
+    },
+    "sales-qualification": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "7c448521e1957bb9cd6d56f152ecb0b61d62deefaf4f4cb33568613491d0ab26"
+    },
+    "scoping-cutting": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "657ed84e0f4ac93a5b8030bb51f538b76ae20716e6f65c4c852bbc9c1350e83d"
+    },
+    "setting-okrs-goals": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "e75f7bf6d63b8fc9165183d8e91cdf73e85d55b9f0fdfb04470760357303422e"
+    },
+    "shipping-products": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c5b2391f7a37caf52fb8731ec59b65732e67c292f57bae1bfedad3c9ea33854c"
+    },
+    "stakeholder-alignment": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "2b63f3e733c3f657443491fb9c545ef1eec5f0a1816d7cf5f33316066519cdf2"
+    },
+    "startup-ideation": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "bd99c0a5a75d765153ee7d27cd5858406a3b2e34ccafe680cd9826fead644c5a"
+    },
+    "startup-pivoting": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "c28971c1087d0734de4b795ce5a5b60316add63263fcf2f2d3f347ee3cf177f9"
+    },
+    "systems-thinking": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "5c20fb81335a464d82642acdfc59f242aab88f43b8d58d472adfa80a273ea858"
+    },
+    "team-rituals": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "86caa6a72986d1278f1b0c244b045cb1bbcf05c828308d5549182960b33cce72"
+    },
+    "technical-roadmaps": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "91b37deea7a5afe4e290700d28724bac4699c3c2be5846ce1077aaa34848aaff"
+    },
+    "usability-testing": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "61244008f3069d086d46cc7c2ff1f689e2d664db10950a42b1aa9d4aa7eed976"
+    },
+    "user-onboarding": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "8c458c50f180a72e439a9c60697aeef9da975a5e4fe7538ef1b47eb3114dff02"
+    },
+    "vibe-coding": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "6e31a086952e810305b9b57176946bb56ad08edbaf59c6121230d1a1151eba93"
+    },
+    "working-backwards": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "79a64fbaa38c97abde8ded5275bfcaebcee8b7ffdc0ed5a359aa35a8acfb71ea"
+    },
+    "writing-job-descriptions": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "6f19ebf12481a9b94caf90375f5b2e018a245fa5fc042e4cbdaf1beb13fed256"
+    },
+    "writing-north-star-metrics": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "76300be74ff4f74b822cd2828bfda8bf9c7514fc0ae5c4ce50f6c792a3ba8400"
+    },
+    "writing-prds": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "fd8f8f4794db11621573b0b53b1c5bda7b51c5e4cbd210c40fc4b468bee5d193"
+    },
+    "writing-specs-designs": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "404e78a2209c7ad5c9347392122131dcd70f87a7b40d6f911925d3bd94afbfe6"
+    },
+    "written-communication": {
+      "source": "RefoundAI/lenny-skills",
+      "sourceType": "github",
+      "computedHash": "61e3bc44c44cbeb91dcb6043aa27413f2e8c2c89e86dc0ae50e636a32aed9f3c"
+    }
+  }
+}

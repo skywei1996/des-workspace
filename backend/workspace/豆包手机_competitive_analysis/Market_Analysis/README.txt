@@ -1,0 +1,1 @@
+This directory contains files related to the market analysis for 豆包手机, including market size, growth trends, and user demographics.

@@ -1,0 +1,222 @@
+
+> react-des@0.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m385[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[2m7:10:37 PM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /tasks/automation/result-summary?user_id=U10023&unread_only=true&limit=1[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m7:13:06 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:13:20 PM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /groups/[39m
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m7:14:29 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:14:32 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:16:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:16:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:16:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:16:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:16:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:18:59 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m7:25:25 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m7:26:07 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m8:22:46 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m8:23:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m8:25:39 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:25:54 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:26:31 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:26:55 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:27:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:35:06 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:35:14 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:35:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:36:23 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:36:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:37:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:38:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:38:38 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:41:35 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:41:40 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:41:49 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:41:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:44:57 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:09 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:45:33 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:51:08 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChatWorkspace.jsx, /src/index.css[22m
+[2m8:51:18 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChatWorkspace.jsx, /src/index.css[22m
+[2m8:51:43 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ChatWorkspace.jsx, /src/index.css[22m
+[2m8:58:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:01 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:12 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:21 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:27 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:34 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m8:59:34 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\src\pages\ConnectSiliconWorker.jsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (927:10)
+
+[0m [90m 925 |[31m               [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 926 |[31m             [33m<[31m[33m/[31m[33mform[31m[33m>[31m
+[31m[1m>[22m[31m[90m 927 |[31m           [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m     |[31m           [31m[1m^[22m[31m
+ [90m 928 |[31m         [33m<[31m[33m/[31m[33mmain[31m[33m>[31m
+ [90m 929 |[31m       [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 930 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/cursor/DES workspace - Copy/12.12 - 公司最终版本/react-des/src/pages/ConnectSiliconWorker.jsx[39m:927:10
+[33m  925|                </div>
+  926|              </form>
+  927|            </div>
+     |            ^
+  928|          </main>
+  929|        </div>[39m
+      at constructor (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:367:19)
+      at JSXParserMixin.raise (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:6624:19)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4771:18)
+      at JSXParserMixin.jsxParseElement (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4778:17)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4788:19)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12567:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11747:28)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11395:23)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4793:20)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at JSXParserMixin.parseConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10957:29)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10949:17)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at JSXParserMixin.parseExpressionBase (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10848:23)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10844:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseExpression (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10844:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4661:31)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4740:36)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElement (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4778:17)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4788:19)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:17)
+[2m8:59:34 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\src\pages\ConnectSiliconWorker.jsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (927:10)
+
+[0m [90m 925 |[31m               [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 926 |[31m             [33m<[31m[33m/[31m[33mform[31m[33m>[31m
+[31m[1m>[22m[31m[90m 927 |[31m           [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m     |[31m           [31m[1m^[22m[31m
+ [90m 928 |[31m         [33m<[31m[33m/[31m[33mmain[31m[33m>[31m
+ [90m 929 |[31m       [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 930 |[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/cursor/DES workspace - Copy/12.12 - 公司最终版本/react-des/src/pages/ConnectSiliconWorker.jsx[39m:927:10
+[33m  925|                </div>
+  926|              </form>
+  927|            </div>
+     |            ^
+  928|          </main>
+  929|        </div>[39m
+      at constructor (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:367:19)
+      at JSXParserMixin.raise (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:6624:19)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4771:18)
+      at JSXParserMixin.jsxParseElement (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4778:17)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4788:19)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12567:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11747:28)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11395:23)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4793:20)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at JSXParserMixin.parseConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10957:29)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10949:17)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at JSXParserMixin.parseExpressionBase (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10848:23)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10844:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseExpression (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10844:17)
+      at JSXParserMixin.jsxParseExpressionContainer (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4661:31)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4740:36)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElementAt (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4727:32)
+      at JSXParserMixin.jsxParseElement (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4778:17)
+      at JSXParserMixin.parseExprAtom (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:4788:19)
+      at JSXParserMixin.parseExprSubscripts (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11130:21)
+      at JSXParserMixin.parseMaybeUnary (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:11110:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10968:23)
+      at JSXParserMixin.parseMaybeConditional (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10895:21)
+      at D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:39
+      at JSXParserMixin.allowInAnd (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:12500:12)
+      at JSXParserMixin.parseMaybeAssignAllowIn (D:\cursor\DES workspace - Copy\12.12 - 公司最终版本\react-des\node_modules\@babel\parser\lib\index.js:10864:17)
+[2m8:59:37 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ConnectSiliconWorker.jsx, /src/index.css[22m
+[2m9:00:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m9:07:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:07:45 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:07:58 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:08:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:09:04 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:09:16 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:09:30 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:09:47 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:10:00 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:10:23 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:13:34 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:13:44 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:13:51 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:14:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:14:24 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/WorkforceManagement.jsx, /src/index.css[22m
+[2m9:16:56 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m9:17:05 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/WorkerMarketContent.jsx, /src/index.css[22m
+[2m9:20:13 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Sidebar.jsx, /src/index.css[22m
+[2m9:21:11 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/Sidebar.jsx, /src/index.css[22m

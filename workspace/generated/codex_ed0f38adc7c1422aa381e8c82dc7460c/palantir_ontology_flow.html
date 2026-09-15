@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palantir Ontology 建模细化流程</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #f4f6f9;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px 40px;
+  }
+  .container {
+    max-width: 1360px;
+    width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 32px 28px 40px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  h1 small {
+    font-size: 15px;
+    font-weight: 400;
+    color: #6b7280;
+    display: block;
+    margin-top: 4px;
+    letter-spacing: 0;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 16px;
+  }
+  .flowchart { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .lane-row { display: flex; width: 100%; position: relative; }
+  .lane-label {
+    width: 92px; min-width: 92px; display: flex; align-items: center; justify-content: center;
+    writing-mode: vertical-lr; letter-spacing: 4px; font-size: 14px; font-weight: 600;
+    color: #fff; border-radius: 10px 0 0 10px; margin-right: 2px; padding: 12px 6px; text-orientation: mixed;
+  }
+  .lane-body {
+    flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 16px;
+    padding: 20px 18px; border-radius: 0 10px 10px 0; min-height: 120px;
+    border: 1px solid #e5e7eb; border-left: none;
+  }
+  .lane-data .lane-label { background: #2563eb; }
+  .lane-data .lane-body { background: #eff6ff; }
+  .lane-clean .lane-label { background: #059669; }
+  .lane-clean .lane-body { background: #ecfdf5; }
+  .lane-model .lane-label { background: #7c3aed; }
+  .lane-model .lane-body { background: #f5f3ff; }
+  .lane-permission .lane-label { background: #d97706; }
+  .lane-permission .lane-body { background: #fffbeb; }
+  .lane-output .lane-label { background: #dc2626; }
+  .lane-output .lane-body { background: #fef2f2; }
+  .node {
+    background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 12px 14px; min-width: 140px; max-width: 200px; flex: 1 1 auto;
+    border-left: 4px solid #2563eb; position: relative; transition: box-shadow 0.2s, transform 0.15s; cursor: default;
+  }
+  .node:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
+  .node .tag {
+    display: inline-block; font-size: 10px; font-weight: 700; color: #fff;
+    background: #2563eb; border-radius: 4px; padding: 1px 7px; margin-bottom: 5px; letter-spacing: 0.5px;
+  }
+  .node .title { font-size: 14px; font-weight: 600; color: #1f2937; line-height: 1.4; }
+  .node .desc { font-size: 12px; color: #6b7280; line-height: 1.5; margin-top: 4px; }
+  .node:after {
+    content: ""; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #d1d5db;
+  }
+  .node.end-node:after { display: none; }
+  .node.end-node { border-left-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #fff 100%); min-width: 180px; }
+  .node.end-node .tag { background: #dc2626; }
+  .node.blue { border-left-color: #2563eb; }
+  .node.blue .tag { background: #2563eb; }
+  .node.green { border-left-color: #059669; }
+  .node.green .tag { background: #059669; }
+  .node.purple { border-left-color: #7c3aed; }
+  .node.purple .tag { background: #7c3aed; }
+  .node.amber { border-left-color: #d97706; }
+  .node.amber .tag { background: #d97706; }
+  .node.red { border-left-color: #dc2626; }
+  .node.red .tag { background: #dc2626; }
+  .connector-row {
+    display: flex; align-items: center; justify-content: center; width: 100%;
+    padding: 4px 0 4px 94px; gap: 0;
+  }
+  .arrow-line { flex: 1; height: 2px; background: #9ca3af; position: relative; margin: 0 4px; }
+  .arrow-line:after {
+    content: ""; position: absolute; right: -6px; top: -4px; width: 0; height: 0;
+    border-left: 8px solid #9ca3af; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+  }
+  .arrow-label { font-size: 11px; color: #6b7280; white-space: nowrap; padding: 0 4px; font-weight: 500; }
+  .phase-title {
+    width: 100%; font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 4px;
+    padding: 4px 0 2px 6px; border-bottom: 2px dashed #d1d5db; letter-spacing: 0.5px;
+  }
+  .phase-title .step-num {
+    display: inline-block; background: #374151; color: #fff; font-size: 11px; border-radius: 50%;
+    width: 22px; height: 22px; text-align: center; line-height: 22px; margin-right: 6px;
+  }
+  .sub-list { margin-top: 5px; padding-left: 14px; font-size: 11px; color: #6b7280; line-height: 1.6; list-style: none; }
+  .sub-list li:before { content: "● "; color: #9ca3af; }
+  @media (max-width: 768px) {
+    .container { padding: 16px 12px; }
+    .lane-label { width: 60px; min-width: 60px; font-size: 12px; letter-spacing: 2px; }
+    .node { min-width: 100px; max-width: 160px; }
+    .connector-row { padding-left: 62px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Palantir Ontology 建模细化流程</h1>
+  <div class="subtitle">从源数据接入 → 对象建模 → 权限管控 → 可交付规则梳理的完整流水线</div>
+  <div class="flowchart">
+
+    <div class="lane-row lane-data">
+      <div class="lane-label">数据接入</div>
+      <div class="lane-body">
+        <div class="node blue">
+          <div class="tag">Step 1</div>
+          <div class="title">数据源识别与接入</div>
+          <div class="desc">识别内部/外部数据源，建立连接</div>
+          <ul class="sub-list">
+            <li>数据库 / 数仓 / API / 文件</li>
+            <li>数据源注册与连接配置</li>
+            <li>全量 / 增量同步策略</li>
+          </ul>
+        </div>
+        <div class="node blue">
+          <div class="tag">Step 2</div>
+          <div class="title">原始数据探查</div>
+          <div class="desc">理解数据 schema、分布、质量</div>
+          <ul class="sub-list">
+            <li>字段类型 / 空值 / 唯一性</li>
+            <li>数据分布与异常值检测</li>
+            <li>血缘关系初步梳理</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-row">
+      <div class="arrow-line"></div>
+      <span class="arrow-label">数据探查报告</span>
+      <div class="arrow-line"></div>
+    </div>
+
+    <div class="lane-row lane-clean">
+      <div class="lane-label">数据清洗</div>
+      <div class="lane-body">
+        <div class="node green">
+          <div class="tag">Step 3</div>
+          <div class="title">数据清洗与标准化</div>
+          <div class="desc">去除噪音、统一格式、处理缺失</div>
+          <ul class="sub-list">
+            <li>去重 / 去空 / 异常值处理</li>
+            <li>字段格式标准化（日期、枚举等）</li>
+            <li>数据脱敏（敏感字段标记）</li>
+          </ul>
+        </div>
+        <div class="node green">
+          <div class="tag">Step 4</div>
+          <div class="title">数据质量校验</div>
+          <div class="desc">建立质量规则并验证通过率</div>
+          <ul class="sub-list">
+            <li>完整性 / 准确性 / 一致性</li>
+            <li>质量 dashboard 与告警</li>
+            <li>不合格数据回溯修复</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-row">
+      <div class="arrow-line"></div>
+      <span class="arrow-label">清洗后数据</span>
+      <div class="arrow-line"></div>
+    </div>
+
+    <div class="lane-row lane-model">
+      <div class="lane-label">对象建模</div>
+      <div class="lane-body">
+        <div class="node purple">
+          <div class="tag">Step 5</div>
+          <div class="title">对象类型定义</div>
+          <div class="desc">定义 Ontology 对象类型及主键</div>
+          <ul class="sub-list">
+            <li>确定对象类型（如 Customer, Order）</li>
+            <li>定义主键（Primary Key）</li>
+            <li>对象描述与业务语义标注</li>
+          </ul>
+        </div>
+        <div class="node purple">
+          <div class="tag">Step 6</div>
+          <div class="title">属性建模与类型</div>
+          <div class="desc">定义属性字段、类型、约束</div>
+          <ul class="sub-list">
+            <li>属性类型（string, int, double, date...）</li>
+            <li>值约束（必填、唯一、枚举范围）</li>
+            <li>派生属性 / 计算字段</li>
+          </ul>
+        </div>
+        <div class="node purple">
+          <div class="tag">Step 7</div>
+          <div class="title">对象关系映射</div>
+          <div class="desc">建立对象间关联关系</div>
+          <ul class="sub-list">
+            <li>1:1 / 1:N / N:M 关系</li>
+            <li>外键映射与链接类型</li>
+            <li>反向引用与聚合关系</li>
+          </ul>
+        </div>
+        <div class="node purple">
+          <div class="tag">Step 8</div>
+          <div class="title">数据映射配置</div>
+          <div class="desc">将源字段映射到对象属性</div>
+          <ul class="sub-list">
+            <li>源字段 → 属性映射规则</li>
+            <li>类型转换与表达式映射</li>
+            <li>映射验证与预览</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-row">
+      <div class="arrow-line"></div>
+      <span class="arrow-label">建模完成</span>
+      <div class="arrow-line"></div>
+    </div>
+
+    <div class="lane-row lane-permission">
+      <div class="lane-label">角色权限</div>
+      <div class="lane-body">
+        <div class="node amber">
+          <div class="tag">Step 9</div>
+          <div class="title">角色定义与权限策略</div>
+          <div class="desc">定义角色、权限矩阵、访问控制</div>
+          <ul class="sub-list">
+            <li>角色层级（Admin / Editor / Viewer）</li>
+            <li>对象级 / 属性级 / 行级权限</li>
+            <li>权限策略配置与测试</li>
+          </ul>
+        </div>
+        <div class="node amber">
+          <div class="tag">Step 10</div>
+          <div class="title">数据发布与同步</div>
+          <div class="desc">将建模结果发布到 Ontology 服务</div>
+          <ul class="sub-list">
+            <li>Ontology 版本管理与发布</li>
+            <li>同步配置与调度策略</li>
+            <li>发布后验证与回滚方案</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector-row">
+      <div class="arrow-line"></div>
+      <span class="arrow-label">Ontology 就绪</span>
+      <div class="arrow-line"></div>
+    </div>
+
+    <div class="lane-row lane-output">
+      <div class="lane-label">交付输出</div>
+      <div class="lane-body">
+        <div class="node end-node red">
+          <div class="tag">✅ 交付物</div>
+          <div class="title">可消费的 Ontology 数据</div>
+          <div class="desc">下一步可直接进入规则梳理、分析、Workshop 等</div>
+          <ul class="sub-list">
+            <li>对象与属性完整定义文档</li>
+            <li>数据清洗与质量报告</li>
+            <li>字段映射与血缘关系图</li>
+            <li>权限配置清单</li>
+            <li>Ontology 发布版本快照</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:36px; display:flex; flex-wrap:wrap; gap:12px; justify-content:center; border-top:1px solid #e5e7eb; padding-top:20px; font-size:13px; color:#6b7280;">
+    <span style="display:inline-flex; align-items:center; gap:4px;">
+      <span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#2563eb;"></span> 数据接入
+    </span>
+    <span style="display:inline-flex; align-items:center; gap:4px;">
+      <span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#059669;"></span> 数据清洗
+    </span>
+    <span style="display:inline-flex; align-items:center; gap:4px;">
+      <span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#7c3aed;"></span> 对象建模
+    </span>
+    <span style="display:inline-flex; align-items:center; gap:4px;">
+      <span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#d97706;"></span> 角色权限
+    </span>
+    <span style="display:inline-flex; align-items:center; gap:4px;">
+      <span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#dc2626;"></span> 交付输出
+    </span>
+    <span style="margin-left:8px; color:#9ca3af;">| 共 10 步 · 一页流程图</span>
+  </div>
+</div>
+</body>
+</html>
