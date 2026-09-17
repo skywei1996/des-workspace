@@ -537,6 +537,27 @@ class ChatMessage(ChatMessageBase):
         orm_mode = True
 
 
+class ChatSessionBase(BaseModel):
+    chat_id: int
+    session_type: Literal["member", "group"] = "member"
+    title: str = "Aria"
+    summary: str = "打开了会话"
+    active_member: Optional[str] = None
+    group_id: Optional[str] = None
+
+
+class ChatSessionUpsert(ChatSessionBase):
+    pass
+
+
+class ChatSession(ChatSessionBase):
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
 class GroupBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -724,6 +745,29 @@ class OntologyModelingObject(OntologyModelingObjectCreate):
 
     class Config:
         from_attributes = True
+
+
+class OntologyModelingPropertyCreate(BaseModel):
+    name: str
+    api_name: str = ""
+    object_ids: List[str] = Field(default_factory=list)
+    data_type: str = "文本"
+    description: str = ""
+    source: str = ""
+
+
+class OntologyModelingProperty(OntologyModelingPropertyCreate):
+    id: str
+    project_id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class OntologyModelingMappingPayload(BaseModel):
+    mapping: dict = Field(default_factory=dict)
 
 
 class WorkflowStep(BaseModel):

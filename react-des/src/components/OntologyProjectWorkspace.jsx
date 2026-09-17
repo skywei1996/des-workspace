@@ -1,10 +1,11 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import Sidebar from './Sidebar'
 
 const navigationGroups = [
   { title: '', items: [{ key: 'overview', label: '项目概览', path: '' }] },
   { title: '本体结构', items: [{ key: 'objects', label: '对象', path: '' }, { key: 'properties', label: '属性', path: '/properties' }] },
-  { title: '业务逻辑', items: [{ key: 'actions', label: '动作', path: '/actions' }, { key: 'functions', label: '函数' }] },
+  { title: '业务逻辑', items: [{ key: 'actions', label: '动作', path: '/actions' }, { key: 'functions', label: '函数', path: '/functions' }] },
   { title: '数据管理', items: [{ key: 'mapping', label: '数据映射', path: '/mapping' }] },
   { title: '发布管理', items: [{ key: 'validation', label: '版本发布', path: '/validation' }] },
 ]
@@ -54,12 +55,15 @@ export function OntologyProjectNav({ projectId, project, activeItem }) {
 
 function OntologyProjectWorkspace({ project, activeItem, actions, children }) {
   return (
-    <div className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden bg-[#f7f8fa]">
-      <OntologyProjectHeader project={project} actions={actions} />
+    <div className="flex h-screen overflow-hidden bg-[#f7f8fa]">
+      <Sidebar compact collapseStateKey="ontology-project" />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <OntologyProjectHeader project={project} actions={actions} />
 
-      <div className="flex min-h-0 flex-1">
-        <OntologyProjectNav projectId={project.id} project={project} activeItem={activeItem} />
-        <main className="min-w-0 flex-1 overflow-y-auto p-6">{children}</main>
+        <div className="flex min-h-0 flex-1">
+          <OntologyProjectNav projectId={project.id} project={project} activeItem={activeItem} />
+          <main className="min-w-0 flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
     </div>
   )

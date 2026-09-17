@@ -4,14 +4,6 @@ import Sidebar from '../components/Sidebar'
 import { OntologyProjectHeader, OntologyProjectNav } from '../components/OntologyProjectWorkspace'
 import { createModelingRelation, getModelingProject, listModelingObjects, listModelingRelations } from '../utils/ontologyModelingApi'
 
-const stages = [
-  { number: '01', title: '对象定义', route: '/ontology-modeling/projects/blank' },
-  { number: '02', title: '属性字典', route: '/ontology-modeling/projects/blank/properties' },
-  { number: '03', title: '对象关系', route: '/ontology-modeling/projects/blank/relations' },
-  { number: '04', title: '数据映射', route: '/ontology-modeling/projects/blank/mapping' },
-  { number: '05', title: '校验与发布', route: '/ontology-modeling/projects/blank/validation' },
-]
-
 const emptyRelation = {
   sourceObjectId: '', targetObjectId: '', name: '', apiName: '', cardinality: '1:N',
   sourceKey: '', targetKey: '', description: '', validationStatus: '待校验',
@@ -76,7 +68,7 @@ function OntologyModelingRelations() {
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-[#f7f8fa] text-sm text-[#717985]">正在加载建模项目...</div>
   if (!project) return <div className="flex h-screen items-center justify-center bg-[#f7f8fa]"><div className="text-center"><h1 className="text-xl font-semibold text-[#20242b]">项目上下文已失效</h1><button type="button" onClick={() => navigate('/ontology-modeling')} className="mt-5 h-10 rounded-md bg-[#e3473c] px-4 text-sm font-medium text-white">返回对象建模</button></div></div>
 
-  return <div className="flex h-screen overflow-hidden bg-[#f7f8fa]"><Sidebar activeTab="objects" /><main className="min-w-0 flex-1 overflow-y-auto">
+  return <div className="flex h-screen overflow-hidden bg-[#f7f8fa]"><Sidebar compact collapseStateKey="ontology-project" /><main className="min-w-0 flex-1 overflow-y-auto">
     <OntologyProjectHeader project={project} actions={<button type="button" onClick={() => navigate('/ontology-modeling')} className="h-9 rounded-md border border-[#cfd5dc] px-4 text-sm font-medium text-[#4c5561]">编辑项目</button>} />
     <div className="flex min-h-0 flex-1"><OntologyProjectNav projectId={project.id} project={project} activeItem="relations" />
       <section className="min-w-0 flex-1 overflow-y-auto p-6"><div className="mx-auto max-w-[1180px] border border-[#e0e3e7] bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eceef1] pb-5"><div><h2 className="text-xl font-semibold text-[#20242b]">关系</h2><p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#717985]">维护对象之间可校验、可下钻的业务关联。</p></div><button type="button" onClick={openCreate} disabled={objects.length < 2} className="h-10 rounded-md bg-[#e3473c] px-4 text-sm font-medium text-white hover:bg-[#cf3e34] disabled:cursor-not-allowed disabled:bg-[#e7a6a0]">+ 新建关系</button></div>

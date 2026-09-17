@@ -36,9 +36,7 @@ import AutomationTaskHistoryPage from './pages/AutomationTaskHistoryPage'
 import ConnectSiliconWorker from './pages/ConnectSiliconWorker'
 import SiliconWorkerDifyConfig from './pages/SiliconWorkerDifyConfig'
 import OntologyModeling from './pages/OntologyModeling'
-import OntologyModelingProject from './pages/OntologyModelingProject'
 import OntologyProjectWorkspacePage from './pages/OntologyProjectWorkspacePage'
-import OntologyModelingProperties from './pages/OntologyModelingProperties'
 import OntologyModelingRelations from './pages/OntologyModelingRelations'
 import OntologyModelingMapping from './pages/OntologyModelingMapping'
 import OntologyModelingValidation from './pages/OntologyModelingValidation'
@@ -83,7 +81,7 @@ function App() {
           <Route path="/workforce-management" element={<WorkforceManagement />} />
           <Route path="/role-management" element={<RoleManagement />} />
           <Route path="/ontology-modeling" element={<OntologyModeling />} />
-          <Route path="/ontology-modeling/projects/blank" element={<OntologyModelingProject />} />
+          <Route path="/ontology-modeling/projects/blank/*" element={<Navigate to="/ontology-modeling" replace />} />
           <Route path="/ontology-modeling/projects/:projectId" element={<OntologyProjectWorkspacePage />} />
           <Route path="/ontology-modeling/projects/:projectId/properties" element={<OntologyProjectWorkspacePage activeSection="properties" />} />
           <Route path="/ontology-modeling/projects/:projectId/relations" element={<OntologyModelingRelations />} />
@@ -92,13 +90,6 @@ function App() {
           <Route path="/ontology-modeling/projects/:projectId/governance" element={<OntologyModelingGovernance />} />
           <Route path="/ontology-modeling/projects/:projectId/actions" element={<OntologyActionsPage />} />
           <Route path="/ontology-modeling/projects/:projectId/functions" element={<OntologyFunctionsPage />} />
-          <Route path="/ontology-modeling/projects/blank/properties" element={<OntologyModelingProperties />} />
-          <Route path="/ontology-modeling/projects/blank/relations" element={<OntologyModelingRelations />} />
-          <Route path="/ontology-modeling/projects/blank/mapping" element={<OntologyModelingMapping />} />
-          <Route path="/ontology-modeling/projects/blank/validation" element={<OntologyModelingValidation />} />
-          <Route path="/ontology-modeling/projects/blank/governance" element={<OntologyModelingGovernance />} />
-          <Route path="/ontology-modeling/projects/blank/actions" element={<OntologyActionsPage />} />
-          <Route path="/ontology-modeling/projects/blank/functions" element={<OntologyFunctionsPage />} />
           <Route path="/workflows" element={<WorkflowList />} />
           <Route path="/workflows/:workflowId" element={<WorkflowWorkspace />} />
           <Route path="/object-management" element={<Navigate to="/object-management/object-types" replace />} />

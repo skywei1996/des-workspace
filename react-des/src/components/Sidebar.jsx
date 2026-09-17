@@ -393,16 +393,18 @@ const Sidebar = ({
   activeGroupId = null,
   onAddEmployee,
   onViewAllEmployees,
-  compact = false 
+  compact = false,
+  collapseStateKey,
 }) => {
   const { language, setLanguage, isZh, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
-  const sidebarModuleKey = getSidebarModuleKey(location.pathname)
+  const isOntologyProject = /^\/ontology-modeling\/projects\/[^/]+/.test(location.pathname)
+  const sidebarModuleKey = collapseStateKey || (isOntologyProject ? 'ontology-project' : getSidebarModuleKey(location.pathname))
   const [customEmployees, setCustomEmployees] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('workforce')
-  const [isCollapsed, setIsCollapsed] = useState(() => sidebarCollapseState[sidebarModuleKey] ?? compact)
+  const [isCollapsed, setIsCollapsed] = useState(() => sidebarCollapseState[sidebarModuleKey] ?? (compact || isOntologyProject))
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false)
   const [groupCreationMode, setGroupCreationMode] = useState('manual')
   const [groupName, setGroupName] = useState('')

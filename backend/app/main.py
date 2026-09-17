@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app import config as _config  # Ensure backend/.env is loaded during app startup.
 from app.mcp_server import router as mcp_router
-from app.routers import carbon_workers, employees, tasks, chats, chat_uploads, todos, watermark, skills, mcp_servers, workflow_runs, groups, image_generation, agent_turns, workspace_files, knowledge_bases, contract_review_rules, model_configurations, email_connectors, object_type_analysis, ontology_instances, ontology_definitions, ontology_modeling, datasets, ontology_design, capacity_evaluation, simple_chat
+from app.routers import carbon_workers, employees, tasks, chats, chat_uploads, todos, watermark, skills, mcp_servers, workflow_runs, groups, image_generation, agent_turns, workspace_files, knowledge_bases, contract_review_rules, model_configurations, email_connectors, object_type_analysis, ontology_instances, ontology_definitions, ontology_modeling, datasets, ontology_design, capacity_evaluation, simple_chat, replenishment
 from app import models, database
 from app.services.automation_schema import ensure_automation_schema
 from app.services.automation_scheduler import automation_task_scheduler
@@ -62,6 +62,7 @@ app.include_router(datasets.router)
 app.include_router(ontology_design.router)
 app.include_router(capacity_evaluation.router)
 app.include_router(simple_chat.router)
+app.include_router(replenishment.router)
 
 
 @app.on_event("startup")

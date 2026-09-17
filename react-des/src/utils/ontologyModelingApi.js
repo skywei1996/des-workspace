@@ -55,6 +55,24 @@ export const createModelingProject = async (project) => {
   return fromProject(await parseResponse(response))
 }
 
+export const updateModelingProject = async (projectId, project) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(toProjectPayload(project)),
+  })
+  return fromProject(await parseResponse(response))
+}
+
+export const deleteModelingProject = async (projectId) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}`), { method: 'DELETE' })
+  const result = await parseResponse(response)
+  ;['relations', 'mappings', 'releases'].forEach((collection) => {
+    window.localStorage.removeItem(`ontology-modeling-${collection}:${projectId}`)
+  })
+  return result
+}
+
 export const listModelingObjects = async (projectId) => {
   const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/objects`), { cache: 'no-store' })
   return (await parseResponse(response)).map(fromObject)
@@ -73,6 +91,93 @@ export const createModelingObject = async (projectId, object) => {
     }),
   })
   return fromObject(await parseResponse(response))
+}
+
+export const updateModelingObject = async (projectId, objectId, object) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/objects/${encodeURIComponent(objectId)}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: object.name,
+      definition: object.definition,
+      object_key: object.key,
+      owner: object.owner,
+      lifecycle: object.lifecycle,
+    }),
+  })
+  return fromObject(await parseResponse(response))
+}
+
+export const deleteModelingObject = async (projectId, objectId) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/objects/${encodeURIComponent(objectId)}`), { method: 'DELETE' })
+  const result = await parseResponse(response)
+  const relationsKey = `ontology-modeling-relations:${projectId}`
+  const mappingsKey = `ontology-modeling-mappings:${projectId}`
+  const relations = readLocalCollection(relationsKey).filter((item) => item.sourceObjectId !== objectId && item.targetObjectId !== objectId)
+  const mappings = readLocalCollection(mappingsKey).filter((item) => item.objectId !== objectId)
+  window.localStorage.setItem(relationsKey, JSON.stringify(relations))
+  window.localStorage.setItem(mappingsKey, JSON.stringify(mappings))
+  return result
+}
+
+const fromProperty = (property) => ({
+  ...property,
+  projectId: property.project_id,
+  apiName: property.api_name,
+  objectIds: property.object_ids || [],
+  dataType: property.data_type,
+  createdAt: property.created_at,
+  updatedAt: property.updated_at,
+})
+
+export const listModelingProperties = async (projectId) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/properties`), { cache: 'no-store' })
+  return (await parseResponse(response)).map(fromProperty)
+}
+
+export const createModelingProperty = async (projectId, property) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/properties`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: property.name,
+      api_name: property.apiName || '',
+      object_ids: property.objectIds || [],
+      data_type: property.dataType || '文本',
+      description: property.description || '',
+      source: property.source || '',
+    }),
+  })
+  return fromProperty(await parseResponse(response))
+}
+
+export const updateModelingProperty = async (projectId, propertyId, property) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/properties/${encodeURIComponent(propertyId)}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: property.name,
+      api_name: property.apiName || '',
+      object_ids: property.objectIds || [],
+      data_type: property.dataType || '文本',
+      description: property.description || '',
+      source: property.source || '',
+    }),
+  })
+  return fromProperty(await parseResponse(response))
+}
+
+export const deleteModelingProperty = async (projectId, propertyId) => {
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/properties/${encodeURIComponent(propertyId)}`), { method: 'DELETE' })
+  const result = await parseResponse(response)
+  const mappingsKey = `ontology-modeling-mappings:${projectId}`
+  const mappings = readLocalCollection(mappingsKey).map((mapping) => ({
+    ...mapping,
+    primaryKeyPropertyIds: (mapping.primaryKeyPropertyIds || []).filter((id) => id !== propertyId),
+    fieldMappings: (mapping.fieldMappings || []).filter((item) => item.propertyId !== propertyId),
+  }))
+  window.localStorage.setItem(mappingsKey, JSON.stringify(mappings))
+  return result
 }
 
 export const listModelingRelations = async (projectId) => {
@@ -107,21 +212,36 @@ const readLocalCollection = (key) => {
   }
 }
 
-export const listModelingProperties = async (projectId) =>
-  readLocalCollection(`ontology-modeling-properties:${projectId}`)
-
-export const listModelingMappings = async (projectId) =>
-  readLocalCollection(`ontology-modeling-mappings:${projectId}`)
+export const listModelingMappings = async (projectId) => {
+  const storageKey = `ontology-modeling-mappings:${projectId}`
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/mappings`), { cache: 'no-store' })
+  const savedMappings = await parseResponse(response)
+  if (savedMappings.length) {
+    window.localStorage.setItem(storageKey, JSON.stringify(savedMappings))
+    return savedMappings
+  }
+  const localMappings = readLocalCollection(storageKey)
+  if (localMappings.length) {
+    return Promise.all(localMappings.map((mapping) => saveModelingMapping(projectId, mapping.objectId, mapping)))
+  }
+  return []
+}
 
 export const saveModelingMapping = async (projectId, objectId, mapping) => {
   const storageKey = `ontology-modeling-mappings:${projectId}`
-  const mappings = await listModelingMappings(projectId)
   const savedMapping = { ...mapping, id: mapping.id || `mapping-${objectId}`, objectId, projectId }
+  const response = await fetch(buildApiUrl(`${PATH}/projects/${encodeURIComponent(projectId)}/objects/${encodeURIComponent(objectId)}/mapping`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mapping: savedMapping }),
+  })
+  const persistedMapping = await parseResponse(response)
+  const mappings = readLocalCollection(storageKey)
   window.localStorage.setItem(storageKey, JSON.stringify([
     ...mappings.filter((item) => item.objectId !== objectId),
-    savedMapping,
+    persistedMapping,
   ]))
-  return savedMapping
+  return persistedMapping
 }
 
 export const listModelingReleases = async (projectId) =>

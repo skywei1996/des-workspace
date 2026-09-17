@@ -1348,6 +1348,26 @@ const buildHistoryEntry = ({ id, type, title, summary, chatId, updatedAt, active
   groupId: groupId || null,
 });
 
+const mapSessionToHistoryEntry = (session) => buildHistoryEntry({
+  id: session.session_type === 'group' ? `group:${session.group_id || ''}` : buildSingleChatHistoryEntryId(session.chat_id),
+  type: session.session_type === 'group' ? 'group' : 'member',
+  title: session.title,
+  summary: session.summary,
+  chatId: session.chat_id,
+  updatedAt: session.updated_at,
+  activeMember: session.active_member,
+  groupId: session.group_id,
+});
+
+const mapHistoryEntryToSession = (entry) => ({
+  chat_id: entry.chatId,
+  session_type: entry.type === 'group' ? 'group' : 'member',
+  title: entry.title || 'Aria',
+  summary: entry.summary || '打开了会话',
+  active_member: entry.activeMember || null,
+  group_id: entry.groupId || null,
+});
+
 const normalizeChatId = (value) => {
   const numeric = Number(value);
   if (Number.isFinite(numeric) && numeric > 0) {
@@ -1929,6 +1949,7 @@ const ChatWorkspace = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const chatMessagesRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
   const chatInputRef = useRef(null);
   const chatFileInputRef = useRef(null);
   const chatUploadParseTimersRef = useRef(new Map());
@@ -2173,7 +2194,7 @@ const ChatWorkspace = () => {
           setActiveGroup((prev) => prev);
         }
       }
-      setChatHistoryEntries(readChatHistoryIndex());
+      refreshChatHistoryEntries({ migrateLocalEntries: true });
     };
 
     syncActiveGroup();
@@ -2312,8 +2333,24 @@ const ChatWorkspace = () => {
     return () => window.clearTimeout(timer);
   }, [navigationToast]);
 
-  const refreshChatHistoryEntries = () => {
-    setChatHistoryEntries(readChatHistoryIndex());
+  const refreshChatHistoryEntries = async ({ migrateLocalEntries = false } = {}) => {
+    const localEntries = readChatHistoryIndex();
+    try {
+      if (migrateLocalEntries && localEntries.length > 0) {
+        await Promise.all(localEntries.map((entry) => (
+          axios.put(`${API_BASE}/chats/sessions/${entry.chatId}`, mapHistoryEntryToSession(entry))
+        )));
+      }
+      const response = await axios.get(`${API_BASE}/chats/sessions/`);
+      const entries = Array.isArray(response.data)
+        ? response.data.map(mapSessionToHistoryEntry)
+        : [];
+      writeChatHistoryIndex(entries);
+      setChatHistoryEntries(entries);
+    } catch (error) {
+      console.error('Failed to load chat session directory:', error);
+      setChatHistoryEntries(localEntries);
+    }
   };
 
   const loadAvailableEmployees = async () => {
@@ -2389,7 +2426,9 @@ const ChatWorkspace = () => {
       groupId: isGroupChat ? activeGroup?.id : null,
     });
     upsertChatHistoryEntry(nextEntry);
-    refreshChatHistoryEntries();
+    axios.put(`${API_BASE}/chats/sessions/${nextEntry.chatId}`, mapHistoryEntryToSession(nextEntry))
+      .then(() => refreshChatHistoryEntries())
+      .catch((error) => console.error('Failed to save chat session directory:', error));
   };
 
   const selectHistoryEntry = async (entry) => {
@@ -2416,6 +2455,19 @@ const ChatWorkspace = () => {
     if (entry.activeMember) {
       openSingleMemberSession(entry.activeMember, entry.chatId);
       setShowHistoryModal(false);
+
+      // Switching between two saved sessions for the same employee does not
+      // change activeMember, so the member-change effect will not run.
+      if (String(entry.activeMember) === String(activeMember)) {
+        const selectedChatId = resolveRequestedChatId(entry.chatId);
+        if (selectedChatId) {
+          automationTaskSessionRef.current = false;
+          requestedChatIdRef.current = selectedChatId;
+          chatIdRef.current = selectedChatId;
+          resetChatWorkspaceState();
+          await loadChatHistory(selectedChatId);
+        }
+      }
     }
   };
 
@@ -2443,6 +2495,7 @@ const ChatWorkspace = () => {
     if (debateSyncRef.current.timerId) {
       clearTimeout(debateSyncRef.current.timerId);
     }
+    shouldAutoScrollRef.current = true;
     debateSyncRef.current = {
       active: false,
       timerId: null,
@@ -3086,9 +3139,19 @@ const ChatWorkspace = () => {
     ));
   }
 
-  // Auto-scroll to bottom when messages change
+  const handleChatMessagesScroll = () => {
+    const container = chatMessagesRef.current;
+    if (!container) {
+      return;
+    }
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom <= 80;
+  };
+
+  // Keep following new messages until the user intentionally scrolls up.
   useEffect(() => {
-    if (chatMessagesRef.current) {
+    if (chatMessagesRef.current && shouldAutoScrollRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [messages]);
@@ -3458,6 +3521,7 @@ const ChatWorkspace = () => {
     try {
       await axios.delete(`${API_BASE}/chats/${chatIdRef.current}/messages/`);
       removeChatHistoryEntry(activeHistoryEntryId);
+      await axios.delete(`${API_BASE}/chats/sessions/${chatIdRef.current}`);
       refreshChatHistoryEntries();
       resetChatWorkspaceState();
       setShowHistoryModal(false);
@@ -4979,7 +5043,11 @@ const ChatWorkspace = () => {
         />
 
         {/* 聊天消息区域 */}
-        <div ref={chatMessagesRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-6 flex flex-col gap-4">
+        <div
+          ref={chatMessagesRef}
+          onScroll={handleChatMessagesScroll}
+          className="flex-1 min-h-0 overflow-y-auto px-6 py-6 flex flex-col gap-4"
+        >
           {showWelcome ? (
             <div className="flex items-center justify-center h-full text-center">
               <div className="max-w-md">

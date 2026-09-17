@@ -104,7 +104,7 @@ function OntologyModelingValidation() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f7f8fa]">
-      <Sidebar activeTab="objects" />
+      <Sidebar compact collapseStateKey="ontology-project" />
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <OntologyProjectHeader
           project={project}

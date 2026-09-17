@@ -300,6 +300,63 @@ class OntologyModelingObject(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
+class OntologyModelingProperty(Base):
+    __tablename__ = "ontology_modeling_project_properties"
+
+    id = Column(String, primary_key=True, index=True)
+    project_id = Column(String, ForeignKey("ontology_modeling_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    api_name = Column(String, nullable=False, default="")
+    object_ids = Column(JSON, nullable=False, default=list)
+    data_type = Column(String, nullable=False, default="文本")
+    description = Column(Text, default="")
+    source = Column(String, default="")
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class OntologyModelingMapping(Base):
+    __tablename__ = "ontology_modeling_mappings"
+    __table_args__ = (
+        UniqueConstraint("project_id", "object_id", name="uq_ontology_modeling_mapping_object"),
+    )
+
+    id = Column(String, primary_key=True, index=True)
+    project_id = Column(String, ForeignKey("ontology_modeling_projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    object_id = Column(String, ForeignKey("ontology_modeling_objects.id", ondelete="CASCADE"), nullable=False, index=True)
+    dataset_id = Column(String, nullable=False, default="")
+    dataset_name = Column(String, nullable=False, default="")
+    dataset_version = Column(String, nullable=False, default="")
+    sheet_name = Column(String, nullable=False, default="")
+    primary_key_property_ids = Column(JSON, nullable=False, default=list)
+    field_mappings = Column(JSON, nullable=False, default=list)
+    validation_json = Column(JSON, nullable=False, default=dict)
+    status = Column(String, nullable=False, default="draft")
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class ReplenishmentInventoryAdjustment(Base):
+    __tablename__ = "replenishment_inventory_adjustments"
+    __table_args__ = (
+        UniqueConstraint("request_id", "store_id", "sku_id", name="uq_replenishment_adjustment_request_item"),
+    )
+
+    id = Column(String, primary_key=True, index=True)
+    request_id = Column(String, nullable=False, index=True)
+    project_id = Column(String, nullable=False, index=True)
+    store_id = Column(String, nullable=False, index=True)
+    sku_id = Column(String, nullable=False, index=True)
+    direction = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    quantity_delta = Column(Integer, nullable=False)
+    approval_required = Column(Integer, nullable=False, default=0)
+    approval_status = Column(String, nullable=False, default="not_required")
+    initiated_by = Column(String, nullable=False, default="")
+    approved_by = Column(String, nullable=False, default="")
+    created_at = Column(DateTime, default=datetime.now)
+
+
 class SkillRegistryEntry(Base):
     __tablename__ = "skill_registry_entries"
 
@@ -430,6 +487,20 @@ class ChatMessage(Base):
     message_type = Column(String, default="text")
     meta_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
+
+
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    chat_id = Column(Integer, primary_key=True, index=True)
+    session_type = Column(String, nullable=False, default="member")
+    title = Column(String, nullable=False, default="Aria")
+    summary = Column(Text, nullable=False, default="打开了会话")
+    active_member = Column(String, nullable=True, index=True)
+    group_id = Column(String, nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, index=True)
+
 
 class Todo(Base):
     __tablename__ = "todos"
